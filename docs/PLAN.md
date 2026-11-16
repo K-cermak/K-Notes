@@ -8,15 +8,15 @@ Section numbers refer to `docs/SPEC.md`.
 
 ## Phase 0: Scaffold
 
-- [ ] Initialise the git repository, `.gitignore`, MIT `LICENSE`, `branding.json`, the layout from `CLAUDE.md`.
-- [ ] Backend: FastAPI app factory, settings (section 3), SQLite engine with pragmas, Alembic wired to run at startup, `GET /api/v1/health` and `GET /api/v1/config`.
-- [ ] Frontend: Vite, Vue, TypeScript, Tailwind, vue-router, Pinia, vue-i18n with `en.json`, dev proxy for `/api`.
-- [ ] Design foundation from section 9 "Visual design": colour tokens with `light-dark()` exposed to Tailwind, self-hosted Geist and Geist Mono, zero radius, global icon stroke settings, and the base controls (button variants, input, checkbox, notice) on a throwaway showcase route.
-- [ ] Typed API client generated from the OpenAPI schema (`just api-types`).
-- [ ] Lint, format and type-check tooling for both sides.
-- [ ] `justfile` with the commands listed in `CLAUDE.md`.
-- [ ] Dockerfile and `docker-compose.yml`; the image serves the SPA and the API.
-- [ ] GitHub Actions workflow running `just check`, the API types check and the image build.
+- [x] Initialise the git repository, `.gitignore`, MIT `LICENSE`, `branding.json`, the layout from `CLAUDE.md`.
+- [x] Backend: FastAPI app factory, settings (section 3), SQLite engine with pragmas, Alembic wired to run at startup, `GET /api/v1/health` and `GET /api/v1/config`.
+- [x] Frontend: Vite, Vue, TypeScript, Tailwind, vue-router, Pinia, vue-i18n with `en.json`, dev proxy for `/api`.
+- [x] Design foundation from section 9 "Visual design": colour tokens with `light-dark()` exposed to Tailwind, self-hosted Geist and Geist Mono, zero radius, global icon stroke settings, and the base controls (button variants, input, checkbox, notice) on a throwaway showcase route.
+- [x] Typed API client generated from the OpenAPI schema (`just api-types`).
+- [x] Lint, format and type-check tooling for both sides.
+- [x] `justfile` with the commands listed in `CLAUDE.md`.
+- [x] Dockerfile and `docker-compose.yml`; the image serves the SPA and the API.
+- [x] GitHub Actions workflow running `just check`, the API types check and the image build.
 
 Done when: `just docker` succeeds, the container shows a placeholder page that displays the version from `/config` through the typed client, the showcase route, put next to the owner's reference form in light and in dark, reads as the same design family, and CI is green.
 

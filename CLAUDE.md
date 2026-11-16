@@ -73,12 +73,17 @@ docs/                SPEC.md, PLAN.md, design/reference.css
 Phase 0 creates these. Keep this section accurate when they change.
 
 ```
-just dev          # backend with reload + Vite dev server (proxies /api)
-just check        # everything CI runs: lint, types, unit tests for both sides
-just test-e2e     # Playwright against the built image
-just api-types    # regenerate frontend/src/api/schema.d.ts from the OpenAPI schema
-just docker       # build the production image locally
+just setup            # install backend (uv) and frontend (pnpm) dependencies
+just dev              # backend with reload + Vite dev server (proxies /api); data in backend/.data
+just check            # everything CI runs: lint, types, unit tests for both sides
+just fmt              # format and autofix both sides
+just test-e2e         # Playwright against the built image
+just api-types        # regenerate frontend/src/api/schema.d.ts from the OpenAPI schema
+just api-types-check  # fail if the generated API types are out of date (runs in CI)
+just docker           # build the production image locally
 ```
+
+Toolchain: Python 3.14 (`backend/.python-version`), Node 26 (`.node-version`), pnpm 12. The Node version matters: jsdom, used by Vitest, needs Node 22.22+ or newer. Playwright needs `pnpm exec playwright install chromium` once.
 
 ## Testing
 
