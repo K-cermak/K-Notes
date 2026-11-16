@@ -36,11 +36,11 @@ Done when: pytest covers the flows above, including that a non-admin cannot reac
 
 ## Phase 2: Sync backend
 
-- [ ] Models for all synced entities with bookkeeping columns (section 4).
-- [ ] `services/merge.py` implementing sections 5.1, 5.2, 5.4 and 5.5.
-- [ ] Rich text validation and plain-text extraction (section 4.1).
-- [ ] Push, pull and SSE endpoints (section 5.3), with the in-process listener registry.
-- [ ] Trash purge task (section 5.7), without blob cleanup for now, and the nightly cleanup of expired sessions and invites.
+- [x] Models for all synced entities with bookkeeping columns (section 4).
+- [x] `services/merge.py` implementing sections 5.1, 5.2, 5.4 and 5.5.
+- [x] Rich text validation and plain-text extraction (section 4.1).
+- [x] Push, pull and SSE endpoints (section 5.3), with the in-process listener registry.
+- [x] Trash purge task (section 5.7), without blob cleanup for now, and the nightly cleanup of expired sessions and invites.
 
 Done when: every merge case listed in section 12 has a pytest test, user isolation is tested, and a scripted run with two simulated devices (plain HTTP clients in a test) converges to the same state, including one conflict copy.
 
