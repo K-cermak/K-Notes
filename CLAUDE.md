@@ -77,7 +77,8 @@ just setup            # install backend (uv) and frontend (pnpm) dependencies
 just dev              # backend with reload + Vite dev server (proxies /api); data in backend/.data
 just check            # everything CI runs: lint, types, unit tests for both sides
 just fmt              # format and autofix both sides
-just test-e2e         # Playwright against the built image
+just test-e2e         # build the image and run Playwright against it
+just e2e              # Playwright against an already built image (used by CI)
 just api-types        # regenerate frontend/src/api/schema.d.ts from the OpenAPI schema
 just api-types-check  # fail if the generated API types are out of date (runs in CI)
 just docker           # build the production image locally

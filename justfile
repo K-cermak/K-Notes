@@ -57,8 +57,11 @@ api-types-check: api-types
 docker:
     docker build -t {{image}} .
 
-# Playwright against the built image
-test-e2e: docker
+# Build the image, then run Playwright against it
+test-e2e: docker e2e
+
+# Playwright against an already built image (CI builds it with its layer cache first)
+e2e:
     #!/usr/bin/env bash
     set -euo pipefail
     name="notes-e2e-$$"

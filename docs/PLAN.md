@@ -30,6 +30,7 @@ Done when: `just docker` succeeds, the container shows a placeholder page that d
 - [x] Invite acceptance, self-registration and password reset pages.
 - [x] CLI: `reset-password`, `disable-totp`, `make-admin`.
 - [x] Minimal setup and login screens, enough to obtain a session.
+- [x] Playwright against the built image runs in CI from this phase on, moved forward from phase 11 so that the sync work in phases 2 and 3 is guarded end to end from the start.
 
 Done when: pytest covers the flows above, including that a non-admin cannot reach admin endpoints, that the last active admin cannot be demoted, deactivated or deleted, that admins cannot demote or deactivate themselves, that an invite or reset link works once and expires, and that a deactivated user's session stops working at once and they cannot log in again; and on a fresh instance you can create the admin, invite a second user by link, log out and log in through the browser.
 
@@ -113,7 +114,7 @@ Done when: pytest covers TOTP, recovery codes, token auth and token scope limits
 ## Phase 11: Release
 
 - [ ] Startup configuration validation with clear messages.
-- [ ] Complete the Playwright list in section 12 and run it in CI against the built image.
+- [ ] Complete the Playwright list in section 12 (CI already runs Playwright against the built image since phase 1).
 - [ ] Release workflow publishing a multi-architecture image (`linux/amd64` and `linux/arm64`) to GHCR on a version tag.
 - [ ] `README.md` as described in section 11, with screenshots; `CONTRIBUTING.md`, `CHANGELOG.md`.
 - [ ] Accessibility pass (section 9, Accessibility) and a review of the security headers with the final bundle.
