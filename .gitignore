@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Node
+node_modules/
+frontend/dist/
+frontend/dev-dist/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+
+# Local data
+/data/
+backend/.data/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
