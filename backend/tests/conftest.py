@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.main import create_app
 from app.services import clock
+from tests.sync_helpers import Device
 
 ADMIN = {"email": "admin@example.com", "display_name": "Admin", "password": "admin-password"}
 PASSWORD = "user-password"
@@ -110,3 +111,16 @@ def make_user(admin: TestClient, new_client: Callable[[], TestClient]) -> Callab
 
 def user_id(client: TestClient) -> str:
     return client.get("/api/v1/me").json()["id"]
+
+
+@pytest.fixture
+def device(admin: TestClient) -> Device:
+    return Device(admin)
+
+
+@pytest.fixture
+def second_device(admin: TestClient, new_client: Callable[[], TestClient]) -> Device:
+    """The same user on another device, with its own session."""
+    other = new_client()
+    other.post("/api/v1/auth/login", json={"email": ADMIN["email"], "password": ADMIN["password"]})
+    return Device(other)
