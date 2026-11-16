@@ -65,8 +65,8 @@ Done when: the app is usable for text notes on a desktop browser and at phone wi
 
 ## Phase 5: Labels and search
 
-- [ ] Label management dialog, label picker, label views in the drawer, chips on cards.
-- [ ] Local search with case and diacritics folding.
+- [x] Label management dialog, label picker, label views in the drawer, chips on cards.
+- [x] Local search with case and diacritics folding.
 
 Done when: label rename and delete propagate between two clients, and searching `cerny` finds a note containing `černý`.
 
