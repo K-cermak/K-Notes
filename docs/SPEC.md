@@ -277,7 +277,7 @@ Local Dexie tables: `notes`, `checklistItems`, `labels`, `noteLabels`, `attachme
 **Sync cycle.** One cycle at a time, never in parallel:
 
 1. Upload blobs that are stored locally and not yet on the server.
-2. Push outbox ops in order, in batches of up to 200. Hold back attachment ops whose blob is not uploaded yet. Remove ops from the outbox when the server answers `applied`, `gone` or `rejected`; log rejections and show a toast for them. `blob_missing` is the exception: keep the op and retry after uploading.
+2. Push outbox ops in order, in batches of up to 200 ops and about 1 MB of JSON, so that a batch stays within the default request size limit of common reverse proxies (a single larger op is sent on its own). Hold back attachment ops whose blob is not uploaded yet. Remove ops from the outbox when the server answers `applied`, `gone` or `rejected`; log rejections and show a toast for them. `blob_missing` is the exception: keep the op and retry after uploading.
 3. Pull until `has_more` is false.
 4. Download blobs referenced by live attachments that are not stored locally (unless the device setting "download images on demand" is on).
 
@@ -473,7 +473,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - Web manifest with its name, short name and theme colour taken from `branding.json`, the app's icons, `display: standalone`, theme colors for both themes, and maskable icons. Add `apple-touch-icon` and the iOS meta tags.
 - When a new version is available, show a snackbar "Update available" with a Reload action. Do not reload by itself; the user may be typing.
 - On iOS Safari outside standalone mode, show a dismissible hint explaining Share → Add to Home Screen. This matters beyond convenience: Safari may delete a site's data after seven days without use, and home screen apps are exempt.
-- Service workers require HTTPS (or `localhost`). The README must say that the app has to be served over HTTPS behind a reverse proxy, with a sample configuration that disables buffering for the SSE path.
+- Service workers require HTTPS (or `localhost`). The README must say that the app has to be served over HTTPS behind a reverse proxy, with a sample configuration that disables buffering for the SSE path and raises the request body limit (`client_max_body_size` in nginx) above the image size limit and the largest single note.
 - Respect safe-area insets on phones, and make sure the on-screen keyboard does not cover the editor toolbar.
 
 ## 11. Docker and release
