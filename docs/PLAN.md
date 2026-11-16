@@ -54,12 +54,12 @@ Done when: Vitest covers the engine cases in section 12, and Playwright shows a 
 
 ## Phase 4: Interface for text notes
 
-- [ ] App shell: top bar, navigation drawer, composer, responsive behaviour (section 9, Layout).
-- [ ] Masonry grid composable and list view.
-- [ ] Note card and editor with Tiptap and the formatting control.
-- [ ] Colors, pin, archive, trash views, make a copy, undo snackbar.
-- [ ] Light and dark theme from the tokens, saved in the profile and cached locally.
-- [ ] Empty states and keyboard shortcuts.
+- [x] App shell: top bar, navigation drawer, composer, responsive behaviour (section 9, Layout).
+- [x] Masonry grid composable and list view.
+- [x] Note card and editor with Tiptap and the formatting control.
+- [x] Colors, pin, archive, trash views, make a copy, undo snackbar.
+- [x] Light and dark theme from the tokens, saved in the profile and cached locally.
+- [x] Empty states and keyboard shortcuts.
 
 Done when: the app is usable for text notes on a desktop browser and at phone width, in both themes; you have compared its layout and behaviour side by side with Google Keep and fixed the obvious differences; and its look, put next to the owner's reference form, reads as the same design family. Include screenshots in the report.
 
