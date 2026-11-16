@@ -44,7 +44,9 @@ def _error(status_code: int, code: str, message: str, headers: Any = None) -> JS
 
 async def _app_error(_request: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)
-    return _error(exc.status_code, exc.code, exc.message)
+    retry_after = getattr(exc, "retry_after", None)
+    headers = {"Retry-After": str(retry_after)} if retry_after else None
+    return _error(exc.status_code, exc.code, exc.message, headers)
 
 
 async def _http_error(_request: Request, exc: Exception) -> JSONResponse:
@@ -66,3 +68,29 @@ def install_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, _app_error)
     app.add_exception_handler(StarletteHTTPException, _http_error)
     app.add_exception_handler(RequestValidationError, _validation_error)
+
+
+class UnauthorizedError(AppError):
+    def __init__(self, message: str = "Sign in to continue") -> None:
+        super().__init__(401, "unauthorized", message)
+
+
+class ForbiddenError(AppError):
+    def __init__(self, code: str = "forbidden", message: str = "Not allowed") -> None:
+        super().__init__(403, code, message)
+
+
+class ConflictError(AppError):
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(409, code, message)
+
+
+class InvalidInputError(AppError):
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(422, code, message)
+
+
+class TooManyRequestsError(AppError):
+    def __init__(self, retry_after: int) -> None:
+        super().__init__(429, "too_many_requests", f"Too many attempts. Try again in {retry_after} s.")
+        self.retry_after = retry_after
