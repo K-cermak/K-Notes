@@ -1,0 +1,27 @@
+# Example deployment. Put a reverse proxy with HTTPS in front of it: the app needs HTTPS
+# for the service worker and secure cookies (localhost is the only exception).
+services:
+  notes:
+    build: .
+    image: ${IMAGE:-notes:latest}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      # The container runs as uid 1000; create the directory first: mkdir data && sudo chown 1000:1000 data
+      - ./data:/data
+    environment:
+      APP_BASE_URL: https://notes.example.com
+      # APP_TRASH_RETENTION_DAYS: "7"
+      # APP_MAX_IMAGE_MB: "10"
+      # APP_SESSION_DAYS: "180"
+      # APP_TRUSTED_PROXIES: "172.16.0.0/12"
+      # APP_LOG_LEVEL: info
+
+      # Single sign-on through any OIDC provider (Authentik, Keycloak, ...).
+      # APP_OIDC_DISCOVERY_URL: https://id.example.com/application/o/notes/.well-known/openid-configuration
+      # APP_OIDC_CLIENT_ID: notes
+      # APP_OIDC_CLIENT_SECRET: change-me
+      # APP_OIDC_PROVIDER_NAME: Authentik
+      # APP_OIDC_AUTO_PROVISION: "false"
+      # APP_PASSWORD_LOGIN_ENABLED: "false"
