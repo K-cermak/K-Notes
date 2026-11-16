@@ -56,7 +56,10 @@ export async function addNote(page: Page, title: string, body = ''): Promise<voi
     await page.keyboard.type(body)
   }
   await form.getByTestId('close-note').click()
+  // The card appears with the title alone after the first autosave; wait for the final save too.
   await expect(card(page, title)).toBeVisible()
+  if (body) await expect(card(page, title).getByTestId('card-body')).toContainText(body)
+  await expect(page.getByTestId('note-form')).toHaveCount(0)
 }
 
 export function card(page: Page, title: string) {

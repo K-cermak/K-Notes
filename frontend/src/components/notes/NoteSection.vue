@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { LocalNote } from '@/db/schema'
+import type { LocalLabel, LocalNote } from '@/db/schema'
 import { useMasonry } from '@/composables/useMasonry'
 import NoteCard from './NoteCard.vue'
 
-const props = defineProps<{ notes: LocalNote[]; layout: 'grid' | 'list'; heading?: string }>()
+const props = defineProps<{
+  notes: LocalNote[]
+  layout: 'grid' | 'list'
+  heading?: string
+  labels: Map<string, LocalLabel[]>
+}>()
 
 const container = ref<HTMLElement | null>(null)
 const keys = computed(() => props.notes.map((note) => note.id))
@@ -22,7 +27,12 @@ const { layout: masonry, track } = useMasonry(container, keys)
       {{ heading }}
     </h2>
     <div v-if="layout === 'list'" class="mx-auto flex w-full max-w-[600px] flex-col gap-3">
-      <NoteCard v-for="note in notes" :key="note.id" :note="note" />
+      <NoteCard
+        v-for="note in notes"
+        :key="note.id"
+        :note="note"
+        :labels="labels.get(note.id) ?? []"
+      />
     </div>
     <div
       v-else
@@ -43,7 +53,7 @@ const { layout: masonry, track } = useMasonry(container, keys)
           transform: `translate(${masonry.placements.get(note.id)?.x ?? 0}px, ${masonry.placements.get(note.id)?.y ?? 0}px)`,
         }"
       >
-        <NoteCard :note="note" />
+        <NoteCard :note="note" :labels="labels.get(note.id) ?? []" />
       </div>
     </div>
   </section>

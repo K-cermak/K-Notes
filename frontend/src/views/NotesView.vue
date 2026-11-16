@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Archive, Lightbulb, Trash2 } from '@lucide/vue'
+import { Archive, Lightbulb, Search, Tag, Trash2 } from '@lucide/vue'
+import { byName } from '@/db/labels'
 import { byPosition } from '@/db/notes'
-import { db } from '@/db/schema'
+import { db, type LocalLabel } from '@/db/schema'
+import { matches } from '@/db/search'
 import type { NotesView } from '@/notes'
 import { useLiveQuery } from '@/composables/useLiveQuery'
 import { useNoteActions } from '@/composables/useNoteActions'
@@ -13,45 +15,87 @@ import NoteSection from '@/components/notes/NoteSection.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiNotice from '@/components/ui/UiNotice.vue'
 
-const props = defineProps<{ view: NotesView }>()
+const props = defineProps<{ view: NotesView; labelId?: string; query?: string }>()
 
 const session = useSessionStore()
 const instance = useInstanceStore()
 const actions = useNoteActions()
 const all = useLiveQuery(async () => (await db.notes.toArray()).sort(byPosition), [])
+const labelRows = useLiveQuery(() => db.labels.toArray(), [])
+const memberships = useLiveQuery(() => db.noteLabels.toArray(), [])
+
+const labelsByNote = computed(() => {
+  const byId = new Map(labelRows.value.map((label) => [label.id, label]))
+  const result = new Map<string, LocalLabel[]>()
+  for (const membership of memberships.value) {
+    const label = byId.get(membership.label_id)
+    if (!label) continue
+    result.set(membership.note_id, [...(result.get(membership.note_id) ?? []), label])
+  }
+  for (const labels of result.values()) labels.sort(byName)
+  return result
+})
 
 const layout = computed(() => session.user?.default_view ?? 'grid')
-const visible = computed(() =>
-  all.value.filter((note) => {
-    if (props.view === 'trash') return note.trashed_at !== null
-    if (note.trashed_at !== null) return false
-    return props.view === 'archive' ? note.archived : !note.archived
-  }),
-)
-const pinned = computed(() => (props.view === 'notes' ? visible.value.filter((n) => n.pinned) : []))
-const others = computed(() =>
-  props.view === 'notes' ? visible.value.filter((n) => !n.pinned) : visible.value,
+const live = computed(() => all.value.filter((note) => note.trashed_at === null))
+
+/** Sections of the current view: [heading key, notes]; an empty heading key means no heading. */
+const sections = computed((): [string, typeof all.value][] => {
+  if (props.view === 'trash') return [['', all.value.filter((note) => note.trashed_at !== null)]]
+  if (props.view === 'archive') return [['', live.value.filter((note) => note.archived)]]
+  if (props.view === 'search') {
+    // Results are split into active and archived; trashed notes never show up (SPEC 9).
+    const found = props.query
+      ? live.value.filter((note) => matches(note.searchText, props.query!))
+      : []
+    const active = found.filter((note) => !note.archived)
+    const archived = found.filter((note) => note.archived)
+    return [
+      [archived.length ? 'notes.active' : '', active],
+      ['notes.archived', archived],
+    ]
+  }
+  const active = live.value.filter(
+    (note) =>
+      !note.archived &&
+      (props.view !== 'label' ||
+        labelsByNote.value.get(note.id)?.some((l) => l.id === props.labelId)),
+  )
+  const pinned = active.filter((note) => note.pinned)
+  return [
+    ['notes.pinned', pinned],
+    [pinned.length ? 'notes.others' : '', active.filter((note) => !note.pinned)],
+  ]
+})
+const visibleCount = computed(() =>
+  sections.value.reduce((sum, [, notes]) => sum + notes.length, 0),
 )
 const retention = computed(() => instance.config?.trash_retention_days ?? 0)
 
-const empty = {
-  notes: { icon: Lightbulb, key: 'empty.notes' },
-  archive: { icon: Archive, key: 'empty.archive' },
-  trash: { icon: Trash2, key: 'empty.trash' },
-}
+const empty = computed(() => {
+  if (props.view === 'search') {
+    return { icon: Search, key: props.query ? 'empty.search' : 'empty.searchPrompt' }
+  }
+  return {
+    notes: { icon: Lightbulb, key: 'empty.notes' },
+    archive: { icon: Archive, key: 'empty.archive' },
+    trash: { icon: Trash2, key: 'empty.trash' },
+    label: { icon: Tag, key: 'empty.label' },
+  }[props.view]
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-8">
     <div
-      v-if="view === 'trash' && (retention > 0 || visible.length > 0)"
+      v-if="view === 'trash' && (retention > 0 || visibleCount > 0)"
       class="mx-auto flex w-full max-w-[600px] flex-col gap-3 sm:flex-row sm:items-center"
     >
       <UiNotice v-if="retention > 0" class="flex-1">
         {{ $t('trash.notice', { days: retention }, retention) }}
       </UiNotice>
       <UiButton
-        v-if="visible.length > 0"
+        v-if="visibleCount > 0"
         variant="danger"
         class="self-end sm:self-auto"
         @click="actions.emptyTrash()"
@@ -59,18 +103,15 @@ const empty = {
         {{ $t('trash.empty') }}
       </UiButton>
     </div>
-    <EmptyState v-if="visible.length === 0" :icon="empty[view].icon" :text="$t(empty[view].key)" />
-    <NoteSection
-      v-if="pinned.length > 0"
-      :notes="pinned"
-      :layout="layout"
-      :heading="$t('notes.pinned')"
-    />
-    <NoteSection
-      v-if="others.length > 0"
-      :notes="others"
-      :layout="layout"
-      :heading="pinned.length > 0 ? $t('notes.others') : undefined"
-    />
+    <EmptyState v-if="visibleCount === 0" :icon="empty.icon" :text="$t(empty.key)" />
+    <template v-for="([heading, notes], index) in sections" :key="index">
+      <NoteSection
+        v-if="notes.length > 0"
+        :notes="notes"
+        :layout="layout"
+        :labels="labelsByNote"
+        :heading="heading ? $t(heading) : undefined"
+      />
+    </template>
   </div>
 </template>

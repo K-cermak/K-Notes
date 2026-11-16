@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { Archive, Lightbulb, NotebookPen, Trash2 } from '@lucide/vue'
+import { Archive, Lightbulb, NotebookPen, Pencil, Tag, Trash2 } from '@lucide/vue'
+import { byName } from '@/db/labels'
+import { db } from '@/db/schema'
+import { useLiveQuery } from '@/composables/useLiveQuery'
 import branding from '@branding'
 import type { NotesView } from '@/notes'
 
@@ -9,8 +12,12 @@ import type { NotesView } from '@/notes'
  * Desktop: an icon rail that expands on hover or with the menu button. Phone: an overlay opened
  * with the menu button (SPEC 9, Layout).
  */
-const props = defineProps<{ compact: boolean; current: NotesView }>()
+const props = defineProps<{ compact: boolean; current: NotesView; labelId?: string }>()
 const open = defineModel<boolean>('open', { required: true })
+const emit = defineEmits<{ editLabels: [] }>()
+
+const labels = useLiveQuery(async () => (await db.labels.toArray()).sort(byName), [])
+const expanded = computed(() => props.compact || open.value || hovered.value)
 
 const hovered = ref(false)
 let hoverTimer: ReturnType<typeof setTimeout> | null = null
@@ -29,6 +36,14 @@ function leave(): void {
   if (hoverTimer) clearTimeout(hoverTimer)
   hovered.value = false
 }
+const entry =
+  'flex h-12 shrink-0 items-center gap-6 px-6 whitespace-nowrap transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--ink)_5%,var(--bg))]'
+const activeEntry = 'bg-[color-mix(in_srgb,var(--ink)_8%,var(--bg))] font-medium text-ink'
+const label = computed(() => [
+  'min-w-0 transition-opacity duration-150',
+  !expanded.value && 'opacity-0',
+])
+
 function navigated(): void {
   if (props.compact) open.value = false
 }
@@ -42,7 +57,7 @@ function navigated(): void {
   />
   <nav
     :aria-label="$t('nav.label')"
-    class="fixed bottom-0 left-0 z-30 flex flex-col overflow-hidden bg-bg py-2 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none"
+    class="fixed bottom-0 left-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto bg-bg py-2 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none"
     :class="
       compact
         ? [
@@ -65,26 +80,38 @@ function navigated(): void {
       </span>
       <span class="text-[17px] font-semibold tracking-[-0.02em]">{{ branding.name }}</span>
     </div>
-    <RouterLink
-      v-for="item in items"
-      :key="item.view"
-      :to="item.to"
-      class="flex h-12 shrink-0 items-center gap-6 px-6 whitespace-nowrap transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--ink)_5%,var(--bg))]"
-      :class="
-        current === item.view
-          ? 'bg-[color-mix(in_srgb,var(--ink)_8%,var(--bg))] font-medium text-ink'
-          : 'text-muted'
-      "
-      :aria-current="current === item.view ? 'page' : undefined"
-      @click="navigated"
-    >
-      <component :is="item.icon" :size="20" />
-      <span
-        class="transition-opacity duration-150"
-        :class="!compact && !open && !hovered && 'opacity-0'"
+    <template v-for="item in items" :key="item.view">
+      <RouterLink
+        :to="item.to"
+        :class="[entry, current === item.view && !labelId ? activeEntry : 'text-muted']"
+        :aria-current="current === item.view ? 'page' : undefined"
+        @click="navigated"
       >
-        {{ $t(`nav.${item.view}`) }}
-      </span>
-    </RouterLink>
+        <component :is="item.icon" :size="20" />
+        <span :class="label">{{ $t(`nav.${item.view}`) }}</span>
+      </RouterLink>
+      <template v-if="item.view === 'notes'">
+        <RouterLink
+          v-for="tag in labels"
+          :key="tag.id"
+          :to="`/label/${tag.id}`"
+          :class="[entry, labelId === tag.id ? activeEntry : 'text-muted']"
+          :aria-current="labelId === tag.id ? 'page' : undefined"
+          @click="navigated"
+        >
+          <Tag :size="20" />
+          <span :class="[label, 'truncate']">{{ tag.name }}</span>
+        </RouterLink>
+        <button
+          type="button"
+          :class="[entry, 'w-full cursor-pointer text-left text-muted']"
+          data-testid="edit-labels-button"
+          @click="(navigated(), emit('editLabels'))"
+        >
+          <Pencil :size="20" />
+          <span :class="label">{{ $t('labels.edit') }}</span>
+        </button>
+      </template>
+    </template>
   </nav>
 </template>

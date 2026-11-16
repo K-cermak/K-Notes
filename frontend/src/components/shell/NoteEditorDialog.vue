@@ -39,6 +39,7 @@ async function close(): Promise<void> {
           ref="form"
           :note-id="route.params.id === 'new' ? null : String(route.params.id)"
           :autofocus="route.params.id === 'new' ? 'title' : undefined"
+          :label-ids="route.query.label ? [String(route.query.label)] : undefined"
           @close="close"
         />
       </DialogContent>

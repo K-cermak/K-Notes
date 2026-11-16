@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { JSONContent } from '@tiptap/core'
-import { EditorContent, useEditor } from '@tiptap/vue-3'
+import { Editor, EditorContent } from '@tiptap/vue-3'
 import { Archive, ArchiveRestore, Pin, PinOff, Undo2 } from '@lucide/vue'
+import { byName, setNoteLabel } from '@/db/labels'
 import { createNote, isNoteEmpty, purgeNote, updateNote } from '@/db/notes'
 import { emptyDoc } from '@/db/richtext'
 import { db, type RichDoc } from '@/db/schema'
@@ -17,12 +18,19 @@ import { iconButton } from '@/components/ui/menu'
 import ColorPicker from './ColorPicker.vue'
 import FormatMenu from './FormatMenu.vue'
 import NoteMenu from './NoteMenu.vue'
+import LabelChips from '@/components/labels/LabelChips.vue'
+import LabelPicker from '@/components/labels/LabelPicker.vue'
 
 /**
  * Title, body and toolbar of a note, shared by the composer and the editor. With no noteId it is a
  * draft: the note is only created once something is typed, so opening and closing leaves nothing.
  */
-const props = defineProps<{ noteId: string | null; autofocus?: 'title' | 'body' }>()
+const props = defineProps<{
+  noteId: string | null
+  autofocus?: 'title' | 'body'
+  /** Labels a new note gets, as when it is written in a label's view. */
+  labelIds?: string[]
+}>()
 const emit = defineEmits<{ close: [] }>()
 
 const { t, d } = useI18n()
@@ -31,6 +39,18 @@ const actions = useNoteActions()
 
 const id = ref(props.noteId)
 const note = useLiveQuery(() => (id.value ? db.notes.get(id.value) : undefined), undefined)
+const labels = useLiveQuery(async () => {
+  if (!id.value) return []
+  const memberships = await db.noteLabels.where('note_id').equals(id.value).toArray()
+  const found = await db.labels.bulkGet(memberships.map((m) => m.label_id))
+  return found.filter((label) => label !== undefined).sort(byName)
+}, [])
+const picking = ref(false)
+
+// The menu closes first and hands focus back to its button; the picker opens after that.
+function pickLabels(): void {
+  setTimeout(() => (picking.value = true))
+}
 const draft = ref<{ color: NoteColor; pinned: boolean }>({ color: 'default', pinned: false })
 const title = ref('')
 let focused = false
@@ -48,20 +68,30 @@ function editorContent(doc: RichDoc): JSONContent {
   ) as JSONContent
 }
 
-const editor = useEditor({
-  extensions: noteExtensions(t('note.body')),
-  content: editorContent(emptyDoc()),
-  editable: true,
-  // Tiptap would add a <style> element, which the Content Security Policy blocks; main.css has the rules.
-  injectCSS: false,
-  onUpdate: () => schedule(),
-  onFocus: () => (focused = true),
-  onBlur: () => {
-    focused = false
-    flush()
-  },
-  editorProps: { attributes: { 'aria-label': t('note.body'), 'data-testid': 'editor-body' } },
-})
+/**
+ * The editor is created once the note's content is known, with that content, rather than filled in
+ * afterwards: content set into an editor that is still being mounted could be lost, and the
+ * first keystroke then replaced the note.
+ */
+const editor = shallowRef<Editor>()
+
+function createEditor(content: JSONContent, editable: boolean): void {
+  editor.value = new Editor({
+    extensions: noteExtensions(t('note.body')),
+    content,
+    editable,
+    // Tiptap would add a <style> element, which the Content Security Policy blocks; main.css has the rules.
+    injectCSS: false,
+    onUpdate: () => schedule(),
+    onFocus: () => (focused = true),
+    onBlur: () => {
+      focused = false
+      flush()
+    },
+    editorProps: { attributes: { 'aria-label': t('note.body'), 'data-testid': 'editor-body' } },
+  })
+  if (props.autofocus === 'body') editor.value.commands.focus('end')
+}
 
 // What this form last wrote, so its own writes coming back through the live query are not
 // mistaken for changes from another device.
@@ -78,8 +108,21 @@ async function write(): Promise<void> {
   if (id.value) {
     await updateNote(id.value, { title: title.value, content })
   } else if (title.value.trim() || editor.value?.getText().trim()) {
-    id.value = await createNote({ title: title.value, content, ...draft.value })
+    await create(content)
   }
+}
+
+async function create(content: RichDoc): Promise<string> {
+  const created = await createNote({ title: title.value, content, ...draft.value })
+  for (const labelId of props.labelIds ?? []) await setNoteLabel(created, labelId, true)
+  id.value = created
+  return created
+}
+
+/** The label picker needs a note to attach labels to, even before anything is typed. */
+async function ensureNote(): Promise<string | null> {
+  await queue
+  return id.value ?? (await create((editor.value?.getJSON() ?? emptyDoc()) as RichDoc))
 }
 
 // Saves run one after another: leaving a field and closing the form both save, and two
@@ -92,35 +135,35 @@ function save(): Promise<void> {
 
 const { schedule, flush, pending } = useDebouncedSave(save)
 
-// Loads the note once both it and the editor exist; after that, changes from other devices show
-// up unless the user is typing here.
+if (props.noteId === null) createEditor(editorContent(emptyDoc()), true)
+
+// Loads the note into a new editor; after that, changes from other devices show up unless the user
+// is typing here.
 watch(
-  [note, editor],
-  ([value, instance]) => {
-    if (!value || !instance) return
-    const first = !loaded.value
-    if (!first && (pending() || focused)) return
-    if (first || value.title !== lastSaved.title) title.value = value.title
+  note,
+  (value) => {
+    if (!value) return
     const content = JSON.stringify(value.content)
-    if (
-      first ||
-      (content !== lastSaved.content && content !== JSON.stringify(instance.getJSON()))
-    ) {
+    const instance = editor.value
+    if (!instance) {
+      title.value = value.title
+      lastSaved = { title: value.title, content }
+      loaded.value = true
+      createEditor(editorContent(value.content), value.trashed_at == null)
+      return
+    }
+    instance.setEditable(value.trashed_at == null, false)
+    if (pending() || focused) return
+    if (value.title !== lastSaved.title) title.value = value.title
+    if (content !== lastSaved.content && content !== JSON.stringify(instance.getJSON())) {
       instance.commands.setContent(editorContent(value.content), { emitUpdate: false })
-      // setContent leaves the whole document selected, and a click does not always clear that, so
-      // the first keystroke would replace the note.
+      // setContent leaves the whole document selected, so the next keystroke would replace it.
       instance.commands.setTextSelection(0)
     }
     lastSaved = { title: value.title, content }
-    loaded.value = true
-    instance.setEditable(value.trashed_at == null)
   },
   { immediate: true },
 )
-watch(editor, (value) => {
-  value?.setEditable(loaded.value)
-  if (value && props.autofocus === 'body') value.commands.focus('end')
-})
 
 function setColor(value: NoteColor): void {
   if (id.value) void updateNote(id.value, { color: value })
@@ -225,6 +268,7 @@ defineExpose({ finish })
         </button>
       </div>
       <EditorContent :editor="editor" class="min-h-12 pb-2" />
+      <LabelChips v-if="id" :note-id="id" :labels="labels" :color="color" class="pt-1 pb-2" />
     </div>
     <div
       class="flex flex-wrap items-center gap-0.5 px-2 pt-1 pb-[max(8px,env(safe-area-inset-bottom))]"
@@ -255,11 +299,17 @@ defineExpose({ finish })
           <Archive v-else :size="18" />
         </button>
       </template>
+      <LabelPicker v-if="!trashed" v-model:open="picking" :note-id="id" :ensure-note="ensureNote">
+        <NoteMenu
+          :trashed="false"
+          @trash="run(actions.trash)"
+          @copy="run(actions.copy)"
+          @labels="pickLabels"
+        />
+      </LabelPicker>
       <NoteMenu
-        v-if="note"
-        :trashed="trashed"
-        @trash="run(actions.trash)"
-        @copy="run(actions.copy)"
+        v-else-if="note"
+        :trashed="true"
         @restore="run(actions.restore)"
         @purge="note && actions.purge(note.id).then((done) => done && emit('close'))"
       />

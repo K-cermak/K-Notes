@@ -28,4 +28,4 @@ export function noteLine(color: NoteColor): string {
     : `color-mix(in srgb, var(--ink) 12%, var(--note-${color}))`
 }
 
-export type NotesView = 'notes' | 'archive' | 'trash'
+export type NotesView = 'notes' | 'archive' | 'trash' | 'label' | 'search'

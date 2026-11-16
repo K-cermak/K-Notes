@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { LayoutGrid, Menu, NotebookPen, Rows3 } from '@lucide/vue'
 import branding from '@branding'
 import { useSessionStore } from '@/stores/session'
 import { iconButton } from '@/components/ui/menu'
 import SyncStatus from '@/components/SyncStatus.vue'
 import AccountMenu from './AccountMenu.vue'
+import SearchField from './SearchField.vue'
 import SettingsMenu from './SettingsMenu.vue'
 
 defineProps<{ compact: boolean; drawerOpen: boolean }>()
 const emit = defineEmits<{ menu: [] }>()
+const search = ref<{ focus: () => void } | null>(null)
+
+defineExpose({ focusSearch: () => search.value?.focus() })
 
 const session = useSessionStore()
 </script>
@@ -27,13 +32,18 @@ const session = useSessionStore()
     >
       <Menu :size="20" />
     </button>
-    <RouterLink to="/" class="ml-1 flex items-center gap-2.5 pr-4">
+    <RouterLink
+      v-if="!compact"
+      to="/"
+      class="ml-1 flex w-[200px] shrink-0 items-center gap-2.5 pr-4"
+    >
       <span class="grid size-8 place-items-center bg-ink text-bg" aria-hidden="true">
         <NotebookPen :size="18" />
       </span>
       <span class="text-[17px] font-semibold tracking-[-0.02em]">{{ branding.name }}</span>
     </RouterLink>
-    <div class="flex-1" />
+    <SearchField ref="search" class="mx-1 sm:mx-4" />
+    <div class="hidden flex-1 lg:block" />
     <SyncStatus />
     <template v-if="!compact">
       <button

@@ -6,12 +6,12 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { Copy, EllipsisVertical, Trash2, Undo2 } from '@lucide/vue'
+import { Copy, EllipsisVertical, Tag, Trash2, Undo2 } from '@lucide/vue'
 import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
 
 defineProps<{ trashed: boolean }>()
 
-const emit = defineEmits<{ trash: []; copy: []; restore: []; purge: [] }>()
+const emit = defineEmits<{ trash: []; copy: []; restore: []; purge: []; labels: [] }>()
 </script>
 
 <template>
@@ -32,6 +32,9 @@ const emit = defineEmits<{ trash: []; copy: []; restore: []; purge: [] }>()
         <template v-else>
           <DropdownMenuItem :class="menuItem" @select="emit('trash')">
             <Trash2 :size="16" /> {{ $t('note.delete') }}
+          </DropdownMenuItem>
+          <DropdownMenuItem :class="menuItem" @select="emit('labels')">
+            <Tag :size="16" /> {{ $t('labels.add') }}
           </DropdownMenuItem>
           <DropdownMenuItem :class="menuItem" @select="emit('copy')">
             <Copy :size="16" /> {{ $t('note.copy') }}

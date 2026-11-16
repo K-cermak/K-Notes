@@ -3,6 +3,8 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import NoteForm from '@/components/notes/NoteForm.vue'
 
 // The desktop "Take a note…" bar; it expands in place and saves when it loses focus (SPEC 9).
+defineProps<{ labelIds?: string[] }>()
+
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 const form = ref<{ finish: () => Promise<void> } | null>(null)
@@ -42,7 +44,7 @@ defineExpose({ start: () => (open.value = true) })
       v-else
       class="flex animate-rise flex-col border border-line-hover motion-reduce:animate-fade"
     >
-      <NoteForm ref="form" :note-id="null" autofocus="title" @close="close" />
+      <NoteForm ref="form" :note-id="null" :label-ids="labelIds" autofocus="title" @close="close" />
     </div>
   </div>
 </template>

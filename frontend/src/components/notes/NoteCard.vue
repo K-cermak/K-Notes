@@ -2,7 +2,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Archive, ArchiveRestore, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
-import type { LocalNote } from '@/db/schema'
+import type { LocalLabel, LocalNote } from '@/db/schema'
+import LabelChips from '@/components/labels/LabelChips.vue'
+import LabelPicker from '@/components/labels/LabelPicker.vue'
 import { updateNote } from '@/db/notes'
 import { plainText } from '@/db/richtext'
 import { noteBackground, noteLine } from '@/notes'
@@ -12,12 +14,18 @@ import ColorPicker from './ColorPicker.vue'
 import NoteMenu from './NoteMenu.vue'
 import RichTextView from './RichTextView'
 
-const props = defineProps<{ note: LocalNote }>()
+const props = defineProps<{ note: LocalNote; labels: LocalLabel[] }>()
 
 const router = useRouter()
 const actions = useNoteActions()
 const body = ref<HTMLElement | null>(null)
 const clipped = ref(false)
+const picking = ref(false)
+
+// The menu closes first and hands focus back to its button; the picker opens after that.
+function pickLabels(): void {
+  setTimeout(() => (picking.value = true))
+}
 
 const color = computed(() => props.note.color)
 const trashed = computed(() => props.note.trashed_at !== null)
@@ -83,6 +91,7 @@ function open(): void {
         <RichTextView :doc="note.content" />
       </div>
       <p v-if="empty" class="text-[22px] leading-snug text-faint">{{ $t('note.emptyCard') }}</p>
+      <LabelChips :note-id="note.id" :labels="labels" :color="color" :limit="3" class="mt-3" />
     </div>
 
     <button
@@ -103,7 +112,7 @@ function open(): void {
     </button>
 
     <div
-      class="flex items-center gap-0.5 px-1.5 pb-1.5 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-state=open]]:opacity-100 pointer-coarse:hidden"
+      class="flex items-center gap-0.5 px-1.5 pb-1.5 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 has-[[aria-expanded=true]]:opacity-100 has-[[data-state=open]]:opacity-100 pointer-coarse:hidden"
       @click.stop
     >
       <template v-if="trashed">
@@ -142,7 +151,14 @@ function open(): void {
           <ArchiveRestore v-if="note.archived" :size="18" />
           <Archive v-else :size="18" />
         </button>
-        <NoteMenu :trashed="false" @trash="actions.trash(note.id)" @copy="actions.copy(note.id)" />
+        <LabelPicker v-model:open="picking" :note-id="note.id">
+          <NoteMenu
+            :trashed="false"
+            @trash="actions.trash(note.id)"
+            @copy="actions.copy(note.id)"
+            @labels="pickLabels"
+          />
+        </LabelPicker>
       </template>
     </div>
   </article>

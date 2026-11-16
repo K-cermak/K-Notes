@@ -24,6 +24,8 @@ export const router = createRouter({
     { path: '/', name: 'notes', component: AppShell, meta: { view: 'notes' } },
     { path: '/archive', name: 'archive', component: AppShell, meta: { view: 'archive' } },
     { path: '/trash', name: 'trash', component: AppShell, meta: { view: 'trash' } },
+    { path: '/label/:id', name: 'label', component: AppShell, meta: { view: 'label' } },
+    { path: '/search', name: 'search', component: AppShell, meta: { view: 'search' } },
     { path: '/note/:id', name: 'note', component: AppShell },
     {
       path: '/setup',

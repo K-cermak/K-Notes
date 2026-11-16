@@ -60,7 +60,8 @@
     "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
-    "undo": "Undo"
+    "undo": "Undo",
+    "done": "Done"
   },
   "account": {
     "displayName": "Display name",
@@ -214,12 +215,17 @@
   },
   "notes": {
     "pinned": "Pinned",
-    "others": "Others"
+    "others": "Others",
+    "active": "Notes",
+    "archived": "Archive"
   },
   "empty": {
     "notes": "Notes you add appear here",
     "archive": "Your archived notes appear here",
-    "trash": "No notes in the trash"
+    "trash": "No notes in the trash",
+    "label": "No notes with this label yet",
+    "search": "No matching notes",
+    "searchPrompt": "Search your notes"
   },
   "trash": {
     "notice": "Notes in the trash are deleted after {days} day. | Notes in the trash are deleted after {days} days.",
@@ -238,5 +244,22 @@
     "settings": "Settings",
     "gridView": "Grid view",
     "listView": "List view"
+  },
+  "labels": {
+    "edit": "Edit labels",
+    "new": "Create new label",
+    "add": "Add label",
+    "pickerTitle": "Label note",
+    "filter": "Enter label name",
+    "create": "Create “{name}”",
+    "exists": "A label with this name already exists.",
+    "deleted": "Label deleted",
+    "delete": "Delete label {name}",
+    "rename": "Rename label {name}",
+    "remove": "Remove label {name}"
+  },
+  "search": {
+    "placeholder": "Search",
+    "close": "Close search"
   }
 }
