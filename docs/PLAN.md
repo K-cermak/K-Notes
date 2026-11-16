@@ -46,9 +46,9 @@ Done when: every merge case listed in section 12 has a pytest test, user isolati
 
 ## Phase 3: Client data layer
 
-- [ ] Dexie schema, repository functions, outbox with coalescing (section 5.6).
-- [ ] Sync engine: cycle, triggers, backoff, SSE listener, status store, auth edge cases.
-- [ ] A deliberately plain UI: a list of notes with title and plain text, create, edit, delete. Its purpose is to exercise sync, and it will be replaced.
+- [x] Dexie schema, repository functions, outbox with coalescing (section 5.6).
+- [x] Sync engine: cycle, triggers, backoff, SSE listener, status store, auth edge cases.
+- [x] A deliberately plain UI: a list of notes with title and plain text, create, edit, delete. Its purpose is to exercise sync, and it will be replaced.
 
 Done when: Vitest covers the engine cases in section 12, and Playwright shows a note syncing between two contexts, an offline edit syncing after reconnect, and a conflict copy appearing.
 
