@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import uvicorn
@@ -12,6 +13,7 @@ def main() -> None:
     except ConfigError as exc:
         print(exc, file=sys.stderr)
         sys.exit(2)
+    logging.basicConfig(level=settings.log_level.upper(), format="%(levelname)-9s %(name)s: %(message)s")
     # One worker only: SSE fan-out lives in process memory and SQLite has a single writer.
     uvicorn.run(
         create_app(settings),
