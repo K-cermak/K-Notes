@@ -95,12 +95,13 @@ export const useSessionStore = defineStore('session', () => {
    */
   async function updateProfile(patch: ProfileUpdate): Promise<void> {
     if (!user.value) return
-    // A plain object: IndexedDB cannot store Vue's reactive proxy.
-    const next = { ...user.value, ...patch } as Me
-    user.value = next
-    await rememberUser(db, next)
+    // Stored before it is shown, so a reload right after the change cannot lose it.
     const pending = { ...((await getMeta<ProfileUpdate>(db, PENDING_PROFILE)) ?? {}), ...patch }
     await setMeta(db, PENDING_PROFILE, pending)
+    // A plain object: IndexedDB cannot store Vue's reactive proxy.
+    const next = { ...user.value, ...patch } as Me
+    await rememberUser(db, next)
+    user.value = next
     await sendProfile()
   }
 
