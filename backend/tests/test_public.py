@@ -36,7 +36,7 @@ def test_startup_creates_data_dir_database_and_secret(client: TestClient, settin
 
 
 def test_sqlite_pragmas(client: TestClient) -> None:
-    engine: Engine = cast(FastAPI, client.app).state.engine
+    engine: Engine = cast(FastAPI, client.app).state.db.read_engine
     with engine.connect() as connection:
         assert connection.exec_driver_sql("PRAGMA journal_mode").scalar() == "wal"
         assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar() == 1

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from app.api import public
 from app.branding import REPO_ROOT, get_branding
 from app.config import Settings, load_settings
-from app.db import make_engine, make_session_factory
+from app.db import Database
 from app.errors import ErrorResponse, install_error_handlers
 from app.migrations import run_migrations
 from app.spa import install_spa
@@ -32,13 +32,12 @@ def create_app(settings: Settings | None = None, static_dir: Path | None = None)
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         prepare_data_dir(settings)
-        engine = make_engine(settings.database_path)
-        run_migrations(engine)
-        app.state.engine = engine
-        app.state.session_factory = make_session_factory(engine)
+        db = Database(settings.database_path)
+        run_migrations(db.write_engine)
+        app.state.db = db
         logger.info("Started version %s with data in %s", VERSION, settings.data_dir)
         yield
-        engine.dispose()
+        db.dispose()
 
     app = FastAPI(
         title=get_branding().name,
