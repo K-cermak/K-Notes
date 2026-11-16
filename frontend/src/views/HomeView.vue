@@ -26,10 +26,13 @@ const newTitle = ref('')
 const newText = ref('')
 
 async function add(): Promise<void> {
-  if (!newTitle.value && !newText.value) return
-  await createNote({ title: newTitle.value, content: fromPlainText(newText.value) })
+  const title = newTitle.value
+  const text = newText.value
+  if (!title && !text) return
+  // Cleared before the write, so text typed while it runs is not wiped.
   newTitle.value = ''
   newText.value = ''
+  await createNote({ title, content: fromPlainText(text) })
 }
 
 async function logout(): Promise<void> {
