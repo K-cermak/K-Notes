@@ -1,5 +1,6 @@
 import { Dexie, type EntityTable } from 'dexie'
 import type { components } from '@/api/schema'
+import { refreshSearchText } from './search'
 
 type Schemas = components['schemas']
 export type RichDoc = Schemas['RichDoc']
@@ -11,7 +12,8 @@ type Local<Row extends { seq: number; deleted: boolean }> = Omit<Row, 'seq' | 'd
   serverSeq: number
 }
 
-export type LocalNote = Local<Schemas['NoteRow']>
+/** searchText is derived locally from the title, text, items and label names; it is never sent. */
+export type LocalNote = Local<Schemas['NoteRow']> & { searchText?: string }
 export type LocalChecklistItem = Local<Schemas['ChecklistItemRow']>
 export type LocalLabel = Local<Schemas['LabelRow']>
 export type LocalNoteLabel = Local<Schemas['NoteLabelRow']>
@@ -64,6 +66,13 @@ export class NotesDatabase extends Dexie {
       outbox: '++seq, [entity+entityId]',
       meta: 'key',
     })
+    // Version 2 adds the derived searchText; existing notes get it computed once.
+    this.version(2)
+      .stores({})
+      .upgrade(async (tx) => {
+        const ids = (await tx.table('notes').toCollection().primaryKeys()) as string[]
+        await refreshSearchText(tx.db as NotesDatabase, ids)
+      })
   }
 
   syncedTable(entity: Entity) {

@@ -2,6 +2,7 @@ import { generateKeyBetween } from 'fractional-indexing'
 import { emptyDoc, plainText } from './richtext'
 import { dropPending, enqueuePurge, enqueueUpsert } from './outbox'
 import { db as defaultDb, type LocalNote, type NotesDatabase } from './schema'
+import { refreshSearchText, searchTables } from './search'
 
 /** The fields a client may write on a note. */
 export type NotePatch = Partial<
@@ -29,8 +30,16 @@ export function byPosition(
   return a.position < b.position ? -1 : a.position > b.position ? 1 : a.id < b.id ? -1 : 1
 }
 
-function rowFields<T extends { id: string; serverSeq: number }>(row: T): Record<string, unknown> {
-  const { id: _id, serverSeq: _seq, ...fields } = row
+/** The fields of a local row as the server knows them: no ID, server version or derived fields. */
+export function rowFields<T extends { id: string; serverSeq: number }>(
+  row: T,
+): Record<string, unknown> {
+  const {
+    id: _id,
+    serverSeq: _seq,
+    searchText: _search,
+    ...fields
+  } = row as T & { searchText?: string }
   return fields
 }
 
@@ -45,7 +54,7 @@ export async function createNote(
   db: NotesDatabase = defaultDb,
 ): Promise<string> {
   const id = crypto.randomUUID()
-  await db.transaction('rw', db.notes, db.outbox, async () => {
+  await db.transaction('rw', [...searchTables(db), db.outbox], async () => {
     const now = Date.now()
     const note: LocalNote = {
       id,
@@ -66,6 +75,7 @@ export async function createNote(
     await db.notes.add(note)
     const { updated_at: _updated, ...fields } = rowFields(note)
     await enqueueUpsert(db, 'note', id, fields, 0)
+    await refreshSearchText(db, [id])
   })
   return id
 }
@@ -75,7 +85,7 @@ export async function updateNote(
   patch: NotePatch,
   db: NotesDatabase = defaultDb,
 ): Promise<void> {
-  await db.transaction('rw', db.notes, db.outbox, async () => {
+  await db.transaction('rw', [...searchTables(db), db.outbox], async () => {
     const note = await db.notes.get(id)
     if (!note) return
     const changed = Object.fromEntries(
@@ -87,6 +97,7 @@ export async function updateNote(
     const contentEdit = CONTENT_FIELDS.some((key) => key in changed)
     await db.notes.update(id, { ...changed, ...(contentEdit ? { updated_at: Date.now() } : {}) })
     await enqueueUpsert(db, 'note', id, changed, note.serverSeq)
+    if (contentEdit) await refreshSearchText(db, [id])
   })
 }
 
@@ -119,7 +130,7 @@ export async function copyNote(id: string, db: NotesDatabase = defaultDb): Promi
   const copyId = crypto.randomUUID()
   const done = await db.transaction(
     'rw',
-    [db.notes, db.checklistItems, db.noteLabels, db.attachments, db.outbox],
+    [...searchTables(db), db.attachments, db.outbox],
     async () => {
       const note = await db.notes.get(id)
       if (!note) return false
@@ -157,6 +168,7 @@ export async function copyNote(id: string, db: NotesDatabase = defaultDb): Promi
         await db.noteLabels.add(row)
         await enqueueUpsert(db, 'note_label', row.id, {}, 0)
       }
+      await refreshSearchText(db, [copyId])
       return true
     },
   )

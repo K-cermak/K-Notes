@@ -1,6 +1,7 @@
 import type { components } from '@/api/schema'
 import { setMeta } from './meta'
 import type { Entity, NotesDatabase } from './schema'
+import { refreshSearchText } from './search'
 
 type Changes = components['schemas']['Changes']
 
@@ -49,6 +50,18 @@ export async function applyChanges(
         await table.put(merged as never)
       }
     }
+    // Titles, text, items and label names all feed a note's search text.
+    const touched = [
+      ...changes.notes.map((row) => row.id),
+      ...changes.checklist_items.map((row) => row.note_id),
+      ...changes.note_labels.map((row) => row.note_id),
+    ]
+    for (const label of changes.labels) {
+      touched.push(
+        ...(await db.noteLabels.where('label_id').equals(label.id).toArray()).map((m) => m.note_id),
+      )
+    }
+    await refreshSearchText(db, touched)
     await setMeta(db, 'cursor', cursor)
   })
 }
