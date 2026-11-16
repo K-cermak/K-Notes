@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import {
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogOverlay,
@@ -34,18 +32,16 @@ const confirm = useConfirmStore()
         <AlertDialogDescription class="text-muted">
           {{ confirm.request.message }}
         </AlertDialogDescription>
+        <!-- Plain buttons: Reka's Action and Cancel close the dialog before their click handlers run,
+             which would answer every confirmation as a cancel. -->
         <div class="flex justify-end gap-3">
-          <AlertDialogCancel as-child>
-            <UiButton>{{ $t('common.cancel') }}</UiButton>
-          </AlertDialogCancel>
-          <AlertDialogAction as-child>
-            <UiButton
-              :variant="confirm.request.danger ? 'danger' : 'primary'"
-              @click="confirm.answer(true)"
-            >
-              {{ confirm.request.confirmLabel }}
-            </UiButton>
-          </AlertDialogAction>
+          <UiButton @click="confirm.answer(false)">{{ $t('common.cancel') }}</UiButton>
+          <UiButton
+            :variant="confirm.request.danger ? 'danger' : 'primary'"
+            @click="confirm.answer(true)"
+          >
+            {{ confirm.request.confirmLabel }}
+          </UiButton>
         </div>
       </AlertDialogContent>
     </AlertDialogPortal>

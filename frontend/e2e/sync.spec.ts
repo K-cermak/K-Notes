@@ -105,17 +105,16 @@ test('signing out wipes the notes from this browser', async ({ browser }) => {
   expect(left).toBe(0)
 })
 
-// FIXME(phase 3): after "Discard and continue" the logout request succeeds (204) but the page
-// stays on /; probably wipeLocalData or the redirect after it. Investigate before closing phase 3.
-test.fixme('signing out with unsent changes asks first', async ({ browser }) => {
+test('signing out with unsent changes asks first', async ({ browser }) => {
   const user = await newUser(browser)
   const a = await signedIn(browser, user)
   await a.context.setOffline(true)
   await a.page.getByTestId('new-title').fill('Not sent yet')
   await a.page.getByTestId('add').click()
   await expect(a.page.getByTestId('unsent')).toHaveText('1 unsent change')
-  await a.context.setOffline(false)
+  // Sync stays blocked when the browser is back online, so the change remains unsent.
   await a.context.route('**/api/v1/sync/**', (route) => route.abort())
+  await a.context.setOffline(false)
 
   await a.page.getByRole('button', { name: 'Sign out' }).click()
   const dialog = a.page.getByRole('alertdialog')
