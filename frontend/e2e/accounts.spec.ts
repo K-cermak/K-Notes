@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test'
-
-const admin = { name: 'Ada Admin', email: 'ada@example.com', password: 'admin-password' }
+import { admin } from './helpers'
 const friend = { name: 'Fred Friend', email: 'fred@example.com', password: 'friend-password' }
 
 test('first-run setup, invite by link, sign out and sign in', async ({ page, browser }) => {
@@ -11,6 +10,7 @@ test('first-run setup, invite by link, sign out and sign in', async ({ page, bro
   await page.getByLabel('Password').fill(admin.password)
   await page.getByRole('button', { name: 'Create account' }).click()
   await expect(page.getByTestId('signed-in-as')).toContainText(admin.email)
+  await expect(page.getByTestId('sync-status')).toHaveAttribute('data-state', 'synced')
 
   await page.getByRole('link', { name: 'Administration' }).click()
   await page.getByRole('button', { name: 'Create invite link' }).click()

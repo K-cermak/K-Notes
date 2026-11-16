@@ -57,7 +57,8 @@
   },
   "notFound": "This page does not exist.",
   "common": {
-    "back": "Back"
+    "back": "Back",
+    "cancel": "Cancel"
   },
   "account": {
     "displayName": "Display name",
@@ -135,5 +136,32 @@
     "not_admin": "Only administrators can do this.",
     "self_change": "You cannot do this to your own account.",
     "last_admin": "The instance must keep at least one active administrator."
+  },
+  "sync": {
+    "idle": "Starting",
+    "syncing": "Syncing",
+    "synced": "Synced",
+    "offline": "Offline",
+    "error": "Sync error",
+    "unauthorized": "Signed out",
+    "unsent": "{count} unsent change | {count} unsent changes",
+    "signInAgain": "Your session has ended. Your notes stay on this device; sign in again to sync them.",
+    "rejected": "The server refused {count} change. | The server refused {count} changes."
+  },
+  "session": {
+    "unsentTitle": "Discard unsent changes?",
+    "unsentMessage": "This device has {count} change that has not reached the server. It will be lost. | This device has {count} changes that have not reached the server. They will be lost.",
+    "discard": "Discard and continue"
+  },
+  "plain": {
+    "title": "Title",
+    "text": "Note",
+    "newTitle": "New note title",
+    "newText": "New note text",
+    "add": "Add note",
+    "delete": "Delete note",
+    "empty": "No notes yet.",
+    "conflict": "Conflicted copy",
+    "dismissConflict": "Dismiss conflict marker"
   }
 }

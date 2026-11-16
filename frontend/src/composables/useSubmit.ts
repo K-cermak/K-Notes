@@ -34,5 +34,14 @@ export function useSubmit(overrides: Partial<Record<string, string>> = {}) {
     }
   }
 
-  return { pending, error, failure, run }
+  /** Like run, but returns the action's result, or null when it failed. */
+  async function attempt<T>(action: () => Promise<T>): Promise<T | null> {
+    let result: T | null = null
+    const ok = await run(async () => {
+      result = await action()
+    })
+    return ok ? result : null
+  }
+
+  return { pending, error, failure, run, attempt }
 }

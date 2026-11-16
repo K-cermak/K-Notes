@@ -19,6 +19,10 @@ export default defineConfigWithVueTs(
       'vue/multi-word-component-names': 'off',
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
       'vue/component-api-style': ['error', ['script-setup']],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
     },
   },
   skipFormatting,

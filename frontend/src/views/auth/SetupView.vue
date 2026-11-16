@@ -12,21 +12,21 @@ import AuthLayout from '@/components/AuthLayout.vue'
 const router = useRouter()
 const instance = useInstanceStore()
 const session = useSessionStore()
-const { pending, error, run } = useSubmit()
+const { pending, error, attempt } = useSubmit()
 
 const email = ref('')
 const displayName = ref('')
 const password = ref('')
 
 async function submit(): Promise<void> {
-  const ok = await run(async () => {
-    session.user = await call(() =>
+  const me = await attempt(() =>
+    call(() =>
       api.POST('/api/v1/auth/setup', {
         body: { email: email.value, display_name: displayName.value, password: password.value },
       }),
-    )
-  })
-  if (ok) {
+    ),
+  )
+  if (me && (await session.signedIn(me))) {
     await instance.load()
     await router.replace('/')
   }

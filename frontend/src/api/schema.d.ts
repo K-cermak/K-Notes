@@ -541,14 +541,32 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** HardBreak */
         HardBreak: {
-            [key: string]: unknown;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "hardBreak";
         };
+        /** Heading */
         Heading: {
-            [key: string]: unknown;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "heading";
+            attrs: components["schemas"]["HeadingAttrs"];
+            /** Content */
+            content?: (components["schemas"]["Text"] | components["schemas"]["HardBreak"])[] | null;
         };
+        /** HeadingAttrs */
         HeadingAttrs: {
-            [key: string]: unknown;
+            /**
+             * Level
+             * @enum {integer}
+             */
+            level: 1 | 2;
         };
         /** HealthResponse */
         HealthResponse: {
@@ -618,8 +636,13 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** Mark */
         Mark: {
-            [key: string]: unknown;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "bold" | "italic" | "underline";
         };
         /** Me */
         Me: {
@@ -736,8 +759,15 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /** Paragraph */
         Paragraph: {
-            [key: string]: unknown;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "paragraph";
+            /** Content */
+            content?: (components["schemas"]["Text"] | components["schemas"]["HardBreak"])[] | null;
         };
         /** PasswordChange */
         PasswordChange: {
@@ -829,8 +859,18 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** RichDoc */
         RichDoc: {
-            [key: string]: unknown;
+            /**
+             * Type
+             * @constant
+             */
+            type: "doc";
+            /**
+             * Content
+             * @default []
+             */
+            content: (components["schemas"]["Paragraph"] | components["schemas"]["Heading"])[];
         };
         /** SessionInfo */
         SessionInfo: {
@@ -860,8 +900,17 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** Text */
         Text: {
-            [key: string]: unknown;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "text";
+            /** Text */
+            text: string;
+            /** Marks */
+            marks?: components["schemas"]["Mark"][] | null;
         };
         /** TokenRequest */
         TokenRequest: {

@@ -6,16 +6,16 @@ tricked into rendering.
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class _Node(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    # Absent optional parts stay absent, as in the document the client sent.
-    @model_serializer(mode="wrap")
-    def _drop_none(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
-        return {k: v for k, v in handler(self).items() if v is not None}
+
+def _optional() -> Any:
+    """An optional part that stays absent in output, as in the document the client sent."""
+    return Field(default=None, exclude_if=lambda value: value is None)
 
 
 class Mark(_Node):
@@ -25,7 +25,7 @@ class Mark(_Node):
 class Text(_Node):
     type: Literal["text"]
     text: str = Field(min_length=1)
-    marks: list[Mark] | None = None
+    marks: list[Mark] | None = _optional()
 
 
 class HardBreak(_Node):
@@ -37,7 +37,7 @@ Inline = Annotated[Text | HardBreak, Field(discriminator="type")]
 
 class Paragraph(_Node):
     type: Literal["paragraph"]
-    content: list[Inline] | None = None
+    content: list[Inline] | None = _optional()
 
 
 class HeadingAttrs(_Node):
@@ -47,7 +47,7 @@ class HeadingAttrs(_Node):
 class Heading(_Node):
     type: Literal["heading"]
     attrs: HeadingAttrs
-    content: list[Inline] | None = None
+    content: list[Inline] | None = _optional()
 
 
 Block = Annotated[Paragraph | Heading, Field(discriminator="type")]

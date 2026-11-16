@@ -12,7 +12,7 @@ const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
 const check = useSubmit()
-const { pending, error, run } = useSubmit()
+const { pending, error, attempt } = useSubmit()
 
 const token = String(route.params.token)
 const checked = ref(false)
@@ -30,8 +30,8 @@ onMounted(async () => {
 })
 
 async function submit(): Promise<void> {
-  const ok = await run(async () => {
-    session.user = await call(() =>
+  const me = await attempt(() =>
+    call(() =>
       api.POST('/api/v1/auth/invite/accept', {
         body: {
           token,
@@ -40,9 +40,11 @@ async function submit(): Promise<void> {
           password: password.value,
         },
       }),
-    )
-  })
-  if (ok) await router.replace('/')
+    ),
+  )
+  if (me && (await session.signedIn(me))) {
+    await router.replace('/')
+  }
 }
 </script>
 

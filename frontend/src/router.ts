@@ -78,9 +78,9 @@ router.beforeEach(async (to) => {
   if (instance.config.setup_required) {
     return to.name === 'setup' || to.name === 'showcase' ? true : { name: 'setup' }
   }
-  if (!session.loaded) await session.load().catch(() => undefined)
+  if (!session.loaded) await session.load()
   if (to.name === 'setup') return { name: session.user ? 'home' : 'login' }
-  if (to.meta.guestOnly && session.user) return { name: 'home' }
+  if (to.meta.guestOnly && session.user && !session.expired) return { name: 'home' }
   if (!to.meta.public && !session.user) {
     return { name: 'login', query: to.fullPath === '/' ? {} : { next: to.fullPath } }
   }

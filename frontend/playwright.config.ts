@@ -10,5 +10,14 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:18000',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    // Sets up the instance through the UI and creates the admin the other tests use.
+    { name: 'accounts', testMatch: /accounts\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      testIgnore: /accounts\.spec\.ts/,
+      dependencies: ['accounts'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 })

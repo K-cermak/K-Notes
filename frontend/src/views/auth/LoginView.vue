@@ -16,18 +16,20 @@ const route = useRoute()
 const router = useRouter()
 const instance = useInstanceStore()
 const session = useSessionStore()
-const { pending, error, run } = useSubmit({ unauthorized: 'login.invalid' })
+const { pending, error, attempt } = useSubmit({ unauthorized: 'login.invalid' })
 
 const email = ref('')
 const password = ref('')
 
 async function submit(): Promise<void> {
-  const ok = await run(async () => {
-    session.user = await call(() =>
+  const me = await attempt(() =>
+    call(() =>
       api.POST('/api/v1/auth/login', { body: { email: email.value, password: password.value } }),
-    )
-  })
-  if (ok) await router.replace(afterSignIn(route.query.next))
+    ),
+  )
+  if (me && (await session.signedIn(me))) {
+    await router.replace(afterSignIn(route.query.next))
+  }
 }
 </script>
 
