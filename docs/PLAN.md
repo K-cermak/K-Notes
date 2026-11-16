@@ -22,14 +22,14 @@ Done when: `just docker` succeeds, the container shows a placeholder page that d
 
 ## Phase 1: Accounts and sessions
 
-- [ ] Users, sessions, invites, settings tables.
-- [ ] Setup screen that creates the admin when there are no users.
-- [ ] Login, logout, current user, profile settings (display name, locale, theme, default view), change password (revoking other sessions), list and revoke sessions.
-- [ ] Cookie sessions, origin check, login throttling, security headers (section 7).
-- [ ] Admin API: list users, invite links, password reset links, deactivate and reactivate, delete, granting and revoking admin rights with the last-admin and self-change guards (section 7), registration toggle.
-- [ ] Invite acceptance, self-registration and password reset pages.
-- [ ] CLI: `reset-password`, `disable-totp`, `make-admin`.
-- [ ] Minimal setup and login screens, enough to obtain a session.
+- [x] Users, sessions, invites, settings tables.
+- [x] Setup screen that creates the admin when there are no users.
+- [x] Login, logout, current user, profile settings (display name, locale, theme, default view), change password (revoking other sessions), list and revoke sessions.
+- [x] Cookie sessions, origin check, login throttling, security headers (section 7).
+- [x] Admin API: list users, invite links, password reset links, deactivate and reactivate, delete, granting and revoking admin rights with the last-admin and self-change guards (section 7), registration toggle.
+- [x] Invite acceptance, self-registration and password reset pages.
+- [x] CLI: `reset-password`, `disable-totp`, `make-admin`.
+- [x] Minimal setup and login screens, enough to obtain a session.
 
 Done when: pytest covers the flows above, including that a non-admin cannot reach admin endpoints, that the last active admin cannot be demoted, deactivated or deleted, that admins cannot demote or deactivate themselves, that an invite or reset link works once and expires, and that a deactivated user's session stops working at once and they cannot log in again; and on a fresh instance you can create the admin, invite a second user by link, log out and log in through the browser.
 
