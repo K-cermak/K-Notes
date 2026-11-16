@@ -366,6 +366,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sync/push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push */
+        post: operations["push"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sync/pull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pull Changes */
+        get: operations["pull_changes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sync/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Events
+         * @description Sends `change` with the user's counter whenever it moves, and a heartbeat comment.
+         */
+        get: operations["events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -400,6 +454,74 @@ export interface components {
             /** Is Admin */
             is_admin?: boolean | null;
         };
+        /** AttachmentRow */
+        AttachmentRow: {
+            /** Id */
+            id: string;
+            /** Seq */
+            seq: number;
+            /** Deleted */
+            deleted: boolean;
+            /** Note Id */
+            note_id: string;
+            /** Blob Hash */
+            blob_hash: string;
+            /** Mime */
+            mime: string;
+            /** Width */
+            width: number;
+            /** Height */
+            height: number;
+            /** Size */
+            size: number;
+            /** Position */
+            position: string;
+        };
+        /** Changes */
+        Changes: {
+            /**
+             * Notes
+             * @default []
+             */
+            notes: components["schemas"]["NoteRow"][];
+            /**
+             * Checklist Items
+             * @default []
+             */
+            checklist_items: components["schemas"]["ChecklistItemRow"][];
+            /**
+             * Labels
+             * @default []
+             */
+            labels: components["schemas"]["LabelRow"][];
+            /**
+             * Note Labels
+             * @default []
+             */
+            note_labels: components["schemas"]["NoteLabelRow"][];
+            /**
+             * Attachments
+             * @default []
+             */
+            attachments: components["schemas"]["AttachmentRow"][];
+        };
+        /** ChecklistItemRow */
+        ChecklistItemRow: {
+            /** Id */
+            id: string;
+            /** Seq */
+            seq: number;
+            /** Deleted */
+            deleted: boolean;
+            /** Note Id */
+            note_id: string;
+            /** Text */
+            text: string;
+            /** Checked */
+            checked: boolean;
+            /** Position */
+            position: string;
+        };
         /**
          * CreatedLink
          * @description A one-time link. The URL is only available in this response; the server keeps a hash.
@@ -418,6 +540,15 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        HardBreak: {
+            [key: string]: unknown;
+        };
+        Heading: {
+            [key: string]: unknown;
+        };
+        HeadingAttrs: {
+            [key: string]: unknown;
         };
         /** HealthResponse */
         HealthResponse: {
@@ -464,6 +595,17 @@ export interface components {
             /** Email */
             email?: string | null;
         };
+        /** LabelRow */
+        LabelRow: {
+            /** Id */
+            id: string;
+            /** Seq */
+            seq: number;
+            /** Deleted */
+            deleted: boolean;
+            /** Name */
+            name: string;
+        };
         /** LinkInfo */
         LinkInfo: {
             /** Email */
@@ -475,6 +617,9 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        Mark: {
+            [key: string]: unknown;
         };
         /** Me */
         Me: {
@@ -504,6 +649,95 @@ export interface components {
             has_password: boolean;
             /** Oidc Linked */
             oidc_linked: boolean;
+        };
+        /** NoteLabelRow */
+        NoteLabelRow: {
+            /** Id */
+            id: string;
+            /** Seq */
+            seq: number;
+            /** Deleted */
+            deleted: boolean;
+            /** Note Id */
+            note_id: string;
+            /** Label Id */
+            label_id: string;
+        };
+        /** NoteRow */
+        NoteRow: {
+            /** Id */
+            id: string;
+            /** Seq */
+            seq: number;
+            /** Deleted */
+            deleted: boolean;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "text" | "checklist";
+            /** Title */
+            title: string;
+            content: components["schemas"]["RichDoc"];
+            /**
+             * Color
+             * @enum {string}
+             */
+            color: "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "fog" | "storm" | "dusk" | "blossom" | "clay" | "chalk";
+            /** Pinned */
+            pinned: boolean;
+            /** Archived */
+            archived: boolean;
+            /** Trashed At */
+            trashed_at: number | null;
+            /** Position */
+            position: string;
+            /** Conflict Of */
+            conflict_of: string | null;
+            /** Created At */
+            created_at: number;
+            /** Updated At */
+            updated_at: number;
+        };
+        /** Op */
+        Op: {
+            /** Op Id */
+            op_id: string;
+            /** Entity */
+            entity: string;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "upsert" | "purge";
+            /**
+             * Fields
+             * @default {}
+             */
+            fields: {
+                [key: string]: unknown;
+            };
+            /** Base Seq */
+            base_seq: number;
+            /** Edited At */
+            edited_at: number;
+        };
+        /** OpResult */
+        OpResult: {
+            /** Op Id */
+            op_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "gone" | "rejected";
+            /** Error */
+            error?: string | null;
+        };
+        Paragraph: {
+            [key: string]: unknown;
         };
         /** PasswordChange */
         PasswordChange: {
@@ -564,6 +798,28 @@ export interface components {
             /** Max Image Mb */
             max_image_mb: number;
         };
+        /** PullResponse */
+        PullResponse: {
+            /** Seq */
+            seq: number;
+            /** Has More */
+            has_more: boolean;
+            changes: components["schemas"]["Changes"];
+        };
+        /** PushRequest */
+        PushRequest: {
+            /** Device Id */
+            device_id: string;
+            /** Ops */
+            ops: components["schemas"]["Op"][];
+        };
+        /** PushResponse */
+        PushResponse: {
+            /** Seq */
+            seq: number;
+            /** Results */
+            results: components["schemas"]["OpResult"][];
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /** Email */
@@ -572,6 +828,9 @@ export interface components {
             display_name: string;
             /** Password */
             password: string;
+        };
+        RichDoc: {
+            [key: string]: unknown;
         };
         /** SessionInfo */
         SessionInfo: {
@@ -600,6 +859,9 @@ export interface components {
             display_name: string;
             /** Password */
             password: string;
+        };
+        Text: {
+            [key: string]: unknown;
         };
         /** TokenRequest */
         TokenRequest: {
@@ -1402,6 +1664,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InstanceStatus"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    push: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushResponse"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    pull_changes: {
+        parameters: {
+            query?: {
+                since?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PullResponse"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-Sent Events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
                 };
             };
             /** @description Default Response */

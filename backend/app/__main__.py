@@ -24,6 +24,8 @@ def main() -> None:
         proxy_headers=bool(settings.trusted_proxies),
         forwarded_allow_ips=settings.trusted_proxies or None,
         server_header=False,
+        # Open event streams would otherwise hold up a restart until every client disconnects.
+        timeout_graceful_shutdown=5,
     )
 
 
