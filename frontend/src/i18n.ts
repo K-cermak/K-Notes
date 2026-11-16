@@ -8,4 +8,10 @@ export const i18n = createI18n<[MessageSchema], 'en'>({
   locale: 'en',
   fallbackLocale: 'en',
   messages: { en },
+  datetimeFormats: {
+    en: {
+      time: { hour: 'numeric', minute: '2-digit' },
+      date: { day: 'numeric', month: 'short', year: 'numeric' },
+    },
+  },
 })

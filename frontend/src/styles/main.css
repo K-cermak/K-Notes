@@ -158,3 +158,60 @@
     }
   }
 }
+
+/* Note text in cards and the editor: headings stay modest, as in a small card. */
+@layer components {
+  .rich-text h3,
+  .ProseMirror h1 {
+    font-size: 18px;
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .rich-text h4,
+  .ProseMirror h2 {
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .rich-text > * + *,
+  .ProseMirror > * + * {
+    margin-top: 2px;
+  }
+
+  .ProseMirror {
+    position: relative;
+    outline: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    font-variant-ligatures: none;
+    font-feature-settings: 'liga' 0;
+    -webkit-touch-callout: none;
+  }
+
+  .ProseMirror [contenteditable='false'] {
+    white-space: normal;
+  }
+
+  .ProseMirror-hideselection *::selection {
+    background: transparent;
+  }
+
+  .ProseMirror-separator {
+    display: inline !important;
+    border: none !important;
+    margin: 0 !important;
+  }
+
+  .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--faint);
+    pointer-events: none;
+  }
+}

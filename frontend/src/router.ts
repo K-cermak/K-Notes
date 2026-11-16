@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
+import type { NotesView } from '@/notes'
 import { useInstanceStore } from '@/stores/instance'
 import { useSessionStore } from '@/stores/session'
 
@@ -10,13 +10,21 @@ declare module 'vue-router' {
     /** Only for visitors who are not signed in; signed-in users go home. */
     guestOnly?: boolean
     admin?: boolean
+    /** Which list the shell shows; note routes keep the previous one behind the editor. */
+    view?: NotesView
   }
 }
+
+// The shell carries Tiptap, so it loads on its own; every list route shares the one instance.
+const AppShell = () => import('@/views/AppShell.vue')
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', name: 'home', component: HomeView },
+    { path: '/', name: 'notes', component: AppShell, meta: { view: 'notes' } },
+    { path: '/archive', name: 'archive', component: AppShell, meta: { view: 'archive' } },
+    { path: '/trash', name: 'trash', component: AppShell, meta: { view: 'trash' } },
+    { path: '/note/:id', name: 'note', component: AppShell },
     {
       path: '/setup',
       name: 'setup',
@@ -80,11 +88,11 @@ router.beforeEach(async (to) => {
   }
   if (!session.loaded) await session.load()
   if (to.name === 'setup') return { name: session.user ? 'home' : 'login' }
-  if (to.meta.guestOnly && session.user && !session.expired) return { name: 'home' }
+  if (to.meta.guestOnly && session.user && !session.expired) return { name: 'notes' }
   if (!to.meta.public && !session.user) {
     return { name: 'login', query: to.fullPath === '/' ? {} : { next: to.fullPath } }
   }
-  if (to.meta.admin && !session.user?.is_admin) return { name: 'home' }
+  if (to.meta.admin && !session.user?.is_admin) return { name: 'notes' }
   return true
 })
 

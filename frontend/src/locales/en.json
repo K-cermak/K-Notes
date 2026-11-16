@@ -58,13 +58,16 @@
   "notFound": "This page does not exist.",
   "common": {
     "back": "Back",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "close": "Close",
+    "undo": "Undo"
   },
   "account": {
     "displayName": "Display name",
     "email": "E-mail",
     "password": "Password",
-    "passwordHint": "At least 10 characters."
+    "passwordHint": "At least 10 characters.",
+    "menu": "Account"
   },
   "setup": {
     "title": "Set up {name}",
@@ -153,15 +156,87 @@
     "unsentMessage": "This device has {count} change that has not reached the server. It will be lost. | This device has {count} changes that have not reached the server. They will be lost.",
     "discard": "Discard and continue"
   },
-  "plain": {
+  "note": {
     "title": "Title",
-    "text": "Note",
-    "newTitle": "New note title",
-    "newText": "New note text",
-    "add": "Add note",
+    "body": "Take a note…",
+    "untitled": "Untitled note",
+    "emptyCard": "Empty note",
+    "editor": "Edit note",
+    "color": "Background colour",
+    "pin": "Pin note",
+    "unpin": "Unpin note",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "more": "More",
     "delete": "Delete note",
-    "empty": "No notes yet.",
-    "conflict": "Conflicted copy",
-    "dismissConflict": "Dismiss conflict marker"
+    "copy": "Make a copy",
+    "restore": "Restore",
+    "deleteForever": "Delete forever",
+    "deleteForeverTitle": "Delete this note forever?",
+    "deleteForeverMessage": "It will be removed from all your devices. This cannot be undone.",
+    "archived": "Note archived",
+    "unarchived": "Note unarchived",
+    "trashed": "Note moved to trash",
+    "restored": "Note restored",
+    "copied": "Copy created",
+    "edited": "Edited {time}",
+    "conflictCopy": "Conflicted copy",
+    "openOriginal": "Open original",
+    "dismissConflict": "Dismiss"
+  },
+  "colors": {
+    "default": "Default",
+    "coral": "Coral",
+    "peach": "Peach",
+    "sand": "Sand",
+    "mint": "Mint",
+    "sage": "Sage",
+    "fog": "Fog",
+    "storm": "Storm",
+    "dusk": "Dusk",
+    "blossom": "Blossom",
+    "clay": "Clay",
+    "chalk": "Chalk"
+  },
+  "format": {
+    "title": "Formatting",
+    "h1": "Heading 1",
+    "h2": "Heading 2",
+    "normal": "Normal text",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "clear": "Clear formatting"
+  },
+  "composer": {
+    "placeholder": "Take a note…",
+    "new": "New note"
+  },
+  "notes": {
+    "pinned": "Pinned",
+    "others": "Others"
+  },
+  "empty": {
+    "notes": "Notes you add appear here",
+    "archive": "Your archived notes appear here",
+    "trash": "No notes in the trash"
+  },
+  "trash": {
+    "notice": "Notes in the trash are deleted after {days} day. | Notes in the trash are deleted after {days} days.",
+    "empty": "Empty trash",
+    "emptyTitle": "Empty the trash?",
+    "emptyMessage": "All notes in the trash will be deleted forever, on all your devices."
+  },
+  "nav": {
+    "label": "Main",
+    "notes": "Notes",
+    "archive": "Archive",
+    "trash": "Trash"
+  },
+  "topbar": {
+    "menu": "Main menu",
+    "settings": "Settings",
+    "gridView": "Grid view",
+    "listView": "List view"
   }
 }

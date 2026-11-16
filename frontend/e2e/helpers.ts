@@ -45,3 +45,40 @@ export async function signedIn(
   await expect(page.getByTestId('sync-status')).toHaveAttribute('data-state', 'synced')
   return { context, page }
 }
+
+/** Writes a note through the "Take a note…" composer. */
+export async function addNote(page: Page, title: string, body = ''): Promise<void> {
+  await page.getByTestId('composer').click()
+  const form = page.getByTestId('note-form')
+  await form.getByTestId('editor-title').fill(title)
+  if (body) {
+    await form.getByTestId('editor-body').click()
+    await page.keyboard.type(body)
+  }
+  await form.getByTestId('close-note').click()
+  await expect(card(page, title)).toBeVisible()
+}
+
+export function card(page: Page, title: string) {
+  return page
+    .getByTestId('note-card')
+    .filter({ has: page.getByTestId('card-title').getByText(title, { exact: true }) })
+}
+
+export async function openNote(page: Page, title: string): Promise<void> {
+  await card(page, title).getByTestId('card-title').click()
+  await expect(page.getByTestId('editor')).toBeVisible()
+}
+
+/** Sets the title of the open note and closes the editor, which saves at once. */
+export async function retitle(page: Page, from: string, to: string): Promise<void> {
+  await openNote(page, from)
+  await page.getByTestId('editor-title').fill(to)
+  await page.getByTestId('close-note').click()
+  await expect(page.getByTestId('editor')).toHaveCount(0)
+}
+
+export async function accountMenu(page: Page, item: string): Promise<void> {
+  await page.getByTestId('account-menu').click()
+  await page.getByRole('menuitem', { name: item }).click()
+}
