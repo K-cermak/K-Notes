@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api, call, isFailure, type Me } from '@/api/client'
+import type { components } from '@/api/schema'
 import { i18n } from '@/i18n'
 import {
   cachedProfile,
@@ -9,8 +10,12 @@ import {
   unsentCount,
   wipeLocalData,
 } from '@/db/identity'
+import { getMeta, setMeta } from '@/db/meta'
 import { db } from '@/db/schema'
 import { useConfirmStore } from './confirm'
+
+type ProfileUpdate = components['schemas']['ProfileUpdate']
+const PENDING_PROFILE = 'profilePatch'
 
 export const useSessionStore = defineStore('session', () => {
   const user = ref<Me | null>(null)
@@ -35,7 +40,8 @@ export const useSessionStore = defineStore('session', () => {
   async function load(): Promise<void> {
     try {
       const me = await call(() => api.GET('/api/v1/me'))
-      if (!(await signedIn(me))) user.value = null
+      const pending = (await getMeta<ProfileUpdate>(db, PENDING_PROFILE)) ?? {}
+      if (!(await signedIn({ ...me, ...pending } as Me))) user.value = null
       offline.value = false
     } catch (e) {
       if (!isFailure(e)) throw e
@@ -83,5 +89,33 @@ export const useSessionStore = defineStore('session', () => {
     return true
   }
 
-  return { user, loaded, expired, offline, load, signedIn, logout }
+  /**
+   * Applies a profile change at once and sends it to the server; offline it waits in the local
+   * database and goes out with the next successful sync (SPEC 9, Visual design).
+   */
+  async function updateProfile(patch: ProfileUpdate): Promise<void> {
+    if (!user.value) return
+    // A plain object: IndexedDB cannot store Vue's reactive proxy.
+    const next = { ...user.value, ...patch } as Me
+    user.value = next
+    await rememberUser(db, next)
+    const pending = { ...((await getMeta<ProfileUpdate>(db, PENDING_PROFILE)) ?? {}), ...patch }
+    await setMeta(db, PENDING_PROFILE, pending)
+    await sendProfile()
+  }
+
+  async function sendProfile(): Promise<void> {
+    const pending = await getMeta<ProfileUpdate>(db, PENDING_PROFILE)
+    if (!pending) return
+    try {
+      await call(() => api.PATCH('/api/v1/me', { body: pending }))
+      await db.meta.delete(PENDING_PROFILE)
+    } catch (e) {
+      if (!isFailure(e)) throw e
+      // Kept for the next attempt; a refused value is dropped so it does not block later changes.
+      if (e.status !== null && e.status !== 401) await db.meta.delete(PENDING_PROFILE)
+    }
+  }
+
+  return { user, loaded, expired, offline, load, signedIn, logout, updateProfile, sendProfile }
 })
