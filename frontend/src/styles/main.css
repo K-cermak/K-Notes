@@ -1,0 +1,160 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+/* The light-dark() tokens follow color-scheme, so switching theme only has to flip that one property. */
+:root {
+  color-scheme: light dark;
+
+  --bg: light-dark(#ffffff, #0a0a0a);
+  --ink: light-dark(#171717, #ededed);
+  --muted: light-dark(#666666, #a1a1a1);
+  --faint: light-dark(#8f8f8f, #8f8f8f);
+  --line: light-dark(#eaeaea, #2e2e2e);
+  --line-hover: light-dark(#c9c9c9, #454545);
+  --ring: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.14));
+  --accent: #1f6fd6;
+  --accent-hover: #1a5fc8;
+  --on-accent: #ffffff;
+  --danger: light-dark(#d1242f, #ff6369);
+  --warning: light-dark(#b45309, #f5a524);
+  --success: light-dark(#1a8c3e, #3fb950);
+  --float: light-dark(0 8px 24px -6px rgb(0 0 0 / 0.12), 0 8px 24px -6px rgb(0 0 0 / 0.6));
+
+  --note-default: var(--bg);
+  --note-coral: light-dark(#faafa8, #77172e);
+  --note-peach: light-dark(#f39f76, #692b17);
+  --note-sand: light-dark(#fff8b8, #7c4a03);
+  --note-mint: light-dark(#e2f6d3, #264d3b);
+  --note-sage: light-dark(#b4ddd3, #0c625d);
+  --note-fog: light-dark(#d4e4ed, #256377);
+  --note-storm: light-dark(#aeccdc, #284255);
+  --note-dusk: light-dark(#d3bfdb, #472e5b);
+  --note-blossom: light-dark(#f6e2dd, #6c394f);
+  --note-clay: light-dark(#e9e3d4, #4b443a);
+  --note-chalk: light-dark(#efeff1, #232427);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* Resetting the default palette, radii and shadows means a raw colour or a rounded corner cannot slip in through a utility class. */
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-label: 13px;
+  --text-label--line-height: 1.4;
+  --text-meta: 12px;
+  --text-meta--line-height: 1.4;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  --animate-rise: rise 240ms var(--ease-out) both;
+  --animate-fade: fade 240ms var(--ease-out) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-hover: var(--line-hover);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --shadow-float: var(--float);
+
+  --color-note-default: var(--note-default);
+  --color-note-coral: var(--note-coral);
+  --color-note-peach: var(--note-peach);
+  --color-note-sand: var(--note-sand);
+  --color-note-mint: var(--note-mint);
+  --color-note-sage: var(--note-sage);
+  --color-note-fog: var(--note-fog);
+  --color-note-storm: var(--note-storm);
+  --color-note-dusk: var(--note-dusk);
+  --color-note-blossom: var(--note-blossom);
+  --color-note-clay: var(--note-clay);
+  --color-note-chalk: var(--note-chalk);
+}
+
+/* Touch devices keep :hover after a tap, so hover styles only apply to a real pointer. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* CSS outranks the presentation attributes Lucide writes, which keeps every icon consistent. */
+  svg.lucide {
+    stroke-width: 1.6;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+    flex-shrink: 0;
+  }
+
+  :where(button, a, [role='button'], [role='checkbox'], summary):focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* Movement becomes a fade or nothing; colour changes stay. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-property: color, background-color, border-color, box-shadow, opacity !important;
+    }
+  }
+}
