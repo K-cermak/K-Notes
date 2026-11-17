@@ -115,9 +115,9 @@ Done when: pytest covers TOTP, recovery codes, token auth and token scope limits
 
 Requested by the owner after phase 9; specified in SPEC section 7, Storage quotas.
 
-- [ ] A limit on the data each user can store: an instance default, which may be unlimited, and a per-user override set by an admin. Admins are always unlimited.
-- [ ] Over the limit, the user cannot create notes or add images; everything else stays allowed, and deleting gets them back under it.
-- [ ] Usage and the limit shown in settings and in the admin user list.
+- [x] A limit on the data each user can store: an instance default, which may be unlimited, and a per-user override set by an admin. Admins are always unlimited.
+- [x] Over the limit, the user cannot create notes or add images; everything else stays allowed, and deleting gets them back under it.
+- [x] Usage and the limit shown in settings and in the admin user list.
 
 Done when: a user over the limit cannot create notes or add images in the app and is told why, the REST API refuses new notes for them, they can still read, edit and delete, and they can create again after deleting enough; an admin is never limited.
 
