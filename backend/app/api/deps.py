@@ -1,10 +1,12 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Request, Response
+from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.db import Database, DbSession
+from app.db import READ_METHODS, Database, DbSession
 from app.errors import ForbiddenError, UnauthorizedError
 from app.models import AuthSession, User
 from app.services import sessions
@@ -55,6 +57,20 @@ class Auth:
     token: str
 
 
+def _write(request: Request, db: Session, work: Callable[[Session], None]) -> None:
+    """Runs a small bookkeeping write while authenticating.
+
+    A read request gets its own short write transaction, so it keeps its read-only one. A write
+    request already holds the write lock through db, and a second writer would wait for it in vain.
+    """
+    if request.method in READ_METHODS:
+        database: Database = request.app.state.db
+        with database.writer() as writer:
+            work(writer)
+    else:
+        work(db)
+
+
 def get_auth(request: Request, response: Response, db: DbSession, settings: AppSettings) -> Auth:
     token = request.cookies.get(SESSION_COOKIE)
     found = sessions.resolve(db, token) if token else None
@@ -62,10 +78,7 @@ def get_auth(request: Request, response: Response, db: DbSession, settings: AppS
         raise UnauthorizedError()
     session, user = found
     if sessions.touch_due(session):
-        # Its own short write transaction, so plain GET requests can keep their read-only one.
-        database: Database = request.app.state.db
-        with database.writer() as writer:
-            sessions.touch(writer, settings, session.id)
+        _write(request, db, lambda writer: sessions.touch(writer, settings, session.id))
         set_session_cookie(response, settings, token)
     return Auth(user=user, session=session, token=token)
 

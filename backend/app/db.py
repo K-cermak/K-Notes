@@ -61,12 +61,12 @@ class Database:
         self.write_engine.dispose()
 
 
-_READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
 
 def get_session(request: Request) -> Iterator[Session]:
     db: Database = request.app.state.db
-    factory = db.reader if request.method in _READ_METHODS else db.writer
+    factory = db.reader if request.method in READ_METHODS else db.writer
     with factory() as session:
         yield session
 

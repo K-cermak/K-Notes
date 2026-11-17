@@ -97,6 +97,13 @@ def test_session_slides_forward_on_use(admin: TestClient, fake_clock: FakeClock)
     assert admin.get("/api/v1/me").status_code == 200
 
 
+def test_a_write_after_an_idle_hour_slides_the_session_too(admin: TestClient, fake_clock: FakeClock) -> None:
+    # The write request already holds the database write lock, so the sliding must not wait for it.
+    fake_clock.advance(DAY_MS)
+    assert admin.patch("/api/v1/me", json={"display_name": "Ada"}).status_code == 200
+    assert "session" in admin.cookies
+
+
 def test_registration_is_closed_by_default(client: TestClient, admin: TestClient) -> None:
     body = {"email": "new@example.com", "display_name": "New", "password": PASSWORD}
     response = client.post("/api/v1/auth/register", json=body)
