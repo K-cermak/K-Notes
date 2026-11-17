@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { ListChecks } from '@lucide/vue'
+import { ImagePlus, ListChecks } from '@lucide/vue'
 import type { LocalNote } from '@/db/schema'
 import NoteForm from '@/components/notes/NoteForm.vue'
+import { pickImages } from '@/composables/useImageAttach'
 import { iconButton } from '@/components/ui/menu'
 
 // The desktop "Take a note…" bar; it expands in place and saves when it loses focus (SPEC 9).
@@ -10,6 +11,7 @@ defineProps<{ labelIds?: string[] }>()
 
 const open = ref(false)
 const type = ref<LocalNote['type']>('text')
+const files = ref<File[]>([])
 const root = ref<HTMLElement | null>(null)
 const form = ref<{ finish: () => Promise<void> } | null>(null)
 
@@ -30,9 +32,15 @@ function onPointerDown(event: PointerEvent): void {
 onMounted(() => document.addEventListener('pointerdown', onPointerDown))
 onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown))
 
-function start(kind: LocalNote['type'] = 'text'): void {
+function start(kind: LocalNote['type'] = 'text', images: File[] = []): void {
   type.value = kind
+  files.value = images
   open.value = true
+}
+
+async function startWithImages(): Promise<void> {
+  const picked = await pickImages()
+  if (picked.length > 0) start('text', picked)
 }
 
 defineExpose({ start })
@@ -62,6 +70,16 @@ defineExpose({ start })
       >
         <ListChecks :size="18" />
       </button>
+      <button
+        type="button"
+        :class="iconButton"
+        :aria-label="$t('images.newNote')"
+        :title="$t('images.newNote')"
+        data-testid="composer-image"
+        @click="startWithImages"
+      >
+        <ImagePlus :size="18" />
+      </button>
     </div>
     <div
       v-else
@@ -72,6 +90,7 @@ defineExpose({ start })
         :note-id="null"
         :type="type"
         :label-ids="labelIds"
+        :files="files"
         :autofocus="type === 'checklist' ? 'body' : 'title'"
         @close="close"
       />

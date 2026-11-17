@@ -70,6 +70,8 @@ export const useSessionStore = defineStore('session', () => {
       await wipeLocalData(db)
     }
     await rememberUser(db, me)
+    // Asks the browser not to evict the notes under storage pressure (SPEC 6).
+    void navigator.storage?.persist?.().catch(() => false)
     user.value = me
     expired.value = false
     loaded.value = true

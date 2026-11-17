@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Archive, Lightbulb, Search, Tag, Trash2 } from '@lucide/vue'
 import { byName } from '@/db/labels'
 import { byPosition } from '@/db/notes'
-import { db, type LocalChecklistItem, type LocalLabel } from '@/db/schema'
+import { db, type LocalAttachment, type LocalChecklistItem, type LocalLabel } from '@/db/schema'
 import { matches } from '@/db/search'
 import type { NotesView } from '@/notes'
 import { useLiveQuery } from '@/composables/useLiveQuery'
@@ -24,16 +24,19 @@ const all = useLiveQuery(async () => (await db.notes.toArray()).sort(byPosition)
 const labelRows = useLiveQuery(() => db.labels.toArray(), [])
 const memberships = useLiveQuery(() => db.noteLabels.toArray(), [])
 const items = useLiveQuery(async () => (await db.checklistItems.toArray()).sort(byPosition), [])
+const attachments = useLiveQuery(async () => (await db.attachments.toArray()).sort(byPosition), [])
 
-const itemsByNote = computed(() => {
-  const result = new Map<string, LocalChecklistItem[]>()
-  for (const item of items.value) {
-    const list = result.get(item.note_id)
-    if (list) list.push(item)
-    else result.set(item.note_id, [item])
+function byNote<T extends { note_id: string }>(rows: T[]): Map<string, T[]> {
+  const result = new Map<string, T[]>()
+  for (const row of rows) {
+    const list = result.get(row.note_id)
+    if (list) list.push(row)
+    else result.set(row.note_id, [row])
   }
   return result
-})
+}
+const itemsByNote = computed(() => byNote<LocalChecklistItem>(items.value))
+const attachmentsByNote = computed(() => byNote<LocalAttachment>(attachments.value))
 
 const labelsByNote = computed(() => {
   const byId = new Map(labelRows.value.map((label) => [label.id, label]))
@@ -122,6 +125,7 @@ const empty = computed(() => {
         :layout="layout"
         :labels="labelsByNote"
         :items="itemsByNote"
+        :attachments="attachmentsByNote"
         :heading="heading ? $t(heading) : undefined"
       />
     </template>

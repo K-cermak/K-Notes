@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Archive, ArchiveRestore, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
+import { Archive, ArchiveRestore, ImagePlus, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
 import { convertNote, updateItem } from '@/db/checklist'
-import type { LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
+import type { LocalAttachment, LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import LabelChips from '@/components/labels/LabelChips.vue'
 import LabelPicker from '@/components/labels/LabelPicker.vue'
 import { updateNote } from '@/db/notes'
@@ -12,6 +12,9 @@ import { noteBackground, noteLine } from '@/notes'
 import { useNoteActions } from '@/composables/useNoteActions'
 import { iconButton } from '@/components/ui/menu'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
+import ImageCollage from '@/components/images/ImageCollage.vue'
+import { useImageAttach } from '@/composables/useImageAttach'
+import { useSyncStore } from '@/stores/sync'
 import ColorPicker from './ColorPicker.vue'
 import NoteMenu from './NoteMenu.vue'
 import RichTextView from './RichTextView'
@@ -20,10 +23,13 @@ const props = defineProps<{
   note: LocalNote
   labels: LocalLabel[]
   items: LocalChecklistItem[]
+  attachments: LocalAttachment[]
 }>()
 
 const router = useRouter()
 const actions = useNoteActions()
+const images = useImageAttach()
+const sync = useSyncStore()
 const body = ref<HTMLElement | null>(null)
 const clipped = ref(false)
 const picking = ref(false)
@@ -39,11 +45,12 @@ const checklist = computed(() => props.note.type === 'checklist')
 // Checklists show unchecked items, then a count of the checked ones (SPEC 9, Note card).
 const openItems = computed(() => props.items.filter((item) => !item.checked))
 const checkedCount = computed(() => props.items.length - openItems.value.length)
-const empty = computed(() =>
-  checklist.value
-    ? !props.note.title && !props.items.some((item) => item.text.trim())
-    : !props.note.title && !plainText(props.note.content).trim(),
-)
+const empty = computed(() => {
+  if (props.note.title || props.attachments.length > 0) return false
+  return checklist.value
+    ? !props.items.some((item) => item.text.trim())
+    : !plainText(props.note.content).trim()
+})
 
 // Long content is cut off with a fade (SPEC 9, Note card). Measured again whenever the card or
 // its content changes size, since the first layout happens before the masonry width is known.
@@ -81,6 +88,12 @@ function open(): void {
     @click="open"
     @keydown.enter.self="open"
   >
+    <ImageCollage
+      :attachments="attachments"
+      lazy
+      @open="open"
+      @missing="sync.downloadImages(note.id)"
+    />
     <div class="px-4 pt-3 pb-2">
       <p
         v-if="note.conflict_of"
@@ -174,6 +187,16 @@ function open(): void {
           :model-value="color"
           @update:model-value="(value) => updateNote(note.id, { color: value })"
         />
+        <button
+          type="button"
+          :class="iconButton"
+          :aria-label="$t('images.add')"
+          :title="$t('images.add')"
+          data-testid="card-add-image"
+          @click="images.pickAndAttach(note.id)"
+        >
+          <ImagePlus :size="18" />
+        </button>
         <button
           type="button"
           :class="iconButton"

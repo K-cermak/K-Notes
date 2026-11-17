@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
+import type { LocalAttachment, LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import { useMasonry } from '@/composables/useMasonry'
 import NoteCard from './NoteCard.vue'
 
@@ -10,6 +10,7 @@ const props = defineProps<{
   heading?: string
   labels: Map<string, LocalLabel[]>
   items: Map<string, LocalChecklistItem[]>
+  attachments: Map<string, LocalAttachment[]>
 }>()
 
 const container = ref<HTMLElement | null>(null)
@@ -34,6 +35,7 @@ const { layout: masonry, track } = useMasonry(container, keys)
         :note="note"
         :labels="labels.get(note.id) ?? []"
         :items="items.get(note.id) ?? []"
+        :attachments="attachments.get(note.id) ?? []"
       />
     </div>
     <div
@@ -59,6 +61,7 @@ const { layout: masonry, track } = useMasonry(container, keys)
           :note="note"
           :labels="labels.get(note.id) ?? []"
           :items="items.get(note.id) ?? []"
+          :attachments="attachments.get(note.id) ?? []"
         />
       </div>
     </div>

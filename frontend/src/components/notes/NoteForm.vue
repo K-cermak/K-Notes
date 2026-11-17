@@ -4,7 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { JSONContent } from '@tiptap/core'
 import { Editor, EditorContent } from '@tiptap/vue-3'
-import { Archive, ArchiveRestore, Pin, PinOff, Undo2 } from '@lucide/vue'
+import { Archive, ArchiveRestore, ImagePlus, Pin, PinOff, Undo2 } from '@lucide/vue'
+import { noteAttachments, removeAttachment } from '@/db/attachments'
 import { convertNote } from '@/db/checklist'
 import { byName, setNoteLabel } from '@/db/labels'
 import { createNote, isNoteEmpty, purgeNote, updateNote } from '@/db/notes'
@@ -14,7 +15,11 @@ import { noteExtensions } from '@/editor/extensions'
 import { noteBackground, type NoteColor } from '@/notes'
 import { useDebouncedSave } from '@/composables/useDebouncedSave'
 import { useLiveQuery } from '@/composables/useLiveQuery'
+import { useImageAttach } from '@/composables/useImageAttach'
 import { useNoteActions } from '@/composables/useNoteActions'
+import { useSyncStore } from '@/stores/sync'
+import ImageCollage from '@/components/images/ImageCollage.vue'
+import ImageViewer from '@/components/images/ImageViewer.vue'
 import { iconButton } from '@/components/ui/menu'
 import ChecklistEditor from './ChecklistEditor.vue'
 import ColorPicker from './ColorPicker.vue'
@@ -34,6 +39,8 @@ const props = defineProps<{
   type?: LocalNote['type']
   /** Labels a new note gets, as when it is written in a label's view. */
   labelIds?: string[]
+  /** Images a new note starts with, as from the composer's "New note with image". */
+  files?: File[]
 }>()
 const emit = defineEmits<{ close: [] }>()
 
@@ -43,6 +50,10 @@ const actions = useNoteActions()
 
 const id = ref(props.noteId)
 const note = useLiveQuery(() => (id.value ? db.notes.get(id.value) : undefined), undefined, id)
+const attachments = useLiveQuery(() => (id.value ? noteAttachments(id.value) : []), [], id)
+const viewing = ref<number | null>(null)
+const images = useImageAttach()
+const sync = useSyncStore()
 const labels = useLiveQuery(
   async () => {
     if (!id.value) return []
@@ -241,6 +252,8 @@ function onKeydown(event: KeyboardEvent): void {
 
 onBeforeUnmount(() => editor.value?.destroy())
 
+if (props.files?.length) void images.attachFiles(ensureNote, props.files)
+
 defineExpose({ finish })
 </script>
 
@@ -251,66 +264,82 @@ defineExpose({ finish })
     data-testid="note-form"
     @keydown="onKeydown"
   >
-    <div class="min-h-0 flex-1 overflow-y-auto px-4 pt-3 pb-2">
-      <div
-        v-if="note?.conflict_of"
-        class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] bg-[color-mix(in_srgb,var(--warning)_8%,transparent)] px-3 py-2 text-label"
-        data-testid="conflict"
-      >
-        <span class="flex-1">{{ $t('note.conflictCopy') }}</span>
-        <button
-          type="button"
-          class="cursor-pointer font-medium text-accent"
-          @click="router.push(`/note/${note.conflict_of}`)"
-        >
-          {{ $t('note.openOriginal') }}
-        </button>
-        <button
-          type="button"
-          class="cursor-pointer font-medium text-accent"
-          @click="updateNote(note.id, { conflict_of: null })"
-        >
-          {{ $t('note.dismissConflict') }}
-        </button>
-      </div>
-      <div class="flex items-start gap-2">
-        <input
-          v-model="title"
-          class="min-w-0 flex-1 bg-transparent py-1.5 text-base font-semibold tracking-[-0.01em] outline-none placeholder:text-faint"
-          :placeholder="$t('note.title')"
-          :aria-label="$t('note.title')"
-          :readonly="trashed || !loaded"
-          :autofocus="autofocus === 'title'"
-          maxlength="1000"
-          data-testid="editor-title"
-          @input="schedule"
-          @focus="focused = true"
-          @blur="((focused = false), flush())"
-        />
-        <button
-          v-if="!trashed"
-          type="button"
-          :class="[iconButton, '-mr-2', pinned && 'text-ink']"
-          :aria-label="$t(pinned ? 'note.unpin' : 'note.pin')"
-          :aria-pressed="pinned"
-          :title="$t(pinned ? 'note.unpin' : 'note.pin')"
-          @click="togglePin"
-        >
-          <PinOff v-if="pinned" :size="18" />
-          <Pin v-else :size="18" />
-        </button>
-      </div>
-      <!-- v-show: the editor keeps its instance while the note is a checklist. -->
-      <EditorContent v-show="noteType === 'text'" :editor="editor" class="min-h-12 pb-2" />
-      <ChecklistEditor
-        v-if="noteType === 'checklist' && loaded"
-        ref="checklist"
-        :note-id="id"
-        :readonly="trashed"
-        :ensure-note="ensureNote"
-        :autofocus="autofocus === 'body'"
+    <div class="min-h-0 flex-1 overflow-y-auto">
+      <ImageCollage
+        :attachments="attachments"
+        :removable="!trashed"
+        @open="(index) => (viewing = index)"
+        @remove="removeAttachment"
+        @missing="id && sync.downloadImages(id)"
       />
-      <LabelChips v-if="id" :note-id="id" :labels="labels" :color="color" class="pt-1 pb-2" />
+      <ImageViewer v-model:index="viewing" :attachments="attachments" />
+      <div class="px-4 pt-3 pb-2">
+        <div
+          v-if="note?.conflict_of"
+          class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] bg-[color-mix(in_srgb,var(--warning)_8%,transparent)] px-3 py-2 text-label"
+          data-testid="conflict"
+        >
+          <span class="flex-1">{{ $t('note.conflictCopy') }}</span>
+          <button
+            type="button"
+            class="cursor-pointer font-medium text-accent"
+            @click="router.push(`/note/${note.conflict_of}`)"
+          >
+            {{ $t('note.openOriginal') }}
+          </button>
+          <button
+            type="button"
+            class="cursor-pointer font-medium text-accent"
+            @click="updateNote(note.id, { conflict_of: null })"
+          >
+            {{ $t('note.dismissConflict') }}
+          </button>
+        </div>
+        <div class="flex items-start gap-2">
+          <input
+            v-model="title"
+            class="min-w-0 flex-1 bg-transparent py-1.5 text-base font-semibold tracking-[-0.01em] outline-none placeholder:text-faint"
+            :placeholder="$t('note.title')"
+            :aria-label="$t('note.title')"
+            :readonly="trashed || !loaded"
+            :autofocus="autofocus === 'title'"
+            maxlength="1000"
+            data-testid="editor-title"
+            @input="schedule"
+            @focus="focused = true"
+            @blur="((focused = false), flush())"
+          />
+          <button
+            v-if="!trashed"
+            type="button"
+            :class="[iconButton, '-mr-2', pinned && 'text-ink']"
+            :aria-label="$t(pinned ? 'note.unpin' : 'note.pin')"
+            :aria-pressed="pinned"
+            :title="$t(pinned ? 'note.unpin' : 'note.pin')"
+            @click="togglePin"
+          >
+            <PinOff v-if="pinned" :size="18" />
+            <Pin v-else :size="18" />
+          </button>
+        </div>
+        <!-- v-show: the editor keeps its instance while the note is a checklist. -->
+        <EditorContent v-show="noteType === 'text'" :editor="editor" class="min-h-12 pb-2" />
+        <ChecklistEditor
+          v-if="noteType === 'checklist' && loaded"
+          ref="checklist"
+          :note-id="id"
+          :readonly="trashed"
+          :ensure-note="ensureNote"
+          :autofocus="autofocus === 'body'"
+        />
+        <LabelChips v-if="id" :note-id="id" :labels="labels" :color="color" class="pt-1 pb-2" />
+        <p
+          v-if="edited"
+          class="pt-1 text-right font-mono text-meta text-muted tabular-nums sm:hidden"
+        >
+          {{ edited }}
+        </p>
+      </div>
     </div>
     <div
       class="flex flex-wrap items-center gap-0.5 px-2 pt-1 pb-[max(8px,env(safe-area-inset-bottom))]"
@@ -329,6 +358,16 @@ defineExpose({ finish })
       <template v-else>
         <FormatMenu v-if="noteType === 'text'" :editor="editor" />
         <ColorPicker :model-value="color" @update:model-value="setColor" />
+        <button
+          type="button"
+          :class="iconButton"
+          :aria-label="$t('images.add')"
+          :title="$t('images.add')"
+          data-testid="editor-add-image"
+          @click="images.pickAndAttach(ensureNote)"
+        >
+          <ImagePlus :size="18" />
+        </button>
         <button
           type="button"
           :class="iconButton"
@@ -357,9 +396,13 @@ defineExpose({ finish })
         @restore="run(actions.restore)"
         @purge="note && actions.purge(note.id).then((done) => done && emit('close'))"
       />
-      <span class="ml-auto px-2 font-mono text-meta text-muted tabular-nums" data-testid="edited">{{
-        edited
-      }}</span>
+      <!-- Phones have no room for it next to the buttons; it sits under the content there. -->
+      <span
+        class="ml-auto hidden px-2 font-mono text-meta text-muted tabular-nums sm:inline"
+        data-testid="edited"
+        >{{ edited }}</span
+      >
+      <span class="ml-auto sm:hidden" />
       <button
         type="button"
         class="h-9 cursor-pointer px-4 font-medium text-ink hover:bg-[color-mix(in_srgb,var(--ink)_6%,transparent)]"
