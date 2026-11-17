@@ -128,7 +128,7 @@ test('with images on demand, an image downloads when tapped', async ({ browser }
   const user = await newUser(browser)
   const a = await signedIn(browser, user)
   const b = await signedIn(browser, user)
-  await b.page.getByRole('button', { name: 'Settings' }).click()
+  await b.page.getByRole('button', { name: 'Display options' }).click()
   await b.page.getByTestId('download-on-demand').click()
   await expect(b.page.getByTestId('download-on-demand')).toHaveAttribute('aria-checked', 'true')
   await b.page.keyboard.press('Escape')

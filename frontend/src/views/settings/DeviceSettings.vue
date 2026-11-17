@@ -29,7 +29,7 @@ function megabytes(bytes: number): string {
 
 <template>
   <section class="flex flex-col gap-5">
-    <h2 class="text-base">{{ $t('settings.device.title') }}</h2>
+    <h2 class="ui-section-title">{{ $t('settings.device.title') }}</h2>
     <p class="text-muted">{{ $t('settings.device.intro') }}</p>
     <label class="flex cursor-pointer items-start gap-3">
       <UiCheckbox
@@ -43,7 +43,7 @@ function megabytes(bytes: number): string {
         <span class="text-label text-muted">{{ $t('settings.device.onDemandHint') }}</span>
       </span>
     </label>
-    <p v-if="usage" class="font-mono text-meta text-muted tabular-nums">
+    <p v-if="usage" class="ui-meta">
       {{ $t('settings.storage', { mb: megabytes(usage.used) }) }}
     </p>
   </section>

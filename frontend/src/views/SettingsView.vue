@@ -7,11 +7,7 @@ const sections = ['profile', 'security', 'tokens', 'device'] as const
 <template>
   <main class="mx-auto flex w-full max-w-[760px] flex-col gap-8 px-4 py-6 sm:py-10">
     <header class="flex items-center gap-3">
-      <RouterLink
-        to="/"
-        class="grid size-8 place-items-center text-muted hover:text-ink"
-        :aria-label="$t('common.back')"
-      >
+      <RouterLink to="/" class="ui-icon-button" :aria-label="$t('common.back')">
         <ArrowLeft />
       </RouterLink>
       <h1 class="text-xl leading-tight">{{ $t('settings.title') }}</h1>

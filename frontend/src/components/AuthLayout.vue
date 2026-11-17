@@ -17,11 +17,7 @@ const instance = useInstanceStore()
       <p v-if="description" class="text-muted">{{ description }}</p>
     </header>
     <slot />
-    <footer
-      v-if="instance.config"
-      class="font-mono text-meta text-muted tabular-nums"
-      data-testid="version"
-    >
+    <footer v-if="instance.config" class="ui-meta" data-testid="version">
       {{ $t('home.version', { version: instance.config.version }) }}
     </footer>
   </main>

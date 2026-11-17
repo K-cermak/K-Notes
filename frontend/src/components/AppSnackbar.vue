@@ -10,31 +10,33 @@ const snackbar = useSnackbarStore()
     class="pointer-events-none fixed inset-x-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-50 flex sm:right-auto sm:left-6"
     aria-live="polite"
   >
+    <!-- Transitions rather than keyframes: a new message can replace one that is still arriving.
+         It leaves the way it came, a little faster. -->
     <Transition
-      enter-from-class="opacity-0 translate-y-1.5"
-      leave-to-class="opacity-0"
-      enter-active-class="transition duration-150 ease-out"
-      leave-active-class="transition duration-150"
+      enter-from-class="opacity-0 translate-y-2 motion-reduce:translate-y-0"
+      leave-to-class="opacity-0 translate-y-2 motion-reduce:translate-y-0"
+      enter-active-class="transition-[opacity,translate] duration-240 ease-out"
+      leave-active-class="transition-[opacity,translate] duration-150 ease-out"
     >
       <div
         v-if="snackbar.current"
         :key="snackbar.current.id"
         role="status"
-        class="pointer-events-auto flex min-h-12 w-full max-w-[480px] items-center gap-3 border border-line bg-bg py-1.5 pr-1.5 pl-4 shadow-float sm:w-auto sm:min-w-[320px]"
+        class="ui-snackbar pointer-events-auto w-full max-w-[480px] sm:w-auto sm:min-w-[320px]"
         data-testid="snackbar"
       >
         <span class="flex-1">{{ snackbar.current.text }}</span>
         <button
           v-if="snackbar.current.action"
           type="button"
-          class="h-9 cursor-pointer px-3 font-medium text-accent hover:bg-[color-mix(in_srgb,var(--ink)_5%,var(--bg))]"
+          class="ui-snackbar__action"
           @click="snackbar.act()"
         >
           {{ snackbar.current.action.label }}
         </button>
         <button
           type="button"
-          class="grid size-9 cursor-pointer place-items-center text-muted hover:text-ink"
+          class="ui-icon-button"
           :aria-label="$t('common.close')"
           @click="snackbar.close()"
         >

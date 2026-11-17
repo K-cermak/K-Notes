@@ -1,0 +1,59 @@
+/*
+ * Design tokens: colours, type and motion. Plain CSS custom properties with no dependencies, so the
+ * file can be copied into any project; base.css and ui.css build on it.
+ *
+ * Colours use light-dark(), which follows color-scheme: switching the theme only flips that one
+ * property, through data-theme="light" or "dark" on the root element (no attribute: the system's).
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: light-dark(#ffffff, #0a0a0a);
+  --ink: light-dark(#171717, #ededed);
+  --muted: light-dark(#666666, #a1a1a1);
+  /* Below 4.5:1 on white: placeholders, disabled controls and decorative icons only. */
+  --faint: light-dark(#8f8f8f, #8f8f8f);
+  --line: light-dark(#eaeaea, #2e2e2e);
+  --line-hover: light-dark(#c9c9c9, #454545);
+  --ring: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.14));
+  --accent: #1f6fd6;
+  --accent-hover: #1a5fc8;
+  --on-accent: #ffffff;
+  --danger: light-dark(#d1242f, #ff6369);
+  --warning: light-dark(#b45309, #f5a524);
+  --success: light-dark(#18803a, #3fb950);
+  --hover-tint: color-mix(in srgb, var(--ink) 6%, transparent);
+  --float: light-dark(0 8px 24px -6px rgb(0 0 0 / 0.12), 0 8px 24px -6px rgb(0 0 0 / 0.6));
+
+  --font-text: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Only for codes that are read character by character: secrets, recovery codes, tokens. */
+  --font-code: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --size-body: 14px;
+  --size-label: 13px;
+  --size-meta: 12px;
+
+  --motion-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-fast: 150ms;
+  --motion: 240ms;
+
+  --note-default: var(--bg);
+  --note-coral: light-dark(#faafa8, #77172e);
+  --note-peach: light-dark(#f39f76, #692b17);
+  --note-sand: light-dark(#fff8b8, #7c4a03);
+  --note-mint: light-dark(#e2f6d3, #264d3b);
+  --note-sage: light-dark(#b4ddd3, #0c625d);
+  --note-fog: light-dark(#d4e4ed, #256377);
+  --note-storm: light-dark(#aeccdc, #284255);
+  --note-dusk: light-dark(#d3bfdb, #472e5b);
+  --note-blossom: light-dark(#f6e2dd, #6c394f);
+  --note-clay: light-dark(#e9e3d4, #4b443a);
+  --note-chalk: light-dark(#efeff1, #232427);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

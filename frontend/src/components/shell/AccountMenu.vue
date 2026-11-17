@@ -51,7 +51,7 @@ async function logout(): Promise<void> {
           }}</span>
           <span class="text-label text-muted">{{ session.user?.email }}</span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator class="my-1 h-px bg-line" />
+        <DropdownMenuSeparator class="ui-menu-separator" />
         <template v-if="compact">
           <DropdownMenuItem
             :class="menuItem"
@@ -65,9 +65,7 @@ async function logout(): Promise<void> {
             <Rows3 v-else :size="16" />
             {{ $t(session.user?.default_view === 'list' ? 'topbar.gridView' : 'topbar.listView') }}
           </DropdownMenuItem>
-          <DropdownMenuLabel class="px-3 pt-2 pb-1 text-meta text-muted">{{
-            $t('theme.label')
-          }}</DropdownMenuLabel>
+          <DropdownMenuLabel class="ui-menu-label">{{ $t('theme.label') }}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             :model-value="session.user?.theme"
             @update:model-value="
@@ -86,7 +84,7 @@ async function logout(): Promise<void> {
               {{ $t(`theme.${theme}`) }}
             </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
-          <DropdownMenuSeparator class="my-1 h-px bg-line" />
+          <DropdownMenuSeparator class="ui-menu-separator" />
         </template>
         <DropdownMenuItem :class="menuItem" @select="router.push('/settings')">
           <Settings :size="16" /> {{ $t('settings.title') }}

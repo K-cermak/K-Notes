@@ -41,7 +41,7 @@ const control =
       >
         <DialogTitle class="sr-only">{{ $t('images.viewer') }}</DialogTitle>
         <div class="flex items-center justify-between px-2 pt-[max(8px,env(safe-area-inset-top))]">
-          <span class="px-3 font-mono text-meta text-muted tabular-nums">
+          <span class="ui-meta px-3">
             <template v-if="count > 1">{{ (index ?? 0) + 1 }} / {{ count }}</template>
           </span>
           <button

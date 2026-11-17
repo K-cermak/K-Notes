@@ -22,7 +22,13 @@ Thanks for helping. This file covers how the project is put together and what a 
 
 - Every string a user sees goes through vue-i18n and lives in `frontend/src/locales/en.json`.
 - The app name lives only in `branding.json`. Do not write it anywhere in the code.
-- The look follows SPEC section 9, "Visual design": colours only from the tokens in `frontend/src/styles/main.css` and the note palette, square corners, hairlines instead of shadows, Geist Mono for numbers that read as data.
+- The look follows SPEC section 9, "Visual design": colours only from the tokens and the note palette, square corners, hairlines instead of shadows, tabular figures for numbers that read as data.
+- The design lives in three plain CSS files in `frontend/src/styles/`, which need neither Vue nor Tailwind and can be copied into another project together with the Geist fonts:
+  - `tokens.css`: colours for both themes, the note palette, type sizes, motion.
+  - `base.css`: element defaults and the shared keyframes.
+  - `ui.css`: the shared elements as `.ui-*` classes: buttons, inputs, selects, fields, checkboxes, radios, segmented choices, notices, badges, spinner, menus and popovers, dialogs, snackbar, meter, meta text.
+
+  `main.css` adds Tailwind and the styles only this app needs. The components in `frontend/src/components/ui/` are thin Vue wrappers over the `.ui-*` classes. Before styling an element by hand, check whether `ui.css` already has it; if something new is needed in more than one place, add it there.
 - Icon buttons need an accessible name, dialogs keep and return the focus, and everything works from the keyboard. `e2e/a11y.spec.ts` runs axe over the main screens in both themes; keep it passing.
 
 ## Tests

@@ -165,7 +165,7 @@ onMounted(async () => {
 
 <template>
   <section v-if="user?.has_password" class="flex flex-col gap-4">
-    <h2 class="text-base">{{ $t('settings.password.title') }}</h2>
+    <h2 class="ui-section-title">{{ $t('settings.password.title') }}</h2>
     <form class="flex flex-col gap-4" novalidate @submit.prevent="changePassword">
       <UiField :label="$t('settings.password.current')" for="password-current">
         <UiInput
@@ -203,12 +203,12 @@ onMounted(async () => {
   </section>
 
   <section v-if="user?.has_password" class="flex flex-col gap-4" data-testid="totp-settings">
-    <h2 class="text-base">{{ $t('settings.totp.title') }}</h2>
+    <h2 class="ui-section-title">{{ $t('settings.totp.title') }}</h2>
     <p class="text-muted">{{ $t('settings.totp.intro') }}</p>
 
     <div v-if="recoveryCodes" class="flex flex-col gap-3" data-testid="recovery-codes">
       <UiNotice tone="warning">{{ $t('settings.totp.saveCodes') }}</UiNotice>
-      <ul class="grid grid-cols-2 gap-x-6 gap-y-1 border border-line p-4 font-mono tabular-nums">
+      <ul class="ui-code grid grid-cols-2 gap-x-6 gap-y-1 border border-line p-4">
         <li v-for="item in recoveryCodes" :key="item">{{ item }}</li>
       </ul>
       <UiButton class="self-start" @click="recoveryCodes = null">{{ $t('common.done') }}</UiButton>
@@ -220,10 +220,8 @@ onMounted(async () => {
           {{ $t('settings.totp.scan') }}
           <div class="mt-3 flex flex-col gap-2">
             <QrCode :value="enrolment.uri" :label="$t('settings.totp.qr')" />
-            <p class="text-meta text-muted">{{ $t('settings.totp.manual') }}</p>
-            <code class="font-mono text-meta break-all" data-testid="totp-secret">{{
-              enrolment.secret
-            }}</code>
+            <p class="ui-meta">{{ $t('settings.totp.manual') }}</p>
+            <code class="ui-code break-all" data-testid="totp-secret">{{ enrolment.secret }}</code>
           </div>
         </li>
         <li>
@@ -251,9 +249,7 @@ onMounted(async () => {
 
     <template v-else-if="totp?.enabled">
       <p class="flex items-center gap-2">
-        <span class="border border-success px-1.5 text-meta text-success">{{
-          $t('settings.totp.on')
-        }}</span>
+        <span class="ui-badge ui-badge--success">{{ $t('settings.totp.on') }}</span>
         <span class="text-label text-muted">{{
           $t(
             'settings.totp.codesLeft',
@@ -310,7 +306,7 @@ onMounted(async () => {
   </section>
 
   <section v-if="instance.config?.oidc_enabled" class="flex flex-col gap-4">
-    <h2 class="text-base">
+    <h2 class="ui-section-title">
       {{ $t('settings.sso.title', { provider: instance.config.oidc_provider_name }) }}
     </h2>
     <UiNotice v-if="ssoMessage" :tone="ssoMessage.tone">{{ ssoMessage.text }}</UiNotice>
@@ -344,7 +340,7 @@ onMounted(async () => {
 
   <section class="flex flex-col gap-4">
     <div class="flex items-center justify-between gap-4">
-      <h2 class="text-base">{{ $t('settings.sessions.title') }}</h2>
+      <h2 class="ui-section-title">{{ $t('settings.sessions.title') }}</h2>
       <UiButton v-if="sessions.length > 1" size="sm" @click="revokeOthers">
         {{ $t('settings.sessions.signOutOthers') }}
       </UiButton>
@@ -362,7 +358,7 @@ onMounted(async () => {
               $t('settings.sessions.current')
             }}</span>
           </span>
-          <span class="font-mono text-meta text-muted tabular-nums">
+          <span class="ui-meta">
             {{ $t('settings.sessions.lastUsed', { time: when(item.last_used_at) }) }}
             <template v-if="item.ip"> · {{ item.ip }}</template>
             <template v-if="item.auth_method === 'oidc'"> · SSO</template>

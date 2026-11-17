@@ -74,7 +74,7 @@ onMounted(load)
 
 <template>
   <section class="flex flex-col gap-4">
-    <h2 class="text-base">{{ $t('settings.tokens.title') }}</h2>
+    <h2 class="ui-section-title">{{ $t('settings.tokens.title') }}</h2>
     <p class="text-muted">{{ $t('settings.tokens.intro') }}</p>
     <form class="flex flex-col gap-4" @submit.prevent="create">
       <UiField :label="$t('settings.tokens.name')" for="token-name">
@@ -82,26 +82,26 @@ onMounted(load)
       </UiField>
       <div class="flex flex-col gap-4 sm:flex-row">
         <fieldset class="flex flex-col gap-2">
-          <legend class="mb-2 text-label font-medium text-muted">
+          <legend class="ui-label mb-2">
             {{ $t('settings.tokens.scope') }}
           </legend>
-          <label v-for="value in ['read', 'write'] as const" :key="value" class="flex gap-2">
+          <label
+            v-for="value in ['read', 'write'] as const"
+            :key="value"
+            class="flex cursor-pointer items-center gap-2"
+          >
             <input
               v-model="scope"
               type="radio"
               name="token-scope"
               :value="value"
-              class="accent-ink"
+              class="ui-radio"
             />
             {{ $t(`settings.tokens.${value}`) }}
           </label>
         </fieldset>
         <UiField :label="$t('settings.tokens.expiry')" for="token-expiry">
-          <select
-            id="token-expiry"
-            v-model="expiry"
-            class="h-10 cursor-pointer border border-line bg-bg px-3 text-sm text-ink hover:border-line-hover focus:border-ink focus:outline-none"
-          >
+          <select id="token-expiry" v-model="expiry" class="ui-select">
             <option v-for="days in EXPIRIES" :key="String(days)" :value="days">
               {{ days ? $t('settings.tokens.days', { count: days }) : $t('settings.tokens.never') }}
             </option>
@@ -115,7 +115,7 @@ onMounted(load)
     <div v-if="created" class="flex flex-col gap-2" data-testid="new-token">
       <UiNotice tone="warning">{{ $t('settings.tokens.once') }}</UiNotice>
       <div class="flex gap-2">
-        <UiInput :model-value="created" readonly class="font-mono text-meta" />
+        <UiInput :model-value="created" readonly class="ui-code" />
         <UiButton :aria-label="$t('admin.invite.copy')" icon-only @click="copy">
           <Check v-if="copied" class="text-success" />
           <Copy v-else />
@@ -132,11 +132,9 @@ onMounted(load)
         <div class="flex min-w-0 flex-1 flex-col">
           <span class="truncate">
             {{ token.name }}
-            <span class="ml-1 border border-line px-1.5 text-meta text-muted">{{
-              $t(`settings.tokens.${token.scope}`)
-            }}</span>
+            <span class="ui-badge ml-1">{{ $t(`settings.tokens.${token.scope}`) }}</span>
           </span>
-          <span class="font-mono text-meta text-muted tabular-nums">
+          <span class="ui-meta">
             {{ token.prefix }}… ·
             {{ $t('settings.tokens.expires', { date: date(token.expires_at) }) }} ·
             {{

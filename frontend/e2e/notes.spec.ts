@@ -93,7 +93,7 @@ test('an empty new note is discarded when closed', async ({ browser }) => {
 test('the theme is saved in the profile and follows the user', async ({ browser }) => {
   const user = await newUser(browser)
   const a = await signedIn(browser, user)
-  await a.page.getByRole('button', { name: 'Settings' }).click()
+  await a.page.getByRole('button', { name: 'Display options' }).click()
   await a.page.getByRole('menuitemradio', { name: 'Dark' }).click()
   await expect(a.page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await a.page.reload()

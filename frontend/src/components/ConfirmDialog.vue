@@ -19,14 +19,9 @@ const confirm = useConfirmStore()
     @update:open="(open) => !open && confirm.answer(false)"
   >
     <AlertDialogPortal>
-      <AlertDialogOverlay
-        class="fixed inset-0 z-40 bg-[color-mix(in_srgb,var(--ink)_30%,transparent)]"
-      />
-      <AlertDialogContent
-        v-if="confirm.request"
-        class="fixed top-1/2 left-1/2 z-50 flex w-[calc(100%-32px)] max-w-[420px] -translate-1/2 animate-rise flex-col gap-4 border border-line bg-bg p-5 shadow-float motion-reduce:animate-fade"
-      >
-        <AlertDialogTitle class="text-base font-semibold tracking-[-0.01em]">
+      <AlertDialogOverlay class="ui-overlay" />
+      <AlertDialogContent v-if="confirm.request" class="ui-dialog">
+        <AlertDialogTitle class="ui-dialog__title">
           {{ confirm.request.title }}
         </AlertDialogTitle>
         <AlertDialogDescription class="text-muted">
@@ -34,7 +29,7 @@ const confirm = useConfirmStore()
         </AlertDialogDescription>
         <!-- Plain buttons: Reka's Action and Cancel close the dialog before their click handlers run,
              which would answer every confirmation as a cancel. -->
-        <div class="flex justify-end gap-3">
+        <div class="ui-dialog__actions">
           <UiButton @click="confirm.answer(false)">{{ $t('common.cancel') }}</UiButton>
           <UiButton
             :variant="confirm.request.danger ? 'danger' : 'primary'"

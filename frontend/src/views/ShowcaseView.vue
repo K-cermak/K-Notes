@@ -78,7 +78,7 @@ const palette = [
       <div class="flex flex-col gap-1 border border-line p-4">
         <p class="text-base font-semibold tracking-[-0.02em]">{{ $t('showcase.headingSample') }}</p>
         <p>{{ $t('showcase.bodySample') }}</p>
-        <p class="font-mono text-meta text-muted tabular-nums">{{ $t('showcase.metaSample') }}</p>
+        <p class="ui-meta">{{ $t('showcase.metaSample') }}</p>
       </div>
     </section>
 
@@ -141,9 +141,7 @@ const palette = [
       </UiField>
       <UiField :label="$t('showcase.displayName')" for="sc-name">
         <template #aside>
-          <span class="font-mono text-meta text-muted tabular-nums"
-            >{{ displayName.length }} / 50</span
-          >
+          <span class="ui-meta">{{ displayName.length }} / 50</span>
         </template>
         <UiInput id="sc-name" v-model="displayName" maxlength="50" />
       </UiField>
@@ -201,7 +199,7 @@ const palette = [
             class="size-5 shrink-0 border border-line"
             :style="{ background: `var(--${token})` }"
           />
-          <span class="font-mono text-meta text-muted">{{ token }}</span>
+          <span class="ui-code text-muted">{{ token }}</span>
         </li>
       </ul>
     </section>
@@ -219,7 +217,7 @@ const palette = [
         >
           <span class="font-semibold tracking-[-0.01em]">{{ $t('showcase.noteTitle') }}</span>
           <span class="text-sm">{{ $t('showcase.noteBody') }}</span>
-          <span class="font-mono text-meta opacity-70">{{ colour }}</span>
+          <span class="ui-code opacity-70">{{ colour }}</span>
         </li>
       </ul>
     </section>

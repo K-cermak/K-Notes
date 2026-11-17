@@ -62,7 +62,8 @@
     "close": "Close",
     "undo": "Undo",
     "done": "Done",
-    "save": "Save"
+    "save": "Save",
+    "saved": "Changes saved"
   },
   "account": {
     "displayName": "Display name",
@@ -305,7 +306,7 @@
   },
   "topbar": {
     "menu": "Main menu",
-    "settings": "Settings",
+    "settings": "Display options",
     "gridView": "Grid view",
     "listView": "List view"
   },
@@ -345,7 +346,6 @@
     "title": "Settings",
     "profile": {
       "title": "Profile",
-      "saved": "Display name saved.",
       "language": "Language",
       "view": "Notes layout",
       "grid": "Grid",

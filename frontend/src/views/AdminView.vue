@@ -16,6 +16,7 @@ import { useSubmit } from '@/composables/useSubmit'
 import { formatBytes } from '@/format'
 import { useConfirmStore } from '@/stores/confirm'
 import { useSessionStore } from '@/stores/session'
+import { useSnackbarStore } from '@/stores/snackbar'
 import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
@@ -26,6 +27,7 @@ import UiNotice from '@/components/ui/UiNotice.vue'
 const i18n = useI18n()
 const session = useSessionStore()
 const confirm = useConfirmStore()
+const snackbar = useSnackbarStore()
 const users = ref<AdminUser[]>([])
 const status = ref<components['schemas']['InstanceStatus'] | null>(null)
 const resetLink = ref<{ user: AdminUser; link: CreatedLink } | null>(null)
@@ -105,6 +107,7 @@ async function setRegistration(value: boolean): Promise<void> {
     )
     registration.value = result.registration_enabled
   })
+  if (!toggle.error.value) snackbar.show(i18n.t('common.saved'))
 }
 
 // The server enforces both guards (SPEC 7); the menu only reflects them.
@@ -126,6 +129,7 @@ async function updateUser(
     )
     users.value = await call(() => api.GET('/api/v1/admin/users'))
   })
+  if (!userAction.error.value) snackbar.show(i18n.t('common.saved'))
 }
 
 function editLimit(user: AdminUser): void {
@@ -157,6 +161,7 @@ async function saveDefaultLimit(): Promise<void> {
     defaultLimitMb.value = mbText(result.default_storage_limit_bytes)
     users.value = await call(() => api.GET('/api/v1/admin/users'))
   })
+  if (!toggle.error.value) snackbar.show(i18n.t('common.saved'))
 }
 
 async function createResetLink(user: AdminUser): Promise<void> {
@@ -218,11 +223,7 @@ onMounted(refresh)
 <template>
   <main class="mx-auto flex w-full max-w-[600px] flex-col gap-10 px-4 py-6 sm:py-10">
     <header class="flex items-center gap-3">
-      <RouterLink
-        to="/"
-        class="grid size-8 place-items-center text-muted hover:text-ink"
-        :aria-label="$t('common.back')"
-      >
+      <RouterLink to="/" class="ui-icon-button" :aria-label="$t('common.back')">
         <ArrowLeft />
       </RouterLink>
       <h1 class="text-xl leading-tight">{{ $t('admin.title') }}</h1>
@@ -231,26 +232,28 @@ onMounted(refresh)
     <UiNotice v-if="load.error.value" tone="error">{{ load.error.value }}</UiNotice>
 
     <section class="flex flex-col gap-4">
-      <h2 class="text-base">{{ $t('admin.invite.title') }}</h2>
+      <h2 class="ui-section-title">{{ $t('admin.invite.title') }}</h2>
       <p class="text-muted">{{ $t('admin.invite.description') }}</p>
-      <form class="flex flex-col gap-3 sm:flex-row sm:items-end" @submit.prevent="createInvite">
-        <UiField :label="$t('admin.invite.email')" for="invite-email" class="flex-1">
-          <UiInput id="invite-email" v-model="inviteEmail" type="email" autocomplete="off" />
+      <form @submit.prevent="createInvite">
+        <UiField :label="$t('admin.invite.email')" for="invite-email">
+          <div class="ui-input-row">
+            <UiInput id="invite-email" v-model="inviteEmail" type="email" autocomplete="off" />
+            <UiButton type="submit" variant="primary" :loading="create.pending.value">
+              {{ $t('admin.invite.create') }}
+            </UiButton>
+          </div>
         </UiField>
-        <UiButton type="submit" variant="primary" :loading="create.pending.value">
-          {{ $t('admin.invite.create') }}
-        </UiButton>
       </form>
       <UiNotice v-if="create.error.value" tone="error">{{ create.error.value }}</UiNotice>
       <div v-if="link" class="flex flex-col gap-2">
-        <div class="flex gap-2">
-          <UiInput id="invite-link" :model-value="link.url" readonly class="font-mono text-meta" />
+        <div class="ui-input-row">
+          <UiInput id="invite-link" :model-value="link.url" readonly />
           <UiButton :aria-label="$t('admin.invite.copy')" icon-only @click="copyLink">
             <Check v-if="copied" class="text-success" />
             <Copy v-else />
           </UiButton>
         </div>
-        <p class="text-meta text-muted">
+        <p class="ui-meta">
           {{ $t('admin.invite.once', { date: formatDate(link.expires_at) }) }}
         </p>
       </div>
@@ -263,7 +266,7 @@ onMounted(refresh)
           <span class="min-w-0 flex-1 truncate">{{
             invite.email ?? $t('admin.invite.anyone')
           }}</span>
-          <span class="font-mono text-meta text-muted tabular-nums">
+          <span class="ui-meta">
             {{ $t('admin.invite.expires', { date: formatDate(invite.expires_at) }) }}
           </span>
           <UiButton
@@ -280,7 +283,7 @@ onMounted(refresh)
     </section>
 
     <section class="flex flex-col gap-4">
-      <h2 class="text-base">{{ $t('admin.users.title') }}</h2>
+      <h2 class="ui-section-title">{{ $t('admin.users.title') }}</h2>
       <ul class="border border-line">
         <li
           v-for="user in users"
@@ -290,7 +293,7 @@ onMounted(refresh)
           <div class="flex min-w-0 flex-1 flex-col">
             <span class="truncate font-medium">{{ user.display_name }}</span>
             <span class="truncate text-label text-muted">{{ user.email }}</span>
-            <span class="font-mono text-meta text-muted tabular-nums" data-testid="user-storage">
+            <span class="ui-meta" data-testid="user-storage">
               {{ formatBytes(user.storage_used_bytes) }} /
               {{
                 user.storage_limit_bytes === null
@@ -299,15 +302,13 @@ onMounted(refresh)
               }}
             </span>
           </div>
-          <span v-if="user.is_admin" class="border border-line px-1.5 text-meta text-muted">
+          <span v-if="user.is_admin" class="ui-badge">
             {{ $t('admin.users.admin') }}
           </span>
-          <span v-if="!user.is_active" class="border border-danger px-1.5 text-meta text-danger">
+          <span v-if="!user.is_active" class="ui-badge ui-badge--error">
             {{ $t('admin.users.inactive') }}
           </span>
-          <span v-if="user.totp_enabled" class="border border-line px-1.5 text-meta text-muted">
-            2FA
-          </span>
+          <span v-if="user.totp_enabled" class="ui-badge"> 2FA </span>
           <DropdownMenuRoot :modal="false">
             <DropdownMenuTrigger
               :class="iconButton"
@@ -339,7 +340,7 @@ onMounted(refresh)
                 >
                   {{ $t('admin.storage.edit') }}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator class="my-1 h-px bg-line" />
+                <DropdownMenuSeparator class="ui-menu-separator" />
                 <DropdownMenuItem
                   :class="menuItem"
                   :disabled="user.is_admin && (isSelf(user) || lastAdmin(user))"
@@ -367,21 +368,16 @@ onMounted(refresh)
         </li>
       </ul>
       <UiNotice v-if="userAction.error.value" tone="error">{{ userAction.error.value }}</UiNotice>
-      <form
-        v-if="limitEdit"
-        class="flex flex-col gap-3 border border-line p-4"
-        data-testid="limit-editor"
-        @submit.prevent="saveLimit"
-      >
+      <form v-if="limitEdit" class="ui-box" data-testid="limit-editor" @submit.prevent="saveLimit">
         <p class="font-medium">
           {{ $t('admin.storage.for', { name: limitEdit.user.display_name }) }}
         </p>
         <label
           v-for="mode in ['default', 'unlimited', 'custom'] as const"
           :key="mode"
-          class="flex gap-2"
+          class="flex cursor-pointer items-center gap-2"
         >
-          <input v-model="limitEdit.mode" type="radio" :value="mode" class="accent-ink" />
+          <input v-model="limitEdit.mode" type="radio" :value="mode" class="ui-radio" />
           {{ $t(`admin.storage.${mode}`) }}
         </label>
         <UiField
@@ -401,21 +397,21 @@ onMounted(refresh)
         <p class="text-muted">
           {{ $t('admin.users.resetLinkFor', { name: resetLink.user.display_name }) }}
         </p>
-        <div class="flex gap-2">
-          <UiInput :model-value="resetLink.link.url" readonly class="font-mono text-meta" />
+        <div class="ui-input-row">
+          <UiInput :model-value="resetLink.link.url" readonly />
           <UiButton :aria-label="$t('admin.invite.copy')" icon-only @click="copyResetLink">
             <Check v-if="copied" class="text-success" />
             <Copy v-else />
           </UiButton>
         </div>
-        <p class="text-meta text-muted">
+        <p class="ui-meta">
           {{ $t('admin.users.resetOnce', { date: formatDate(resetLink.link.expires_at) }) }}
         </p>
       </div>
     </section>
 
     <section class="flex flex-col gap-3">
-      <h2 class="text-base">{{ $t('admin.registration.title') }}</h2>
+      <h2 class="ui-section-title">{{ $t('admin.registration.title') }}</h2>
       <label class="flex cursor-pointer items-start gap-3">
         <UiCheckbox
           :model-value="registration"
@@ -432,27 +428,29 @@ onMounted(refresh)
     </section>
 
     <section class="flex flex-col gap-3">
-      <h2 class="text-base">{{ $t('admin.storage.title') }}</h2>
-      <form class="flex flex-col gap-3 sm:flex-row sm:items-end" @submit.prevent="saveDefaultLimit">
+      <h2 class="ui-section-title">{{ $t('admin.storage.title') }}</h2>
+      <form @submit.prevent="saveDefaultLimit">
         <UiField
           :label="$t('admin.storage.defaultLabel')"
           for="default-limit"
           :hint="$t('admin.storage.defaultHint')"
-          class="sm:w-60"
+          class="sm:w-80"
         >
-          <UiInput id="default-limit" v-model="defaultLimitMb" inputmode="decimal" />
+          <div class="ui-input-row">
+            <UiInput id="default-limit" v-model="defaultLimitMb" inputmode="decimal" />
+            <UiButton type="submit">{{ $t('common.save') }}</UiButton>
+          </div>
         </UiField>
-        <UiButton type="submit">{{ $t('common.save') }}</UiButton>
       </form>
     </section>
 
     <section v-if="status" class="flex flex-col gap-3" data-testid="instance-status">
-      <h2 class="text-base">{{ $t('admin.status.title') }}</h2>
+      <h2 class="ui-section-title">{{ $t('admin.status.title') }}</h2>
       <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5">
         <dt class="text-muted">{{ $t('admin.status.version') }}</dt>
-        <dd class="font-mono tabular-nums">{{ status.version }}</dd>
+        <dd class="ui-numeric">{{ status.version }}</dd>
         <dt class="text-muted">{{ $t('admin.status.users') }}</dt>
-        <dd class="font-mono tabular-nums">{{ status.user_count }}</dd>
+        <dd class="ui-numeric">{{ status.user_count }}</dd>
         <dt class="text-muted">{{ $t('admin.status.oidc') }}</dt>
         <dd>{{ $t(status.oidc_enabled ? 'admin.status.yes' : 'admin.status.no') }}</dd>
         <dt class="text-muted">{{ $t('admin.status.passwordLogin') }}</dt>

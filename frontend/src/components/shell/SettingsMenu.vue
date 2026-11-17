@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { Check, Settings } from '@lucide/vue'
+import { Check, SlidersHorizontal } from '@lucide/vue'
 import { themes, type Theme } from '@/theme'
 import { deviceSettings, setDeviceSettings } from '@/db/meta'
 import { db } from '@/db/schema'
@@ -50,13 +50,11 @@ function megabytes(bytes: number): string {
       :aria-label="$t('topbar.settings')"
       :title="$t('topbar.settings')"
     >
-      <Settings :size="18" />
+      <SlidersHorizontal :size="18" />
     </DropdownMenuTrigger>
     <DropdownMenuPortal>
       <DropdownMenuContent :class="menuPanel" align="end" :side-offset="6">
-        <DropdownMenuLabel class="px-3 pt-2 pb-1 text-meta text-muted">{{
-          $t('theme.label')
-        }}</DropdownMenuLabel>
+        <DropdownMenuLabel class="ui-menu-label">{{ $t('theme.label') }}</DropdownMenuLabel>
         <DropdownMenuRadioGroup
           :model-value="session.user?.theme"
           @update:model-value="(value) => session.updateProfile({ theme: value as Theme })"
@@ -73,7 +71,7 @@ function megabytes(bytes: number): string {
             {{ $t(`theme.${theme}`) }}
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator class="my-1 h-px bg-line" />
+        <DropdownMenuSeparator class="ui-menu-separator" />
         <DropdownMenuCheckboxItem
           :model-value="onDemand"
           :class="menuItem"
@@ -86,11 +84,7 @@ function megabytes(bytes: number): string {
           </span>
           {{ $t('settings.downloadOnDemand') }}
         </DropdownMenuCheckboxItem>
-        <p
-          v-if="usage !== null"
-          class="px-3 pt-1 pb-2 pl-10 font-mono text-meta text-muted tabular-nums"
-          data-testid="storage-use"
-        >
+        <p v-if="usage !== null" class="ui-meta px-3 pt-1 pb-2 pl-10" data-testid="storage-use">
           {{ $t('settings.storage', { mb: megabytes(usage) }) }}
         </p>
       </DropdownMenuContent>

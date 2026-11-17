@@ -42,7 +42,7 @@ const router = useRouter()
     </li>
     <li
       v-if="limit && labels.length > limit"
-      class="flex h-6 items-center border px-1.5 font-mono text-meta text-muted tabular-nums"
+      class="ui-meta flex h-6 items-center border px-1.5"
       :style="{ borderColor: noteLine(color) }"
     >
       +{{ labels.length - limit }}

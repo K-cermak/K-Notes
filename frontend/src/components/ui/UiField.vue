@@ -8,24 +8,13 @@ defineProps<{
 </script>
 
 <template>
-  <div class="group flex flex-col gap-2">
+  <div class="ui-field">
     <div class="flex items-baseline justify-between gap-4">
-      <label
-        :for="$props.for"
-        class="text-label font-medium text-muted transition-colors duration-150 group-focus-within:text-ink"
-      >
-        {{ label }}
-      </label>
+      <label :for="$props.for" class="ui-label">{{ label }}</label>
       <slot name="aside" />
     </div>
     <slot />
-    <p
-      v-if="error"
-      :id="`${$props.for}-error`"
-      class="animate-rise text-label text-danger motion-reduce:animate-fade"
-    >
-      {{ error }}
-    </p>
-    <p v-else-if="hint" :id="`${$props.for}-hint`" class="text-meta text-muted">{{ hint }}</p>
+    <p v-if="error" :id="`${$props.for}-error`" class="ui-error">{{ error }}</p>
+    <p v-else-if="hint" :id="`${$props.for}-hint`" class="ui-hint">{{ hint }}</p>
   </div>
 </template>

@@ -6,7 +6,7 @@ defineProps<{ icon: Component; text: string }>()
 
 <template>
   <div
-    class="flex flex-col items-center gap-4 px-4 pt-[12vh] text-center"
+    class="flex animate-rise flex-col items-center gap-4 px-4 pt-[12vh] text-center motion-reduce:animate-fade"
     data-testid="empty-state"
   >
     <component

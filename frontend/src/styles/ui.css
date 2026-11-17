@@ -1,0 +1,614 @@
+/*
+ * Shared interface elements as plain CSS classes on top of tokens.css and base.css, with no
+ * framework, so another app can use them by copying these three files and the Geist fonts.
+ *
+ * Square corners everywhere, hairlines rather than shadows (only floating panels get --float),
+ * colours only from the tokens. Hover styles apply only to a real pointer, because touch devices
+ * keep :hover after a tap. Everything sits in the components layer, so utility classes win.
+ */
+@layer components {
+  /* Buttons: <button class="ui-button ui-button--primary">. Default is secondary. */
+  .ui-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition-property: color, background-color, border-color, transform;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    /* A busy button keeps its colours, like the reference's sending state. */
+    &[aria-busy='true'] {
+      cursor: progress;
+    }
+
+    &:disabled:not([aria-busy='true']) {
+      cursor: not-allowed;
+      border-color: var(--line);
+      background: var(--line);
+      color: var(--faint);
+    }
+  }
+
+  .ui-button--primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .ui-button--ghost {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .ui-button--danger {
+    color: var(--danger);
+  }
+
+  .ui-button--sm {
+    height: 32px;
+    padding: 0 12px;
+  }
+
+  .ui-button--icon {
+    width: 40px;
+    padding: 0;
+
+    &.ui-button--sm {
+      width: 32px;
+    }
+  }
+
+  /* An icon on its own, as in toolbars: <button class="ui-icon-button" aria-label="…">. */
+  .ui-icon-button {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    color: var(--muted);
+    cursor: pointer;
+    transition-property: color, background-color, transform;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--motion-ease);
+
+    &:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      color: var(--faint);
+    }
+
+    &[aria-pressed='true'] {
+      color: var(--ink);
+    }
+
+    /* Tap targets stay at least 44 px even where the icon is smaller. */
+    @media (pointer: coarse) {
+      width: 44px;
+      height: 44px;
+    }
+  }
+
+  /* Text fields and selects: <input class="ui-input">, <textarea class="ui-input">. */
+  .ui-input,
+  .ui-select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--size-body);
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--motion-fast);
+
+    &::placeholder {
+      color: var(--faint);
+    }
+
+    &:focus {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px var(--ring);
+      outline: none;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+
+      &:focus {
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      background: color-mix(in srgb, var(--ink) 3%, var(--bg));
+      color: var(--faint);
+    }
+  }
+
+  textarea.ui-input {
+    height: auto;
+    min-height: 160px;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+
+  /* As wide as its options, not stretched by a column layout around it. */
+  .ui-select {
+    align-self: flex-start;
+    width: auto;
+    min-width: 240px;
+    max-width: 100%;
+    cursor: pointer;
+  }
+
+  /* A labelled field: .ui-field > .ui-label + control + .ui-hint or .ui-error. */
+  .ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ui-label {
+    color: var(--muted);
+    font-size: var(--size-label);
+    font-weight: 500;
+    line-height: 1.4;
+    transition: color var(--motion-fast);
+
+    .ui-field:focus-within & {
+      color: var(--ink);
+    }
+  }
+
+  .ui-hint {
+    color: var(--muted);
+    font-size: var(--size-meta);
+    line-height: 1.4;
+  }
+
+  .ui-error {
+    color: var(--danger);
+    font-size: var(--size-label);
+    line-height: 1.4;
+    animation: ui-rise var(--motion) var(--motion-ease) both;
+  }
+
+  /* A field with its button on the same line, aligned to the field, not to its label or hint. */
+  .ui-input-row {
+    display: flex;
+    gap: 8px;
+
+    & > :first-child {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  /* Checkbox (Reka CheckboxRoot or any element with data-state). */
+  .ui-checkbox {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid color-mix(in srgb, var(--ink) 50%, transparent);
+    background: transparent;
+    color: var(--bg);
+    cursor: pointer;
+    transition-property: background-color, border-color;
+    transition-duration: var(--motion-fast);
+
+    &[data-state='checked'],
+    &[data-state='indeterminate'] {
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+
+    &:disabled,
+    &[data-disabled] {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    & svg.lucide {
+      stroke-width: 2.2;
+      animation: ui-pop var(--motion-fast) var(--motion-ease) both;
+    }
+  }
+
+  /* Radio button: <input type="radio" class="ui-radio">. Square, like everything else. */
+  .ui-radio {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-content: center;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1px solid color-mix(in srgb, var(--ink) 50%, transparent);
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+    transition: border-color var(--motion-fast);
+
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--ink);
+      transform: scale(0);
+      transition: transform var(--motion-fast) var(--motion-ease);
+    }
+
+    &:checked {
+      border-color: var(--ink);
+
+      &::before {
+        transform: scale(1);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+  }
+
+  /* A choice of a few options: .ui-segmented > button.ui-segmented__option[role=radio]. */
+  .ui-segmented {
+    display: inline-flex;
+    align-self: flex-start;
+    border: 1px solid var(--line);
+  }
+
+  .ui-segmented__option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition-property: color, background-color;
+    transition-duration: var(--motion-fast);
+
+    & + & {
+      border-left: 1px solid var(--line);
+    }
+
+    &[aria-checked='true'] {
+      background: color-mix(in srgb, var(--ink) 6%, var(--bg));
+      color: var(--ink);
+    }
+  }
+
+  .ui-segmented__option--icon {
+    width: 32px;
+    padding: 0;
+  }
+
+  /* Banner: .ui-notice.ui-notice--success > svg.ui-notice__icon + content. */
+  .ui-notice {
+    --tone: var(--muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+    background: color-mix(in srgb, var(--tone) 6%, var(--bg));
+    color: var(--ink);
+    font-size: var(--size-body);
+    animation: ui-rise var(--motion) var(--motion-ease) both;
+  }
+
+  .ui-notice__icon {
+    margin-top: 1px;
+    color: var(--tone);
+  }
+
+  /* Small status mark: .ui-badge.ui-badge--success. */
+  .ui-badge {
+    --tone: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    padding: 0 6px;
+    border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+    color: var(--tone);
+    font-size: var(--size-meta);
+    line-height: 1.6;
+  }
+
+  .ui-notice--info,
+  .ui-badge--info {
+    --tone: var(--accent);
+  }
+
+  .ui-notice--success,
+  .ui-badge--success {
+    --tone: var(--success);
+  }
+
+  .ui-notice--warning,
+  .ui-badge--warning {
+    --tone: var(--warning);
+  }
+
+  .ui-notice--error,
+  .ui-badge--error {
+    --tone: var(--danger);
+  }
+
+  /* The one round thing. */
+  .ui-spinner {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border: 1.6px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: ui-spin 700ms linear infinite;
+  }
+
+  /* Floating panels: popovers, menus. Reka sets data-side and data-state on them. */
+  .ui-panel {
+    z-index: 50;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    box-shadow: var(--float);
+    outline: none;
+    transform-origin: var(--reka-popper-transform-origin, top);
+    animation: ui-pop var(--motion-fast) var(--motion-ease) both;
+
+    /* Leaves the way it came, a little faster. */
+    &[data-state='closed'] {
+      animation: ui-pop-out 120ms var(--motion-ease) both;
+    }
+  }
+
+  .ui-menu {
+    min-width: 200px;
+    padding: 4px 0;
+  }
+
+  .ui-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 40px;
+    padding: 0 12px;
+    color: var(--ink);
+    font-size: var(--size-body);
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--motion-fast);
+
+    &[data-highlighted] {
+      background: color-mix(in srgb, var(--ink) 6%, var(--bg));
+    }
+
+    &[data-disabled] {
+      cursor: not-allowed;
+      color: var(--faint);
+    }
+  }
+
+  .ui-menu-label {
+    padding: 8px 12px 4px;
+    color: var(--muted);
+    font-size: var(--size-meta);
+  }
+
+  .ui-menu-separator {
+    height: 1px;
+    margin: 4px 0;
+    background: var(--line);
+  }
+
+  /* Modal dialog: .ui-overlay behind .ui-dialog > .ui-dialog__title, content, .ui-dialog__actions. */
+  .ui-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--ink) 30%, transparent);
+    animation: ui-fade var(--motion) var(--motion-ease) both;
+
+    &[data-state='closed'] {
+      animation: ui-fade-out var(--motion-fast) var(--motion-ease) both;
+    }
+  }
+
+  .ui-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: calc(100% - 32px);
+    max-width: 420px;
+    max-height: calc(100dvh - 32px);
+    padding: 20px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    box-shadow: var(--float);
+    translate: -50% -50%;
+    animation: ui-rise var(--motion) var(--motion-ease) both;
+
+    &[data-state='closed'] {
+      animation: ui-sink var(--motion-fast) var(--motion-ease) both;
+    }
+  }
+
+  .ui-dialog__title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .ui-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  /* Snackbar: .ui-snackbar > text, .ui-snackbar__action, a close .ui-icon-button. */
+  .ui-snackbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 6px 6px 6px 16px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    box-shadow: var(--float);
+  }
+
+  .ui-snackbar__action {
+    height: 36px;
+    padding: 0 12px;
+    color: var(--accent);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--motion-fast);
+  }
+
+  /* Usage bar: .ui-meter[role=meter] > .ui-meter__bar with an inline width. */
+  .ui-meter {
+    width: 100%;
+    max-width: 320px;
+    height: 4px;
+    background: var(--line);
+  }
+
+  .ui-meter__bar {
+    height: 100%;
+    background: var(--ink);
+    transition: width var(--motion) var(--motion-ease);
+
+    .ui-meter--full & {
+      background: var(--danger);
+    }
+  }
+
+  /* A boxed group of controls inside a page. */
+  .ui-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--line);
+  }
+
+  .ui-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /* Small secondary text: timestamps, counts, sizes. Figures line up in columns. */
+  .ui-meta {
+    color: var(--muted);
+    font-size: var(--size-meta);
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ui-numeric {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Codes read character by character: secrets, recovery codes, tokens. */
+  .ui-code {
+    font-family: var(--font-code);
+    font-size: var(--size-meta);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-button:hover:not(:disabled) {
+      border-color: var(--line-hover);
+    }
+
+    .ui-button--primary:hover:not(:disabled) {
+      border-color: var(--accent-hover);
+      background: var(--accent-hover);
+    }
+
+    .ui-button--ghost:hover:not(:disabled) {
+      border-color: transparent;
+      background: var(--hover-tint);
+      color: var(--ink);
+    }
+
+    .ui-button--danger:hover:not(:disabled) {
+      border-color: var(--danger);
+    }
+
+    .ui-icon-button:hover:not(:disabled),
+    .ui-snackbar__action:hover {
+      background: var(--hover-tint);
+      color: var(--ink);
+    }
+
+    .ui-snackbar__action:hover {
+      color: var(--accent);
+    }
+
+    :is(.ui-input, .ui-select):hover:not(:focus, :disabled, [aria-invalid='true']) {
+      border-color: var(--line-hover);
+    }
+
+    :is(.ui-checkbox, .ui-radio):hover:not(:disabled, [data-disabled]) {
+      border-color: var(--ink);
+    }
+
+    .ui-segmented__option:hover {
+      color: var(--ink);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-panel,
+    .ui-dialog,
+    .ui-notice,
+    .ui-error,
+    .ui-checkbox svg.lucide {
+      animation-name: ui-fade;
+    }
+
+    .ui-panel[data-state='closed'],
+    .ui-dialog[data-state='closed'] {
+      animation-name: ui-fade-out;
+    }
+
+    .ui-button:active:not(:disabled),
+    .ui-icon-button:active:not(:disabled) {
+      transform: none;
+    }
+  }
+}

@@ -38,7 +38,7 @@ const icon = computed(
     <span class="sr-only">{{ $t(`sync.${sync.state}`) }}</span>
     <span
       v-if="sync.unsent > 0"
-      class="font-mono text-meta tabular-nums"
+      class="ui-meta"
       data-testid="unsent"
       :aria-label="$t('sync.unsent', { count: sync.unsent }, sync.unsent)"
     >

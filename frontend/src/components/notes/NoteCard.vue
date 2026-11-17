@@ -126,7 +126,7 @@ function select(event: MouseEvent): void {
     <div class="px-4 pt-3 pb-2">
       <p
         v-if="note.conflict_of"
-        class="mb-2 inline-block border border-[color-mix(in_srgb,var(--warning)_45%,transparent)] px-1.5 text-meta text-warning"
+        class="ui-badge ui-badge--warning mb-2"
         data-testid="card-conflict"
       >
         {{ $t('note.conflictCopy') }}
@@ -156,11 +156,7 @@ function select(event: MouseEvent): void {
             </span>
             <span class="min-w-0 break-words">{{ item.text }}</span>
           </li>
-          <li
-            v-if="checkedCount > 0"
-            class="pt-1 pl-6 font-mono text-meta text-muted tabular-nums"
-            data-testid="card-checked"
-          >
+          <li v-if="checkedCount > 0" class="ui-meta pt-1 pl-6" data-testid="card-checked">
             {{ $t('checklist.moreChecked', { count: checkedCount }, checkedCount) }}
           </li>
         </ul>

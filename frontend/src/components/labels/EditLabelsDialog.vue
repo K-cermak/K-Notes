@@ -75,16 +75,14 @@ async function remove(id: string): Promise<void> {
 <template>
   <DialogRoot v-model:open="open">
     <DialogPortal>
-      <DialogOverlay
-        class="fixed inset-0 z-40 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)]"
-      />
+      <DialogOverlay class="ui-overlay" />
       <DialogContent
-        class="fixed top-1/2 left-1/2 z-40 flex max-h-[80dvh] w-[calc(100%-32px)] max-w-[340px] -translate-1/2 animate-rise flex-col border border-line bg-bg shadow-float motion-reduce:animate-fade"
+        class="ui-dialog max-h-[80dvh] max-w-[340px] gap-0 p-0"
         :aria-describedby="undefined"
         data-testid="edit-labels"
         @interact-outside="keepOpenForSnackbar"
       >
-        <DialogTitle class="px-4 pt-4 pb-2 text-base font-semibold tracking-[-0.01em]">
+        <DialogTitle class="ui-dialog__title px-4 pt-4 pb-2">
           {{ $t('labels.edit') }}
         </DialogTitle>
         <form class="flex items-center gap-2 px-2" @submit.prevent="add">
@@ -137,9 +135,7 @@ async function remove(id: string): Promise<void> {
           </li>
         </ul>
         <div class="flex justify-end border-t border-line px-2 py-2">
-          <DialogClose
-            class="h-9 cursor-pointer px-4 font-medium hover:bg-[color-mix(in_srgb,var(--ink)_6%,transparent)]"
-          >
+          <DialogClose class="ui-button ui-button--ghost text-ink">
             {{ $t('common.done') }}
           </DialogClose>
         </div>

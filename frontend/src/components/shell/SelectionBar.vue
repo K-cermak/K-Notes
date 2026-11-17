@@ -39,7 +39,7 @@ async function finish(action: (ids: string[]) => Promise<unknown>): Promise<void
 
 <template>
   <header
-    class="sticky top-0 z-20 flex h-16 items-center gap-1 border-b border-line bg-bg pt-[env(safe-area-inset-top)] pr-3 pl-2 sm:pl-3"
+    class="sticky top-0 z-20 flex h-16 animate-fade items-center gap-1 border-b border-line bg-bg pt-[env(safe-area-inset-top)] pr-3 pl-2 sm:pl-3"
     data-testid="selection-bar"
   >
     <button
@@ -52,7 +52,7 @@ async function finish(action: (ids: string[]) => Promise<unknown>): Promise<void
       <X :size="20" />
     </button>
     <span
-      class="ml-1 flex-1 truncate font-mono text-base font-semibold tabular-nums"
+      class="ml-1 flex-1 truncate text-base font-semibold tabular-nums"
       data-testid="selection-count"
     >
       {{ $t('selection.count', { count: selection.ids.length }) }}

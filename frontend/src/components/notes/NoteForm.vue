@@ -333,10 +333,7 @@ defineExpose({ finish })
           :autofocus="autofocus === 'body'"
         />
         <LabelChips v-if="id" :note-id="id" :labels="labels" :color="color" class="pt-1 pb-2" />
-        <p
-          v-if="edited"
-          class="pt-1 text-right font-mono text-meta text-muted tabular-nums sm:hidden"
-        >
+        <p v-if="edited" class="ui-meta pt-1 text-right sm:hidden">
           {{ edited }}
         </p>
       </div>
@@ -397,15 +394,11 @@ defineExpose({ finish })
         @purge="note && actions.purge(note.id).then((done) => done && emit('close'))"
       />
       <!-- Phones have no room for it next to the buttons; it sits under the content there. -->
-      <span
-        class="ml-auto hidden px-2 font-mono text-meta text-muted tabular-nums sm:inline"
-        data-testid="edited"
-        >{{ edited }}</span
-      >
+      <span class="ui-meta ml-auto hidden px-2 sm:inline" data-testid="edited">{{ edited }}</span>
       <span class="ml-auto sm:hidden" />
       <button
         type="button"
-        class="h-9 cursor-pointer px-4 font-medium text-ink hover:bg-[color-mix(in_srgb,var(--ink)_6%,transparent)]"
+        class="ui-button ui-button--ghost h-9 text-ink"
         data-testid="close-note"
         @click="emit('close')"
       >

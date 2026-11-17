@@ -17,6 +17,8 @@ const props = defineProps<{
   attachments: Map<string, LocalAttachment[]>
   /** Whether the notes can be reordered by dragging; not in the trash or in search results. */
   sortable: boolean
+  /** Cards joining or leaving fade in and out; not for search results, which change as you type. */
+  animated: boolean
 }>()
 
 const selection = useSelectionStore()
@@ -95,31 +97,39 @@ function swallow(event: MouseEvent): void {
       data-testid="masonry"
       @click.capture="swallow"
     >
-      <div
-        v-for="note in notes"
-        :key="note.id"
-        :ref="(el) => track(note.id, el)"
-        :data-masonry-key="note.id"
-        class="absolute top-0 left-0 select-none [-webkit-touch-callout:none]"
-        :class="[
-          !masonry.measured && 'invisible',
-          drag.drag.value?.id === note.id
-            ? 'z-10 cursor-grabbing shadow-float'
-            : 'transition-transform duration-200 ease-out motion-reduce:transition-none',
-        ]"
-        :style="{ width: `${masonry.cardWidth}px`, transform: transform(note.id) }"
-        :data-dragging="drag.drag.value?.id === note.id || undefined"
-        @pointerdown="
-          (event) => drag.onPointerDown(event, note.id, event.currentTarget as HTMLElement)
-        "
+      <TransitionGroup
+        :css="animated"
+        type="animation"
+        enter-active-class="card-enter"
+        leave-active-class="card-leave"
+        move-class="card-static"
       >
-        <NoteCard
-          :note="note"
-          :labels="labels.get(note.id) ?? []"
-          :items="items.get(note.id) ?? []"
-          :attachments="attachments.get(note.id) ?? []"
-        />
-      </div>
+        <div
+          v-for="note in notes"
+          :key="note.id"
+          :ref="(el) => track(note.id, el)"
+          :data-masonry-key="note.id"
+          class="absolute top-0 left-0 select-none [-webkit-touch-callout:none]"
+          :class="[
+            !masonry.measured && 'invisible',
+            drag.drag.value?.id === note.id
+              ? 'z-10 cursor-grabbing shadow-float'
+              : 'transition-transform duration-200 ease-out motion-reduce:transition-none',
+          ]"
+          :style="{ width: `${masonry.cardWidth}px`, transform: transform(note.id) }"
+          :data-dragging="drag.drag.value?.id === note.id || undefined"
+          @pointerdown="
+            (event) => drag.onPointerDown(event, note.id, event.currentTarget as HTMLElement)
+          "
+        >
+          <NoteCard
+            :note="note"
+            :labels="labels.get(note.id) ?? []"
+            :items="items.get(note.id) ?? []"
+            :attachments="attachments.get(note.id) ?? []"
+          />
+        </div>
+      </TransitionGroup>
     </div>
   </section>
 </template>

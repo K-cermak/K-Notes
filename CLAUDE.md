@@ -47,6 +47,7 @@ frontend/
     components/
     views/
     locales/         en.json
+    styles/          tokens.css, base.css, ui.css (plain, reusable CSS); main.css (Tailwind, app-only)
   e2e/               Playwright tests
 docs/                SPEC.md, PLAN.md, design/reference.css
 ```
@@ -64,6 +65,7 @@ docs/                SPEC.md, PLAN.md, design/reference.css
 - Migrations: every schema change is an Alembic migration. Never edit a migration that has been committed.
 - The frontend never hand-writes API types. They come from `just api-types`.
 - API errors have one shape: a machine-readable code and a message.
+- Shared interface elements are the `.ui-*` classes in `frontend/src/styles/ui.css`, on the tokens in `tokens.css`; these files stay plain CSS so other projects can reuse them. Use them before styling an element by hand, and add an element there when more than one place needs it.
 - The look is specified in SPEC section 9 "Visual design" and shown in `docs/design/reference.css`. Colours come from the design tokens and the note palette only, corners are square, and surfaces are separated by hairlines rather than shadows.
 - Backend: `ruff` for lint and format, `pyright` for types. Frontend: `eslint`, `prettier`, `vue-tsc`.
 - Commits: small, one logical change each, Conventional Commits format (`feat:`, `fix:`, `test:`, `docs:`, `chore:`). Commit to the active branch, including `main`, unless told otherwise.

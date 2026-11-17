@@ -123,7 +123,8 @@ const empty = computed(() => {
       </UiButton>
     </div>
     <EmptyState v-if="visibleCount === 0" :icon="empty.icon" :text="$t(empty.key)" />
-    <template v-for="([heading, notes], index) in sections" :key="index">
+    <!-- Keyed by the view, so switching views lays out the new list rather than animating it in. -->
+    <template v-for="([heading, notes], index) in sections" :key="`${view}:${labelId}:${index}`">
       <NoteSection
         v-if="notes.length > 0"
         :notes="notes"
@@ -132,6 +133,7 @@ const empty = computed(() => {
         :items="itemsByNote"
         :attachments="attachmentsByNote"
         :sortable="view !== 'trash' && view !== 'search'"
+        :animated="view !== 'search'"
         :heading="heading ? $t(heading) : undefined"
       />
     </template>
