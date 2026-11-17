@@ -104,10 +104,10 @@ Done when: after one online visit the app loads with the network disabled and sh
 
 ## Phase 10: TOTP, OIDC and API tokens
 
-- [ ] TOTP enrolment with QR code, confirmation, recovery codes; two-step login; disable; admin reset.
-- [ ] OIDC login with the account resolution order from section 7; link and unlink in settings; `APP_PASSWORD_LOGIN_ENABLED`, including first-run setup through OIDC when password login is off.
-- [ ] API tokens: create with scope and expiry, show once, list, revoke; Bearer authentication; scope enforcement and the blocked endpoint groups; the REST API (section 8).
-- [ ] Full settings and admin screens, including the user list with invite, reset link, deactivate, delete, the admin rights toggle and TOTP reset, and the instance status.
+- [x] TOTP enrolment with QR code, confirmation, recovery codes; two-step login; disable; admin reset.
+- [x] OIDC login with the account resolution order from section 7; link and unlink in settings; `APP_PASSWORD_LOGIN_ENABLED`, including first-run setup through OIDC when password login is off.
+- [x] API tokens: create with scope and expiry, show once, list, revoke; Bearer authentication; scope enforcement and the blocked endpoint groups; the REST API (section 8).
+- [x] Full settings and admin screens, including the user list with invite, reset link, deactivate, delete, the admin rights toggle and TOTP reset, and the instance status.
 
 Done when: pytest covers TOTP, recovery codes, token auth and token scope limits; OIDC is tested against a mock provider in pytest and manually against one real provider (Authentik or Keycloak in Docker), with the steps recorded in the report, and an unknown user is refused unless auto-provisioning is on. A read token can list notes with `curl` and is refused when it tries to create a note or touch the token endpoints.
 
