@@ -40,9 +40,13 @@ const items = useLiveQuery(
  * already lands in the new row. They stay here until the database has them.
  */
 const unwritten = new Map<string, LocalChecklistItem>()
+/** Removed items disappear at once too, even before the database has them, or gets rid of them. */
+const removed = new Set<string>()
 
 function allItems(): LocalChecklistItem[] {
-  return [...items.value, ...unwritten.values()].sort(byPosition)
+  return [...items.value, ...unwritten.values()]
+    .filter((item) => !removed.has(item.id))
+    .sort(byPosition)
 }
 
 // Local copies for the drag lists, which reorder them while dragging; refreshed from the database
@@ -91,8 +95,13 @@ function track(id: string, row: unknown): void {
   else rows.delete(id)
 }
 
+const root = ref<HTMLElement | null>(null)
+
+// Only while focus is still in the list: a user who has moved on to the title keeps it there.
 async function focusItem(id: string, caret: 'start' | 'end'): Promise<void> {
   await nextTick()
+  const active = document.activeElement
+  if (active && active !== document.body && !root.value?.contains(active)) return
   rows.get(id)?.focus(caret)
 }
 
@@ -126,7 +135,13 @@ function change(item: LocalChecklistItem, patch: ItemPatch): void {
 
 function onRemove(item: LocalChecklistItem): void {
   takeDraft(item.id)
-  void enqueue(() => removeItem(item.id))
+  unwritten.delete(item.id)
+  removed.add(item.id)
+  refresh()
+  void enqueue(async () => {
+    await removeItem(item.id)
+    removed.delete(item.id)
+  })
 }
 
 function onRemoveBack(item: LocalChecklistItem, list: LocalChecklistItem[]): void {
@@ -213,7 +228,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="-ml-2 flex flex-col pb-2" data-testid="checklist">
+  <div ref="root" class="-ml-2 flex flex-col pb-2" data-testid="checklist">
     <VueDraggable
       v-model="unchecked"
       handle=".drag-handle"
