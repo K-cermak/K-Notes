@@ -58,19 +58,21 @@ test('a checklist is written, checked, edited and reordered', async ({ browser }
     .poll(() => itemTexts(editor))
     .toEqual(['Milk', 'Egg', 'Apples', 'Pears', 'Plums', 'Bread'])
 
-  // Dragging the handle of Plums to the top.
+  // Dragging the handle of Plums to the top. Sortable checks the pointer about every 50 ms, so
+  // the drag moves in small steps and drops only once the list shows the new order, as a hand would.
   const plums = item(editor, 'Plums')
   await plums.hover()
   const handle = (await plums.locator('.drag-handle').boundingBox())!
   const top = (await item(editor, 'Milk').boundingBox())!
-  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
+  const x = handle.x + handle.width / 2
+  const from = handle.y + handle.height / 2
+  await page.mouse.move(x, from)
   await page.mouse.down()
   for (let step = 1; step <= 10; step++) {
-    await page.mouse.move(
-      handle.x + handle.width / 2,
-      handle.y + handle.height / 2 + ((top.y + 4 - handle.y) * step) / 10,
-    )
+    await page.mouse.move(x, from + ((top.y + 4 - from) * step) / 10)
+    await page.waitForTimeout(30)
   }
+  await expect.poll(async () => (await itemTexts(editor))[0]).toBe('Plums')
   await page.mouse.up()
   await expect
     .poll(() => itemTexts(editor))
