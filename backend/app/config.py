@@ -177,10 +177,10 @@ def load_settings() -> Settings:
     except ValidationError as exc:
         problems: list[str] = []
         for error in exc.errors():
-            field = str(error["loc"][0]) if error["loc"] else ""
-            name = f"APP_{field.upper()}" if field else "configuration"
             message = "is required" if error["type"] == "missing" else error["msg"]
-            problems.append(f"{name}: {message.removeprefix('Value error, ')}")
+            message = message.removeprefix("Value error, ")
+            # Checks across several variables name them in their message.
+            problems.append(f"APP_{str(error['loc'][0]).upper()}: {message}" if error["loc"] else message)
         raise ConfigError("Invalid configuration:\n  " + "\n  ".join(problems)) from None
     _check_data_dir(settings.data_dir)
     return settings
