@@ -58,6 +58,33 @@ export const router = createRouter({
       meta: { public: true },
     },
     {
+      path: '/settings',
+      component: () => import('@/views/SettingsView.vue'),
+      children: [
+        { path: '', redirect: '/settings/profile' },
+        {
+          path: 'profile',
+          name: 'settings-profile',
+          component: () => import('@/views/settings/ProfileSettings.vue'),
+        },
+        {
+          path: 'security',
+          name: 'settings-security',
+          component: () => import('@/views/settings/SecuritySettings.vue'),
+        },
+        {
+          path: 'tokens',
+          name: 'settings-tokens',
+          component: () => import('@/views/settings/TokenSettings.vue'),
+        },
+        {
+          path: 'device',
+          name: 'settings-device',
+          component: () => import('@/views/settings/DeviceSettings.vue'),
+        },
+      ],
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('@/views/AdminView.vue'),

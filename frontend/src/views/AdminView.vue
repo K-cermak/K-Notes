@@ -1,16 +1,34 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { ArrowLeft, Check, Copy, X } from '@lucide/vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuRoot,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from 'reka-ui'
+import { ArrowLeft, Check, Copy, EllipsisVertical, X } from '@lucide/vue'
 import { api, call, type AdminUser, type CreatedLink, type PendingInvite } from '@/api/client'
+import type { components } from '@/api/schema'
 import { useSubmit } from '@/composables/useSubmit'
+import { useConfirmStore } from '@/stores/confirm'
+import { useSessionStore } from '@/stores/session'
+import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
 import UiField from '@/components/ui/UiField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiNotice from '@/components/ui/UiNotice.vue'
 
-// A minimal admin page for phase 1: enough to invite people. The full screen arrives in phase 10.
+const i18n = useI18n()
+const session = useSessionStore()
+const confirm = useConfirmStore()
 const users = ref<AdminUser[]>([])
+const status = ref<components['schemas']['InstanceStatus'] | null>(null)
+const resetLink = ref<{ user: AdminUser; link: CreatedLink } | null>(null)
+const userAction = useSubmit()
 const invites = ref<PendingInvite[]>([])
 const registration = ref(false)
 const inviteEmail = ref('')
@@ -22,14 +40,16 @@ const toggle = useSubmit()
 
 async function refresh(): Promise<void> {
   await load.run(async () => {
-    const [u, i, s] = await Promise.all([
+    const [u, i, s, st] = await Promise.all([
       call(() => api.GET('/api/v1/admin/users')),
       call(() => api.GET('/api/v1/admin/invites')),
       call(() => api.GET('/api/v1/admin/settings')),
+      call(() => api.GET('/api/v1/admin/status')),
     ])
     users.value = u
     invites.value = i
     registration.value = s.registration_enabled
+    status.value = st
   })
 }
 
@@ -72,6 +92,73 @@ async function setRegistration(value: boolean): Promise<void> {
     )
     registration.value = result.registration_enabled
   })
+}
+
+// The server enforces both guards (SPEC 7); the menu only reflects them.
+const activeAdmins = computed(() => users.value.filter((u) => u.is_admin && u.is_active).length)
+function isSelf(user: AdminUser): boolean {
+  return user.id === session.user?.id
+}
+function lastAdmin(user: AdminUser): boolean {
+  return user.is_admin && user.is_active && activeAdmins.value <= 1
+}
+
+async function updateUser(user: AdminUser, body: { is_admin?: boolean; is_active?: boolean }) {
+  await userAction.run(async () => {
+    await call(() =>
+      api.PATCH('/api/v1/admin/users/{user_id}', { params: { path: { user_id: user.id } }, body }),
+    )
+    users.value = await call(() => api.GET('/api/v1/admin/users'))
+  })
+}
+
+async function createResetLink(user: AdminUser): Promise<void> {
+  copied.value = false
+  await userAction.run(async () => {
+    const created = await call(() =>
+      api.POST('/api/v1/admin/users/{user_id}/reset-link', {
+        params: { path: { user_id: user.id } },
+      }),
+    )
+    resetLink.value = { user, link: created }
+  })
+}
+
+async function resetTotp(user: AdminUser): Promise<void> {
+  const sure = await confirm.ask({
+    title: i18n.t('admin.users.resetTotpTitle', { name: user.display_name }),
+    message: i18n.t('admin.users.resetTotpMessage'),
+    confirmLabel: i18n.t('admin.users.resetTotp'),
+  })
+  if (!sure) return
+  await userAction.run(async () => {
+    await call(() =>
+      api.DELETE('/api/v1/admin/users/{user_id}/totp', { params: { path: { user_id: user.id } } }),
+    )
+    users.value = await call(() => api.GET('/api/v1/admin/users'))
+  })
+}
+
+async function deleteUser(user: AdminUser): Promise<void> {
+  const sure = await confirm.ask({
+    title: i18n.t('admin.users.deleteTitle', { name: user.display_name }),
+    message: i18n.t('admin.users.deleteMessage'),
+    confirmLabel: i18n.t('admin.users.delete'),
+    danger: true,
+  })
+  if (!sure) return
+  await userAction.run(async () => {
+    await call(() =>
+      api.DELETE('/api/v1/admin/users/{user_id}', { params: { path: { user_id: user.id } } }),
+    )
+    users.value = users.value.filter((u) => u.id !== user.id)
+  })
+}
+
+async function copyResetLink(): Promise<void> {
+  if (!resetLink.value) return
+  await navigator.clipboard.writeText(resetLink.value.link.url)
+  copied.value = true
 }
 
 function formatDate(ms: number): string {
@@ -163,8 +250,76 @@ onMounted(refresh)
           <span v-if="!user.is_active" class="border border-danger px-1.5 text-meta text-danger">
             {{ $t('admin.users.inactive') }}
           </span>
+          <span v-if="user.totp_enabled" class="border border-line px-1.5 text-meta text-muted">
+            2FA
+          </span>
+          <DropdownMenuRoot :modal="false">
+            <DropdownMenuTrigger
+              :class="iconButton"
+              :aria-label="$t('admin.users.actions', { name: user.display_name })"
+              data-testid="user-actions"
+            >
+              <EllipsisVertical :size="18" />
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent :class="menuPanel" align="end" :side-offset="4">
+                <DropdownMenuItem
+                  :class="menuItem"
+                  :disabled="!user.is_active"
+                  @select="createResetLink(user)"
+                >
+                  {{ $t('admin.users.resetLink') }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  v-if="user.totp_enabled"
+                  :class="menuItem"
+                  @select="resetTotp(user)"
+                >
+                  {{ $t('admin.users.resetTotp') }}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator class="my-1 h-px bg-line" />
+                <DropdownMenuItem
+                  :class="menuItem"
+                  :disabled="user.is_admin && (isSelf(user) || lastAdmin(user))"
+                  @select="updateUser(user, { is_admin: !user.is_admin })"
+                >
+                  {{ $t(user.is_admin ? 'admin.users.revokeAdmin' : 'admin.users.makeAdmin') }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  :class="menuItem"
+                  :disabled="user.is_active && (isSelf(user) || lastAdmin(user))"
+                  @select="updateUser(user, { is_active: !user.is_active })"
+                >
+                  {{ $t(user.is_active ? 'admin.users.deactivate' : 'admin.users.reactivate') }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  :class="[menuItem, 'text-danger']"
+                  :disabled="isSelf(user) || lastAdmin(user)"
+                  @select="deleteUser(user)"
+                >
+                  {{ $t('admin.users.delete') }}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenuRoot>
         </li>
       </ul>
+      <UiNotice v-if="userAction.error.value" tone="error">{{ userAction.error.value }}</UiNotice>
+      <div v-if="resetLink" class="flex flex-col gap-2" data-testid="reset-link">
+        <p class="text-muted">
+          {{ $t('admin.users.resetLinkFor', { name: resetLink.user.display_name }) }}
+        </p>
+        <div class="flex gap-2">
+          <UiInput :model-value="resetLink.link.url" readonly class="font-mono text-meta" />
+          <UiButton :aria-label="$t('admin.invite.copy')" icon-only @click="copyResetLink">
+            <Check v-if="copied" class="text-success" />
+            <Copy v-else />
+          </UiButton>
+        </div>
+        <p class="text-meta text-faint">
+          {{ $t('admin.users.resetOnce', { date: formatDate(resetLink.link.expires_at) }) }}
+        </p>
+      </div>
     </section>
 
     <section class="flex flex-col gap-3">
@@ -182,6 +337,20 @@ onMounted(refresh)
         </span>
       </label>
       <UiNotice v-if="toggle.error.value" tone="error">{{ toggle.error.value }}</UiNotice>
+    </section>
+
+    <section v-if="status" class="flex flex-col gap-3" data-testid="instance-status">
+      <h2 class="text-base">{{ $t('admin.status.title') }}</h2>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5">
+        <dt class="text-muted">{{ $t('admin.status.version') }}</dt>
+        <dd class="font-mono tabular-nums">{{ status.version }}</dd>
+        <dt class="text-muted">{{ $t('admin.status.users') }}</dt>
+        <dd class="font-mono tabular-nums">{{ status.user_count }}</dd>
+        <dt class="text-muted">{{ $t('admin.status.oidc') }}</dt>
+        <dd>{{ $t(status.oidc_enabled ? 'admin.status.yes' : 'admin.status.no') }}</dd>
+        <dt class="text-muted">{{ $t('admin.status.passwordLogin') }}</dt>
+        <dd>{{ $t(status.password_login_enabled ? 'admin.status.yes' : 'admin.status.no') }}</dd>
+      </dl>
     </section>
   </main>
 </template>

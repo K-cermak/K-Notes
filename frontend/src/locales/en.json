@@ -61,7 +61,8 @@
     "cancel": "Cancel",
     "close": "Close",
     "undo": "Undo",
-    "done": "Done"
+    "done": "Done",
+    "save": "Save"
   },
   "account": {
     "displayName": "Display name",
@@ -73,7 +74,8 @@
   "setup": {
     "title": "Set up {name}",
     "description": "Create the administrator account. You can invite other people afterwards.",
-    "submit": "Create account"
+    "submit": "Create account",
+    "ssoDescription": "Sign in with single sign-on. The first account becomes the administrator."
   },
   "login": {
     "title": "Sign in",
@@ -119,12 +121,35 @@
     "users": {
       "title": "Users",
       "admin": "Admin",
-      "inactive": "Deactivated"
+      "inactive": "Deactivated",
+      "actions": "Actions for {name}",
+      "resetLink": "Create password reset link",
+      "resetLinkFor": "Password reset link for {name}. Pass it on; it works once.",
+      "resetOnce": "Valid until {date}.",
+      "resetTotp": "Turn off two-step verification",
+      "resetTotpTitle": "Turn off two-step verification for {name}?",
+      "resetTotpMessage": "Use this when they lost their phone and their recovery codes. They can set it up again.",
+      "makeAdmin": "Make admin",
+      "revokeAdmin": "Remove admin rights",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "delete": "Delete account",
+      "deleteTitle": "Delete {name}?",
+      "deleteMessage": "Their account, notes and images are deleted for good."
     },
     "registration": {
       "title": "Registration",
       "label": "Allow anyone to create an account",
       "hint": "When off, people can only join through an invite link."
+    },
+    "status": {
+      "title": "Instance",
+      "version": "Version",
+      "users": "Accounts",
+      "oidc": "Single sign-on",
+      "passwordLogin": "Password sign-in",
+      "yes": "On",
+      "no": "Off"
     }
   },
   "errors": {
@@ -147,7 +172,16 @@
     "last_admin": "The instance must keep at least one active administrator.",
     "login_expired": "The sign-in took too long. Start again.",
     "invalid_code": "The code is not correct.",
-    "token_not_allowed": "API tokens cannot be used for this."
+    "token_not_allowed": "API tokens cannot be used for this.",
+    "password_login_disabled": "Sign in with single sign-on.",
+    "oidc_failed": "Single sign-on did not work. Try again.",
+    "oidc_no_account": "There is no account for you yet. Ask an administrator to create one.",
+    "oidc_taken": "That single sign-on account is already linked to another account.",
+    "last_login_method": "This is your only way to sign in.",
+    "setup_required": "Set up the instance first.",
+    "totp_enabled": "Two-step verification is already on.",
+    "no_password": "Accounts that use single sign-on get two-step verification from it.",
+    "insufficient_scope": "This token can only read."
   },
   "sync": {
     "idle": "Starting",
@@ -295,7 +329,82 @@
   },
   "settings": {
     "downloadOnDemand": "Download images on demand",
-    "storage": "{mb} MB stored on this device"
+    "storage": "{mb} MB stored on this device",
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "saved": "Display name saved.",
+      "language": "Language",
+      "view": "Notes layout",
+      "grid": "Grid",
+      "list": "List"
+    },
+    "device": {
+      "title": "This device",
+      "intro": "These settings apply to this browser only.",
+      "onDemandHint": "Images stay on the server until you tap them. Saves data and space on phones."
+    },
+    "password": {
+      "title": "Password",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Change password",
+      "changed": "Password changed. Your other sessions have been signed out."
+    },
+    "totp": {
+      "title": "Two-step verification",
+      "intro": "Asks for a code from an authenticator app after your password.",
+      "setUp": "Set up",
+      "scan": "Scan this code with your authenticator app.",
+      "qr": "QR code for the authenticator app",
+      "manual": "Or enter this key by hand:",
+      "enterCode": "Enter the 6-digit code it shows",
+      "confirm": "Turn on",
+      "saveCodes": "Save these recovery codes somewhere safe. Each one signs you in once if you lose your phone. They are shown only now.",
+      "on": "On",
+      "codesLeft": "{count} recovery code left | {count} recovery codes left",
+      "codeOrRecovery": "Code from the app, or a recovery code",
+      "renew": "New recovery codes",
+      "turnOff": "Turn off"
+    },
+    "sso": {
+      "title": "Single sign-on ({provider})",
+      "isLinked": "Your account is linked to {provider}. You can sign in with it.",
+      "notLinked": "Link your {provider} account to sign in with it.",
+      "unlink": "Unlink",
+      "onlyWay": "This is your only way to sign in, so it cannot be unlinked.",
+      "linked": "Linked. You can now sign in with single sign-on."
+    },
+    "sessions": {
+      "title": "Sessions",
+      "current": "This device",
+      "lastUsed": "Last used {time}",
+      "signOut": "Sign out",
+      "signOutOthers": "Sign out everywhere else",
+      "unknown": "Unknown device"
+    },
+    "tokens": {
+      "title": "API tokens",
+      "intro": "Tokens let scripts read or change your notes through the REST API. They cannot reach your account, security settings or administration.",
+      "name": "Name",
+      "scope": "Access",
+      "read": "Read",
+      "write": "Read and write",
+      "expiry": "Expires",
+      "days": "In {count} day | In {count} days",
+      "never": "Never",
+      "create": "Create token",
+      "once": "Copy the token now. It is not shown again.",
+      "expires": "expires {date}",
+      "used": "used {date}",
+      "unused": "never used",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke “{name}”?",
+      "revokeMessage": "Scripts using this token stop working at once."
+    },
+    "security": {
+      "title": "Security"
+    }
   },
   "images": {
     "add": "Add image",

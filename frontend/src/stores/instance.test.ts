@@ -24,7 +24,7 @@ describe('instance store', () => {
     vi.spyOn(api, 'GET').mockResolvedValueOnce({
       data: config,
       response: new Response(null, { status: 200 }),
-    } as never)
+    })
     await useInstanceStore().load()
     expect(await cachedConfig(db)).toEqual(config)
 

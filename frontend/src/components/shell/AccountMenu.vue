@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { Check, LayoutGrid, LogOut, Rows3, Shield } from '@lucide/vue'
+import { Check, LayoutGrid, LogOut, Rows3, Settings, Shield } from '@lucide/vue'
 import { themes } from '@/theme'
 import { useSubmit } from '@/composables/useSubmit'
 import { useSessionStore } from '@/stores/session'
@@ -88,6 +88,9 @@ async function logout(): Promise<void> {
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator class="my-1 h-px bg-line" />
         </template>
+        <DropdownMenuItem :class="menuItem" @select="router.push('/settings')">
+          <Settings :size="16" /> {{ $t('settings.title') }}
+        </DropdownMenuItem>
         <DropdownMenuItem
           v-if="session.user?.is_admin"
           :class="menuItem"
