@@ -11,6 +11,8 @@ test('first-run setup, invite by link, sign out and sign in', async ({ page, bro
   await page.getByLabel('Password').fill(admin.password)
   await page.getByRole('button', { name: 'Create account' }).click()
   await expect(page.getByTestId('sync-status')).toHaveAttribute('data-state', 'synced')
+  await page.goto('/setup')
+  await expect(page).toHaveURL(/\/$/)
   await page.getByTestId('account-menu').click()
   await expect(page.getByTestId('signed-in-as')).toHaveText(admin.name)
   await page.getByRole('menuitem', { name: 'Administration' }).click()

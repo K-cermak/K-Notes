@@ -116,7 +116,7 @@ router.beforeEach(async (to) => {
     return to.name === 'setup' || to.name === 'showcase' ? true : { name: 'setup' }
   }
   if (!session.loaded) await session.load()
-  if (to.name === 'setup') return { name: session.user ? 'home' : 'login' }
+  if (to.name === 'setup') return { name: session.user ? 'notes' : 'login' }
   if (to.meta.guestOnly && session.user && !session.expired) return { name: 'notes' }
   if (!to.meta.public && !session.user) {
     return { name: 'login', query: to.fullPath === '/' ? {} : { next: to.fullPath } }
