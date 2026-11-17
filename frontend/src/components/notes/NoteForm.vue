@@ -38,13 +38,17 @@ const router = useRouter()
 const actions = useNoteActions()
 
 const id = ref(props.noteId)
-const note = useLiveQuery(() => (id.value ? db.notes.get(id.value) : undefined), undefined)
-const labels = useLiveQuery(async () => {
-  if (!id.value) return []
-  const memberships = await db.noteLabels.where('note_id').equals(id.value).toArray()
-  const found = await db.labels.bulkGet(memberships.map((m) => m.label_id))
-  return found.filter((label) => label !== undefined).sort(byName)
-}, [])
+const note = useLiveQuery(() => (id.value ? db.notes.get(id.value) : undefined), undefined, id)
+const labels = useLiveQuery(
+  async () => {
+    if (!id.value) return []
+    const memberships = await db.noteLabels.where('note_id').equals(id.value).toArray()
+    const found = await db.labels.bulkGet(memberships.map((m) => m.label_id))
+    return found.filter((label) => label !== undefined).sort(byName)
+  },
+  [],
+  id,
+)
 const picking = ref(false)
 
 // The menu closes first and hands focus back to its button; the picker opens after that.

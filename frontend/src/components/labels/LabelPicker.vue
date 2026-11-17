@@ -23,6 +23,7 @@ const labels = useLiveQuery(async () => (await db.labels.toArray()).sort(byName)
 const memberships = useLiveQuery(
   () => (props.noteId ? db.noteLabels.where('note_id').equals(props.noteId).toArray() : []),
   [],
+  () => props.noteId,
 )
 const selected = computed(() => new Set(memberships.value.map((m) => m.label_id)))
 const visible = computed(() => {

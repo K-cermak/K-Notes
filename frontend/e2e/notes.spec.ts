@@ -55,6 +55,22 @@ test('archive and trash with undo, restore and delete forever', async ({ browser
   await expect(card(page, 'Old receipt')).toBeVisible()
 })
 
+test('the composer follows a new note once it is saved', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  await page.getByTestId('composer').click()
+  const form = page.getByTestId('note-form')
+  await form.getByTestId('editor-title').fill('Pinned draft')
+  await expect(page.getByTestId('note-card')).toHaveCount(1)
+  const pin = form.getByRole('button', { name: 'Pin note' })
+  await pin.click()
+  await expect(form.getByRole('button', { name: 'Unpin note' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await form.getByRole('button', { name: 'Unpin note' }).click()
+  await expect(pin).toHaveAttribute('aria-pressed', 'false')
+})
+
 test('an empty new note is discarded when closed', async ({ browser }) => {
   const { page } = await signedIn(browser, await newUser(browser))
   await page.keyboard.press('c')
