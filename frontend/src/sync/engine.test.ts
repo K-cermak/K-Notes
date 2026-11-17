@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Failure } from '@/api/client'
+import { addItems } from '@/db/checklist'
 import { getMeta } from '@/db/meta'
 import { createNote, purgeNote, updateNote } from '@/db/notes'
 import { testDatabase } from '@/db/testing'
@@ -163,6 +164,20 @@ describe('sync cycle', () => {
     expect(server.log).toEqual(['push:1', 'pull:0'])
     expect(await db.outbox.toArray()).toEqual([expect.objectContaining({ inFlight: 0 })])
     expect(states.at(-1)).toBe('synced')
+  })
+
+  it('removes a new row the server answers gone for, as when its note was deleted elsewhere', async () => {
+    const db = testDatabase()
+    const server = new FakeServer()
+    const noteId = await createNote({ title: 'Deleted elsewhere' }, db)
+    await db.notes.update(noteId, { serverSeq: 1 })
+    await db.outbox.clear()
+    await addItems(noteId, ['added offline'], null, db)
+    server.results = (op) => ({ op_id: op.op_id, status: 'gone' })
+    const { engine } = makeEngine(db, server)
+    await engine.start()
+    expect(await db.checklistItems.count()).toBe(0)
+    expect(await db.outbox.count()).toBe(0)
   })
 
   it('runs another cycle when a blob_missing image will be uploaded again', async () => {

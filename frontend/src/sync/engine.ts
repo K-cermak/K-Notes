@@ -1,6 +1,6 @@
 import type { components } from '@/api/schema'
 import { Failure } from '@/api/client'
-import { applyChanges, resetSyncedData } from '@/db/apply'
+import { applyChanges, removeLocal, resetSyncedData } from '@/db/apply'
 import { getMeta } from '@/db/meta'
 import { localWrites } from '@/db/outbox'
 import type { NotesDatabase, OutboxEntry } from '@/db/schema'
@@ -226,6 +226,11 @@ export class SyncEngine {
             continue
           }
           if (result.status === 'rejected') rejected.push(result)
+          if (result.status === 'gone' && entry.kind === 'upsert') {
+            // The row, or the note or label it belongs to, is deleted on the server. A row made
+            // here would otherwise stay for good: no tombstone ever comes for it.
+            await removeLocal(this.db, entry.entity, entry.entityId)
+          }
           if (result.status === 'applied' && entry.kind === 'upsert' && entry.baseSeq === 0) {
             // The server has the new row now. Until the pull brings its real seq, a serverSeq of 0
             // would make a delete look like one of a row the server never saw, and it would be

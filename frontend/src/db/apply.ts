@@ -1,5 +1,6 @@
 import type { components } from '@/api/schema'
 import { setMeta } from './meta'
+import { dropPending } from './outbox'
 import type { Entity, NotesDatabase } from './schema'
 import { refreshSearchText } from './search'
 
@@ -28,15 +29,14 @@ export async function applyChanges(
     for (const [key, entity] of TABLES) {
       const table = db.syncedTable(entity)
       for (const row of changes[key]) {
+        if (row.deleted) {
+          await removeLocal(db, entity, row.id)
+          continue
+        }
         const pending = await db.outbox
           .where('[entity+entityId]')
           .equals([entity, row.id])
           .toArray()
-        if (row.deleted) {
-          await table.delete(row.id)
-          await db.outbox.bulkDelete(pending.map((e) => e.seq!))
-          continue
-        }
         // A pending purge means the user deleted the row here; it stays deleted until the server agrees.
         if (pending.some((e) => e.kind === 'purge')) continue
         const { seq, deleted: _deleted, ...fields } = row
@@ -64,6 +64,38 @@ export async function applyChanges(
     await refreshSearchText(db, touched)
     await setMeta(db, 'cursor', cursor)
   })
+}
+
+/**
+ * Removes a row the server has deleted, with its pending ops. A note takes its items, attachments
+ * and label memberships along, and a label its memberships, including rows made here that the
+ * server never saw: no tombstone would ever come for those. Must run inside a transaction that
+ * includes the synced tables and the outbox.
+ */
+export async function removeLocal(db: NotesDatabase, entity: Entity, id: string): Promise<void> {
+  const affected: string[] = []
+  if (entity === 'note') {
+    for (const [table, child] of [
+      [db.checklistItems, 'checklist_item'],
+      [db.attachments, 'attachment'],
+      [db.noteLabels, 'note_label'],
+    ] as const) {
+      const ids = await table.where('note_id').equals(id).primaryKeys()
+      for (const childId of ids) await dropPending(db, child, childId)
+      await table.bulkDelete(ids)
+    }
+  } else if (entity === 'label') {
+    const memberships = await db.noteLabels.where('label_id').equals(id).toArray()
+    for (const membership of memberships) await dropPending(db, 'note_label', membership.id)
+    await db.noteLabels.bulkDelete(memberships.map((m) => m.id))
+    affected.push(...memberships.map((m) => m.note_id))
+  } else if (entity === 'checklist_item' || entity === 'note_label') {
+    const row = (await db.syncedTable(entity).get(id)) as { note_id: string } | undefined
+    if (row) affected.push(row.note_id)
+  }
+  await db.syncedTable(entity).delete(id)
+  await dropPending(db, entity, id)
+  await refreshSearchText(db, affected)
 }
 
 /** Forgets every synced row and the cursor, keeping only rows that still have pending ops. */

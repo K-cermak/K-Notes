@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { components } from '@/api/schema'
 import { applyChanges } from './apply'
+import { addItems } from './checklist'
+import { createLabel, setNoteLabel } from './labels'
 import { getMeta } from './meta'
 import { createNote, updateNote } from './notes'
 import { fromPlainText } from './richtext'
@@ -81,6 +83,38 @@ describe('applying pulled rows', () => {
     await applyChanges(db, changes({ notes: [noteRow({ id, seq: 4, deleted: true })] }), 4)
     expect(await db.notes.get(id)).toBeUndefined()
     expect(await db.outbox.count()).toBe(0)
+  })
+
+  it('takes rows the server never saw along with their deleted note', async () => {
+    const db = testDatabase()
+    await applyChanges(db, changes({ notes: [noteRow({ id: 'n1', seq: 1 })] }), 1)
+    const labelId = (await createLabel('Home', db))!
+    await addItems('n1', ['offline item'], null, db)
+    await setNoteLabel('n1', labelId, true, db)
+
+    await applyChanges(db, changes({ notes: [noteRow({ id: 'n1', seq: 2, deleted: true })] }), 2)
+    expect(await db.checklistItems.count()).toBe(0)
+    expect(await db.noteLabels.count()).toBe(0)
+    expect((await db.outbox.toArray()).map((e) => e.entity)).toEqual(['label'])
+  })
+
+  it('takes memberships the server never saw along with their deleted label', async () => {
+    const db = testDatabase()
+    await applyChanges(
+      db,
+      changes({
+        notes: [noteRow({ id: 'n1', seq: 1 })],
+        labels: [{ id: 'l1', seq: 2, deleted: false, name: 'Work' }],
+      }),
+      2,
+    )
+    await setNoteLabel('n1', 'l1', true, db)
+    expect((await db.notes.get('n1'))!.searchText).toContain('work')
+
+    await applyChanges(db, changes({ labels: [{ id: 'l1', seq: 3, deleted: true, name: '' }] }), 3)
+    expect(await db.noteLabels.count()).toBe(0)
+    expect(await db.outbox.count()).toBe(0)
+    expect((await db.notes.get('n1'))!.searchText).not.toContain('work')
   })
 
   it('does not bring back a row with a pending purge', async () => {
