@@ -287,6 +287,22 @@ describe('sync cycle', () => {
 })
 
 describe('failures', () => {
+  it('shows offline when the connection drops while a cycle is under way', async () => {
+    const db = testDatabase()
+    const server = new FakeServer()
+    const { engine, states } = makeEngine(db, server)
+    const pull = server.pull
+    server.pull = (since) => {
+      // The browser reports the loss mid-cycle; this response still made it through.
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+      window.dispatchEvent(new Event('offline'))
+      return pull(since)
+    }
+    await engine.start()
+    expect(states.at(-1)).toBe('offline')
+    vi.restoreAllMocks()
+  })
+
   it('backs off exponentially on network errors and keeps the outbox', async () => {
     const db = testDatabase()
     const server = new FakeServer()

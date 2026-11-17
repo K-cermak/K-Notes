@@ -166,7 +166,9 @@ export class SyncEngine {
       return
     }
     this.failures = 0
-    this.setState('synced')
+    // The connection may have dropped while the last request was answered; the offline event that
+    // reported it must not be overwritten.
+    this.setState(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'synced')
     if (this.eventsClosed) this.openEvents()
   }
 
