@@ -80,7 +80,12 @@
     "submit": "Sign in",
     "invalid": "The e-mail address or password is not correct.",
     "forgot": "Forgot your password? Ask your administrator for a reset link.",
-    "noAccount": "No account yet?"
+    "noAccount": "No account yet?",
+    "codeTitle": "Two-step verification",
+    "codeHint": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
+    "code": "Code",
+    "verify": "Verify",
+    "invalidCode": "The code is not correct."
   },
   "register": {
     "title": "Create an account",
@@ -139,7 +144,10 @@
     "cross_origin": "The request was refused for security reasons.",
     "not_admin": "Only administrators can do this.",
     "self_change": "You cannot do this to your own account.",
-    "last_admin": "The instance must keep at least one active administrator."
+    "last_admin": "The instance must keep at least one active administrator.",
+    "login_expired": "The sign-in took too long. Start again.",
+    "invalid_code": "The code is not correct.",
+    "token_not_allowed": "API tokens cannot be used for this."
   },
   "sync": {
     "idle": "Starting",
@@ -304,5 +312,9 @@
   "search": {
     "placeholder": "Search",
     "close": "Close search"
+  },
+  "oidc": {
+    "signIn": "Sign in with {provider}",
+    "link": "Link {provider}"
   }
 }

@@ -1,15 +1,15 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { api } from '@/api/client'
+import { api, type PublicConfig } from '@/api/client'
 import { cachedConfig } from '@/db/identity'
 import { db } from '@/db/schema'
 import { useInstanceStore } from './instance'
 
-const config = {
-  name: 'Notes',
+const config: PublicConfig = {
+  app_name: 'Notes',
   version: '1.0.0',
   setup_required: false,
-  registration_enabled: false,
+  registration_open: false,
   password_login_enabled: true,
   oidc_enabled: false,
   oidc_provider_name: 'SSO',
