@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { ListChecks } from '@lucide/vue'
+import type { LocalNote } from '@/db/schema'
 import NoteForm from '@/components/notes/NoteForm.vue'
+import { iconButton } from '@/components/ui/menu'
 
 // The desktop "Take a note…" bar; it expands in place and saves when it loses focus (SPEC 9).
 defineProps<{ labelIds?: string[] }>()
 
 const open = ref(false)
+const type = ref<LocalNote['type']>('text')
 const root = ref<HTMLElement | null>(null)
 const form = ref<{ finish: () => Promise<void> } | null>(null)
 
@@ -26,25 +30,51 @@ function onPointerDown(event: PointerEvent): void {
 onMounted(() => document.addEventListener('pointerdown', onPointerDown))
 onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown))
 
-defineExpose({ start: () => (open.value = true) })
+function start(kind: LocalNote['type'] = 'text'): void {
+  type.value = kind
+  open.value = true
+}
+
+defineExpose({ start })
 </script>
 
 <template>
   <div ref="root" class="mx-auto w-full max-w-[600px]">
-    <button
+    <div
       v-if="!open"
-      type="button"
-      class="flex h-12 w-full cursor-text items-center border border-line bg-bg px-4 text-left font-medium text-faint shadow-none transition-colors duration-150 hover:border-line-hover"
-      data-testid="composer"
-      @click="open = true"
+      class="flex h-12 w-full items-center border border-line bg-bg pr-1.5 transition-colors duration-150 hover:border-line-hover"
     >
-      {{ $t('composer.placeholder') }}
-    </button>
+      <button
+        type="button"
+        class="h-full flex-1 cursor-text px-4 text-left font-medium text-faint"
+        data-testid="composer"
+        @click="start('text')"
+      >
+        {{ $t('composer.placeholder') }}
+      </button>
+      <button
+        type="button"
+        :class="iconButton"
+        :aria-label="$t('composer.newList')"
+        :title="$t('composer.newList')"
+        data-testid="composer-list"
+        @click="start('checklist')"
+      >
+        <ListChecks :size="18" />
+      </button>
+    </div>
     <div
       v-else
       class="flex animate-rise flex-col border border-line-hover motion-reduce:animate-fade"
     >
-      <NoteForm ref="form" :note-id="null" :label-ids="labelIds" autofocus="title" @close="close" />
+      <NoteForm
+        ref="form"
+        :note-id="null"
+        :type="type"
+        :label-ids="labelIds"
+        :autofocus="type === 'checklist' ? 'body' : 'title'"
+        @close="close"
+      />
     </div>
   </div>
 </template>

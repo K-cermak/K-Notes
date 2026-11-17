@@ -6,12 +6,19 @@ import {
   DropdownMenuRoot,
   DropdownMenuTrigger,
 } from 'reka-ui'
-import { Copy, EllipsisVertical, Tag, Trash2, Undo2 } from '@lucide/vue'
+import { Copy, EllipsisVertical, ListChecks, Tag, Trash2, Type, Undo2 } from '@lucide/vue'
 import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
 
-defineProps<{ trashed: boolean }>()
+defineProps<{ trashed: boolean; checklist?: boolean }>()
 
-const emit = defineEmits<{ trash: []; copy: []; restore: []; purge: []; labels: [] }>()
+const emit = defineEmits<{
+  trash: []
+  copy: []
+  restore: []
+  purge: []
+  labels: []
+  convert: [to: 'text' | 'checklist']
+}>()
 </script>
 
 <template>
@@ -38,6 +45,15 @@ const emit = defineEmits<{ trash: []; copy: []; restore: []; purge: []; labels: 
           </DropdownMenuItem>
           <DropdownMenuItem :class="menuItem" @select="emit('copy')">
             <Copy :size="16" /> {{ $t('note.copy') }}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            :class="menuItem"
+            @select="emit('convert', checklist ? 'text' : 'checklist')"
+          >
+            <template v-if="checklist">
+              <Type :size="16" /> {{ $t('note.hideCheckboxes') }}
+            </template>
+            <template v-else> <ListChecks :size="16" /> {{ $t('note.showCheckboxes') }} </template>
           </DropdownMenuItem>
         </template>
       </DropdownMenuContent>

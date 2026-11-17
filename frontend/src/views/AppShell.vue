@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
 import { Plus } from '@lucide/vue'
+import type { LocalNote } from '@/db/schema'
 import type { NotesView as View } from '@/notes'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useSessionStore } from '@/stores/session'
@@ -23,7 +24,7 @@ const sync = useSyncStore()
 const wide = useMediaQuery('(min-width: 640px)')
 const compact = computed(() => !wide.value)
 const drawerOpen = ref(false)
-const composer = ref<{ start: () => void } | null>(null)
+const composer = ref<{ start: (type?: LocalNote['type']) => void } | null>(null)
 const editLabels = ref(false)
 const topBar = ref<{ focusSearch: () => void } | null>(null)
 
@@ -47,9 +48,18 @@ const listPath = computed(() => background.value?.fullPath ?? '/')
 const editing = computed(() => route.name === 'note')
 const composing = computed(() => view.value === 'notes' || view.value === 'label')
 
-function newNote(): void {
-  if (!compact.value && composing.value) composer.value?.start()
-  else void router.push({ path: '/note/new', query: labelId.value ? { label: labelId.value } : {} })
+function newNote(type: LocalNote['type'] = 'text'): void {
+  if (!compact.value && composing.value) {
+    composer.value?.start(type)
+    return
+  }
+  void router.push({
+    path: '/note/new',
+    query: {
+      ...(labelId.value ? { label: labelId.value } : {}),
+      ...(type === 'checklist' ? { type } : {}),
+    },
+  })
 }
 
 function typing(target: EventTarget | null): boolean {
@@ -59,7 +69,7 @@ function typing(target: EventTarget | null): boolean {
   )
 }
 
-// Keyboard shortcuts (SPEC 9): c for a new note, / for search; l arrives with checklists.
+// Keyboard shortcuts (SPEC 9): c for a new note, l for a new checklist, / for search.
 function onKeydown(event: KeyboardEvent): void {
   if (
     event.defaultPrevented ||
@@ -70,9 +80,9 @@ function onKeydown(event: KeyboardEvent): void {
   )
     return
   if (editing.value) return
-  if (event.key === 'c') {
+  if (event.key === 'c' || event.key === 'l') {
     event.preventDefault()
-    newNote()
+    newNote(event.key === 'l' ? 'checklist' : 'text')
   } else if (event.key === '/') {
     event.preventDefault()
     topBar.value?.focusSearch()
@@ -121,7 +131,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     class="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 grid size-14 cursor-pointer place-items-center bg-accent text-on-accent shadow-float active:bg-accent-hover"
     :aria-label="$t('composer.new')"
     data-testid="fab"
-    @click="newNote"
+    @click="newNote()"
   >
     <Plus :size="24" />
   </button>

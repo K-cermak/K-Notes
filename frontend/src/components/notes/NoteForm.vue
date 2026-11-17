@@ -5,16 +5,18 @@ import { useRouter } from 'vue-router'
 import type { JSONContent } from '@tiptap/core'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import { Archive, ArchiveRestore, Pin, PinOff, Undo2 } from '@lucide/vue'
+import { convertNote } from '@/db/checklist'
 import { byName, setNoteLabel } from '@/db/labels'
 import { createNote, isNoteEmpty, purgeNote, updateNote } from '@/db/notes'
 import { emptyDoc } from '@/db/richtext'
-import { db, type RichDoc } from '@/db/schema'
+import { db, type LocalNote, type RichDoc } from '@/db/schema'
 import { noteExtensions } from '@/editor/extensions'
 import { noteBackground, type NoteColor } from '@/notes'
 import { useDebouncedSave } from '@/composables/useDebouncedSave'
 import { useLiveQuery } from '@/composables/useLiveQuery'
 import { useNoteActions } from '@/composables/useNoteActions'
 import { iconButton } from '@/components/ui/menu'
+import ChecklistEditor from './ChecklistEditor.vue'
 import ColorPicker from './ColorPicker.vue'
 import FormatMenu from './FormatMenu.vue'
 import NoteMenu from './NoteMenu.vue'
@@ -28,6 +30,8 @@ import LabelPicker from '@/components/labels/LabelPicker.vue'
 const props = defineProps<{
   noteId: string | null
   autofocus?: 'title' | 'body'
+  /** The kind of note a draft becomes. */
+  type?: LocalNote['type']
   /** Labels a new note gets, as when it is written in a label's view. */
   labelIds?: string[]
 }>()
@@ -55,10 +59,15 @@ const picking = ref(false)
 function pickLabels(): void {
   setTimeout(() => (picking.value = true))
 }
-const draft = ref<{ color: NoteColor; pinned: boolean }>({ color: 'default', pinned: false })
+const draft = ref<{ type: LocalNote['type']; color: NoteColor; pinned: boolean }>({
+  type: props.type ?? 'text',
+  color: 'default',
+  pinned: false,
+})
 const title = ref('')
 let focused = false
 
+const noteType = computed(() => note.value?.type ?? draft.value.type)
 const color = computed(() => note.value?.color ?? draft.value.color)
 const pinned = computed(() => note.value?.pinned ?? draft.value.pinned)
 const trashed = computed(() => note.value?.trashed_at != null)
@@ -94,7 +103,7 @@ function createEditor(content: JSONContent, editable: boolean): void {
     },
     editorProps: { attributes: { 'aria-label': t('note.body'), 'data-testid': 'editor-body' } },
   })
-  if (props.autofocus === 'body') editor.value.commands.focus('end')
+  if (props.autofocus === 'body' && noteType.value === 'text') editor.value.commands.focus('end')
 }
 
 // What this form last wrote, so its own writes coming back through the live query are not
@@ -105,13 +114,22 @@ let lastSaved = { title: '', content: '' }
 // the empty form.
 const loaded = ref(props.noteId === null)
 
+// A checklist keeps its text in items; the hidden editor's content is not written then.
+function bodyContent(): RichDoc {
+  if (noteType.value === 'checklist') return emptyDoc()
+  return (editor.value?.getJSON() ?? emptyDoc()) as RichDoc
+}
+
 async function write(): Promise<void> {
   if (!loaded.value) return
-  const content = (editor.value?.getJSON() ?? emptyDoc()) as RichDoc
+  const content = bodyContent()
   lastSaved = { title: title.value, content: JSON.stringify(content) }
   if (id.value) {
-    await updateNote(id.value, { title: title.value, content })
-  } else if (title.value.trim() || editor.value?.getText().trim()) {
+    await updateNote(
+      id.value,
+      noteType.value === 'checklist' ? { title: title.value } : { title: title.value, content },
+    )
+  } else if (title.value.trim() || (noteType.value === 'text' && editor.value?.getText().trim())) {
     await create(content)
   }
 }
@@ -123,10 +141,10 @@ async function create(content: RichDoc): Promise<string> {
   return created
 }
 
-/** The label picker needs a note to attach labels to, even before anything is typed. */
+/** Labels and checklist items need a note to belong to, even before anything is typed. */
 async function ensureNote(): Promise<string | null> {
   await queue
-  return id.value ?? (await create((editor.value?.getJSON() ?? emptyDoc()) as RichDoc))
+  return id.value ?? (await create(bodyContent()))
 }
 
 // Saves run one after another: leaving a field and closing the form both save, and two
@@ -179,11 +197,22 @@ function togglePin(): void {
   else draft.value.pinned = !pinned.value
 }
 
+const checklist = ref<{ flush: () => Promise<void> } | null>(null)
+
 /** Saves what is pending and discards the note if it is empty (SPEC 9, Editor). */
 async function finish(): Promise<void> {
   flush()
   await save()
+  await checklist.value?.flush()
   if (id.value && !trashed.value && (await isNoteEmpty(id.value))) await purgeNote(id.value)
+}
+
+async function convert(to: LocalNote['type']): Promise<void> {
+  flush()
+  await save()
+  await checklist.value?.flush()
+  if (id.value) await convertNote(id.value, to)
+  else draft.value.type = to
 }
 
 async function run(action: (noteId: string) => Promise<unknown>): Promise<void> {
@@ -271,7 +300,16 @@ defineExpose({ finish })
           <Pin v-else :size="18" />
         </button>
       </div>
-      <EditorContent :editor="editor" class="min-h-12 pb-2" />
+      <!-- v-show: the editor keeps its instance while the note is a checklist. -->
+      <EditorContent v-show="noteType === 'text'" :editor="editor" class="min-h-12 pb-2" />
+      <ChecklistEditor
+        v-if="noteType === 'checklist' && loaded"
+        ref="checklist"
+        :note-id="id"
+        :readonly="trashed"
+        :ensure-note="ensureNote"
+        :autofocus="autofocus === 'body'"
+      />
       <LabelChips v-if="id" :note-id="id" :labels="labels" :color="color" class="pt-1 pb-2" />
     </div>
     <div
@@ -289,7 +327,7 @@ defineExpose({ finish })
         </button>
       </template>
       <template v-else>
-        <FormatMenu :editor="editor" />
+        <FormatMenu v-if="noteType === 'text'" :editor="editor" />
         <ColorPicker :model-value="color" @update:model-value="setColor" />
         <button
           type="button"
@@ -306,6 +344,8 @@ defineExpose({ finish })
       <LabelPicker v-if="!trashed" v-model:open="picking" :note-id="id" :ensure-note="ensureNote">
         <NoteMenu
           :trashed="false"
+          :checklist="noteType === 'checklist'"
+          @convert="convert"
           @trash="run(actions.trash)"
           @copy="run(actions.copy)"
           @labels="pickLabels"

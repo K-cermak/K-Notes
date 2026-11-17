@@ -183,7 +183,16 @@
     "edited": "Edited {time}",
     "conflictCopy": "Conflicted copy",
     "openOriginal": "Open original",
-    "dismissConflict": "Dismiss"
+    "dismissConflict": "Dismiss",
+    "showCheckboxes": "Show checkboxes",
+    "hideCheckboxes": "Hide checkboxes"
+  },
+  "checklist": {
+    "item": "List item",
+    "add": "List item",
+    "remove": "Remove item",
+    "checked": "{count} checked item | {count} checked items",
+    "moreChecked": "+ {count} checked item | + {count} checked items"
   },
   "colors": {
     "default": "Default",
@@ -211,7 +220,8 @@
   },
   "composer": {
     "placeholder": "Take a note…",
-    "new": "New note"
+    "new": "New note",
+    "newList": "New list"
   },
   "notes": {
     "pinned": "Pinned",

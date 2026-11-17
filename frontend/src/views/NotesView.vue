@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { Archive, Lightbulb, Search, Tag, Trash2 } from '@lucide/vue'
 import { byName } from '@/db/labels'
 import { byPosition } from '@/db/notes'
-import { db, type LocalLabel } from '@/db/schema'
+import { db, type LocalChecklistItem, type LocalLabel } from '@/db/schema'
 import { matches } from '@/db/search'
 import type { NotesView } from '@/notes'
 import { useLiveQuery } from '@/composables/useLiveQuery'
@@ -23,6 +23,17 @@ const actions = useNoteActions()
 const all = useLiveQuery(async () => (await db.notes.toArray()).sort(byPosition), [])
 const labelRows = useLiveQuery(() => db.labels.toArray(), [])
 const memberships = useLiveQuery(() => db.noteLabels.toArray(), [])
+const items = useLiveQuery(async () => (await db.checklistItems.toArray()).sort(byPosition), [])
+
+const itemsByNote = computed(() => {
+  const result = new Map<string, LocalChecklistItem[]>()
+  for (const item of items.value) {
+    const list = result.get(item.note_id)
+    if (list) list.push(item)
+    else result.set(item.note_id, [item])
+  }
+  return result
+})
 
 const labelsByNote = computed(() => {
   const byId = new Map(labelRows.value.map((label) => [label.id, label]))
@@ -110,6 +121,7 @@ const empty = computed(() => {
         :notes="notes"
         :layout="layout"
         :labels="labelsByNote"
+        :items="itemsByNote"
         :heading="heading ? $t(heading) : undefined"
       />
     </template>

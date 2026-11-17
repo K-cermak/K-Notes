@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Archive, ArchiveRestore, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
-import type { LocalLabel, LocalNote } from '@/db/schema'
+import { convertNote, updateItem } from '@/db/checklist'
+import type { LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import LabelChips from '@/components/labels/LabelChips.vue'
 import LabelPicker from '@/components/labels/LabelPicker.vue'
 import { updateNote } from '@/db/notes'
@@ -10,11 +11,16 @@ import { plainText } from '@/db/richtext'
 import { noteBackground, noteLine } from '@/notes'
 import { useNoteActions } from '@/composables/useNoteActions'
 import { iconButton } from '@/components/ui/menu'
+import UiCheckbox from '@/components/ui/UiCheckbox.vue'
 import ColorPicker from './ColorPicker.vue'
 import NoteMenu from './NoteMenu.vue'
 import RichTextView from './RichTextView'
 
-const props = defineProps<{ note: LocalNote; labels: LocalLabel[] }>()
+const props = defineProps<{
+  note: LocalNote
+  labels: LocalLabel[]
+  items: LocalChecklistItem[]
+}>()
 
 const router = useRouter()
 const actions = useNoteActions()
@@ -29,7 +35,15 @@ function pickLabels(): void {
 
 const color = computed(() => props.note.color)
 const trashed = computed(() => props.note.trashed_at !== null)
-const empty = computed(() => !props.note.title && !plainText(props.note.content).trim())
+const checklist = computed(() => props.note.type === 'checklist')
+// Checklists show unchecked items, then a count of the checked ones (SPEC 9, Note card).
+const openItems = computed(() => props.items.filter((item) => !item.checked))
+const checkedCount = computed(() => props.items.length - openItems.value.length)
+const empty = computed(() =>
+  checklist.value
+    ? !props.note.title && !props.items.some((item) => item.text.trim())
+    : !props.note.title && !plainText(props.note.content).trim(),
+)
 
 // Long content is cut off with a fade (SPEC 9, Note card). Measured again whenever the card or
 // its content changes size, since the first layout happens before the masonry width is known.
@@ -88,7 +102,27 @@ function open(): void {
         :class="[note.title && 'mt-1.5', clipped && 'mask-b-from-[calc(100%-48px)]']"
         data-testid="card-body"
       >
-        <RichTextView :doc="note.content" />
+        <ul v-if="checklist" class="flex flex-col" data-testid="card-items">
+          <li v-for="item in openItems" :key="item.id" class="flex items-start gap-2 py-0.5">
+            <span class="grid h-5 shrink-0 place-items-center" @click.stop>
+              <UiCheckbox
+                :model-value="false"
+                :disabled="trashed"
+                :aria-label="item.text"
+                @update:model-value="(value) => updateItem(item.id, { checked: value === true })"
+              />
+            </span>
+            <span class="min-w-0 break-words">{{ item.text }}</span>
+          </li>
+          <li
+            v-if="checkedCount > 0"
+            class="pt-1 pl-6 text-label text-muted"
+            data-testid="card-checked"
+          >
+            {{ $t('checklist.moreChecked', { count: checkedCount }, checkedCount) }}
+          </li>
+        </ul>
+        <RichTextView v-else :doc="note.content" />
       </div>
       <p v-if="empty" class="text-[22px] leading-snug text-faint">{{ $t('note.emptyCard') }}</p>
       <LabelChips :note-id="note.id" :labels="labels" :color="color" :limit="3" class="mt-3" />
@@ -154,6 +188,8 @@ function open(): void {
         <LabelPicker v-model:open="picking" :note-id="note.id">
           <NoteMenu
             :trashed="false"
+            :checklist="checklist"
+            @convert="(to) => convertNote(note.id, to)"
             @trash="actions.trash(note.id)"
             @copy="actions.copy(note.id)"
             @labels="pickLabels"
