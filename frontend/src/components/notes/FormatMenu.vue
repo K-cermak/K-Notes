@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Editor } from '@tiptap/core'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import {
@@ -20,6 +20,19 @@ const props = defineProps<{ editor: Editor | undefined }>()
 // on in the new format. Opened from the keyboard it takes focus as usual.
 const byPointer = ref(false)
 const open = ref(false)
+
+// With focus left in the editor, Escape would reach the note form, which closes the whole note.
+// While the menu is open, Escape closes only the menu.
+function onEscape(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return
+  event.stopPropagation()
+  open.value = false
+}
+watch(open, (value) => {
+  if (value) window.addEventListener('keydown', onEscape, true)
+  else window.removeEventListener('keydown', onEscape, true)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onEscape, true))
 
 // Closed after a choice, so it does not cover the text being typed in the new format.
 function choose(run: (editor: Editor) => boolean): void {

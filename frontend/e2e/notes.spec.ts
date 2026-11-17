@@ -18,6 +18,11 @@ test('formatting applies to the text typed next', async ({ browser }) => {
   await page.getByTestId('composer').click()
   await page.getByTestId('editor-title').fill('Formatted')
   await page.getByTestId('editor-body').click()
+  // Escape closes the menu alone, though the focus stays in the editor while it is open.
+  await page.getByTestId('note-form').getByRole('button', { name: 'Formatting' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('button', { name: 'Heading 1' })).toHaveCount(0)
+  await expect(page.getByTestId('note-form')).toBeVisible()
   await page.getByTestId('note-form').getByRole('button', { name: 'Formatting' }).click()
   await page.getByRole('button', { name: 'Heading 1' }).click()
   await page.keyboard.type('Big')
