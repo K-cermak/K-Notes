@@ -28,12 +28,13 @@ export function useNoteActions() {
   }
 
   return {
-    async archive(id: string, archived = true): Promise<void> {
-      await updateNote(id, { archived, ...(archived ? { pinned: false } : {}) })
-      snackbar.show(t(archived ? 'note.archived' : 'note.unarchived'), {
-        label: t('common.undo'),
-        run: () => updateNote(id, { archived: !archived }),
-      })
+    archive(id: string, archived = true): Promise<void> {
+      // Undo puts the pin back too, which archiving takes away.
+      return updateMany(
+        [id],
+        { archived, ...(archived ? { pinned: false } : {}) },
+        t(archived ? 'note.archived' : 'note.unarchived'),
+      )
     },
     async trash(id: string): Promise<void> {
       await updateNote(id, { trashed_at: Date.now() })

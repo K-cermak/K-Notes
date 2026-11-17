@@ -33,6 +33,8 @@ test('formatting applies to the text typed next', async ({ browser }) => {
 test('archive and trash with undo, restore and delete forever', async ({ browser }) => {
   const { page } = await signedIn(browser, await newUser(browser))
   await addNote(page, 'Old receipt')
+  await card(page, 'Old receipt').hover()
+  await card(page, 'Old receipt').getByRole('button', { name: 'Pin note' }).click()
 
   await card(page, 'Old receipt').hover()
   await card(page, 'Old receipt').getByRole('button', { name: 'Archive' }).click()
@@ -40,6 +42,9 @@ test('archive and trash with undo, restore and delete forever', async ({ browser
   await expect(card(page, 'Old receipt')).toHaveCount(0)
   await page.getByTestId('snackbar').getByRole('button', { name: 'Undo' }).click()
   await expect(card(page, 'Old receipt')).toBeVisible()
+  // Archiving unpins; Undo pins it again.
+  await card(page, 'Old receipt').hover()
+  await expect(card(page, 'Old receipt').getByRole('button', { name: 'Unpin note' })).toBeVisible()
 
   await card(page, 'Old receipt').hover()
   await card(page, 'Old receipt').getByRole('button', { name: 'More' }).click()
