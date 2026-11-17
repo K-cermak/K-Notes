@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { copyNote, createNote, emptyTrash, isNoteEmpty, updateNote } from './notes'
+import {
+  copyNote,
+  createNote,
+  emptyTrash,
+  isNoteEmpty,
+  restoreNotes,
+  updateNote,
+  updateNotes,
+} from './notes'
 import { fromPlainText } from './richtext'
 import { testDatabase } from './testing'
 
@@ -63,5 +71,23 @@ describe('note repository', () => {
     expect(await isNoteEmpty(id, db)).toBe(true)
     await updateNote(id, { title: 'x' }, db)
     expect(await isNoteEmpty(id, db)).toBe(false)
+  })
+})
+
+describe('bulk note changes', () => {
+  it('changes several notes at once and puts each one back', async () => {
+    const db = testDatabase()
+    const a = await createNote({ title: 'A', pinned: true }, db)
+    const b = await createNote({ title: 'B' }, db)
+    const previous = await updateNotes([a, b], { archived: true, pinned: false }, db)
+    expect((await db.notes.bulkGet([a, b])).map((n) => [n!.archived, n!.pinned])).toEqual([
+      [true, false],
+      [true, false],
+    ])
+    await restoreNotes(previous, db)
+    expect((await db.notes.bulkGet([a, b])).map((n) => [n!.archived, n!.pinned])).toEqual([
+      [false, true],
+      [false, false],
+    ])
   })
 })

@@ -107,3 +107,15 @@ export async function setNoteLabel(
     await refreshSearchText(db, [noteId])
   })
 }
+
+/** Adds a label to several notes, or removes it from them, in one transaction. */
+export async function setNotesLabel(
+  noteIds: string[],
+  labelId: string,
+  on: boolean,
+  db: NotesDatabase = defaultDb,
+): Promise<void> {
+  await db.transaction('rw', [...searchTables(db), db.outbox], async () => {
+    for (const noteId of noteIds) await setNoteLabel(noteId, labelId, on, db)
+  })
+}

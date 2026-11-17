@@ -194,3 +194,37 @@ export async function isNoteEmpty(id: string, db: NotesDatabase = defaultDb): Pr
   const images = await db.attachments.where('note_id').equals(id).count()
   return items === 0 && images === 0
 }
+
+/**
+ * Applies a change to several notes in one transaction, as bulk actions do (SPEC 9). Returns each
+ * note's previous values of the changed fields, which restoreNotes() puts back for Undo.
+ */
+export async function updateNotes(
+  ids: string[],
+  patch: NotePatch | ((note: LocalNote) => NotePatch),
+  db: NotesDatabase = defaultDb,
+): Promise<Map<string, NotePatch>> {
+  const previous = new Map<string, NotePatch>()
+  await db.transaction('rw', [...searchTables(db), db.outbox], async () => {
+    for (const id of ids) {
+      const note = await db.notes.get(id)
+      if (!note) continue
+      const wanted = typeof patch === 'function' ? patch(note) : patch
+      previous.set(
+        id,
+        Object.fromEntries(Object.keys(wanted).map((key) => [key, note[key as keyof NotePatch]])),
+      )
+      await updateNote(id, wanted, db)
+    }
+  })
+  return previous
+}
+
+export async function restoreNotes(
+  previous: Map<string, NotePatch>,
+  db: NotesDatabase = defaultDb,
+): Promise<void> {
+  await db.transaction('rw', [...searchTables(db), db.outbox], async () => {
+    for (const [id, patch] of previous) await updateNote(id, patch, db)
+  })
+}
