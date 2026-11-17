@@ -186,7 +186,11 @@ export async function isNoteEmpty(id: string, db: NotesDatabase = defaultDb): Pr
   const note = await db.notes.get(id)
   if (!note) return true
   if (note.title.trim() || plainText(note.content).trim()) return false
-  const items = await db.checklistItems.where('note_id').equals(id).count()
+  const items = await db.checklistItems
+    .where('note_id')
+    .equals(id)
+    .filter((item) => !!item.text.trim())
+    .count()
   const images = await db.attachments.where('note_id').equals(id).count()
   return items === 0 && images === 0
 }
