@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { expect, test, type Page } from '@playwright/test'
-import { addNote, card, newUser, signedIn } from './helpers'
+import { addNote, card, newUser, retitle, signedIn } from './helpers'
 
 const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAIAAABxZ0isAAAAFElEQVR4nGM8YaPBgA0wYRWlkwQAsioBOPy3KEAAAAAASUVORK5CYII=',
@@ -41,6 +41,27 @@ test('after one online visit the app starts offline with its notes and images', 
   // A route opened for the first time offline also comes from the cache.
   await page.goto('/archive')
   await expect(page.getByTestId('empty-state')).toBeVisible()
+})
+
+test('an edit made offline survives a reload offline and syncs once back online', async ({
+  browser,
+}) => {
+  const user = await newUser(browser)
+  const { page, context } = await signedIn(browser, user)
+  await addNote(page, 'Packing list')
+  await expect(page.getByTestId('unsent')).toHaveCount(0)
+  await controlled(page)
+
+  await context.setOffline(true)
+  await retitle(page, 'Packing list', 'Packing list, edited offline')
+  await page.reload()
+  await expect(card(page, 'Packing list, edited offline')).toBeVisible()
+  await expect(page.getByTestId('unsent')).toHaveText('1')
+
+  await context.setOffline(false)
+  await expect(page.getByTestId('unsent')).toHaveCount(0)
+  const other = await signedIn(browser, user)
+  await expect(card(other.page, 'Packing list, edited offline')).toBeVisible()
 })
 
 test('the browser considers the app installable', async ({ browser }) => {

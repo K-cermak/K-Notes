@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
-import { accountMenu, admin } from './helpers'
+import { accountMenu, addNote, admin, card } from './helpers'
 
 const friend = { name: 'Fred Friend', email: 'fred@example.com', password: 'friend-password' }
 
-test('first-run setup, invite by link, sign out and sign in', async ({ page, browser }) => {
+test('first-run setup, first note, invite by link, sign out and sign in', async ({ page, browser }) => {
   await page.goto('/')
   await expect(page).toHaveURL(/\/setup$/)
   await page.getByLabel('Display name').fill(admin.name)
@@ -13,6 +13,10 @@ test('first-run setup, invite by link, sign out and sign in', async ({ page, bro
   await expect(page.getByTestId('sync-status')).toHaveAttribute('data-state', 'synced')
   await page.goto('/setup')
   await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByTestId('empty-state')).toBeVisible()
+  await addNote(page, 'First note', 'Hello')
+  await page.reload()
+  await expect(card(page, 'First note')).toContainText('Hello')
   await page.getByTestId('account-menu').click()
   await expect(page.getByTestId('signed-in-as')).toHaveText(admin.name)
   await page.getByRole('menuitem', { name: 'Administration' }).click()
