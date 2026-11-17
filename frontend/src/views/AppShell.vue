@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
-import { Plus } from '@lucide/vue'
+import { ListChecks, Plus } from '@lucide/vue'
 import type { LocalNote } from '@/db/schema'
 import type { NotesView as View } from '@/notes'
 import { useMediaQuery } from '@/composables/useMediaQuery'
@@ -135,16 +135,31 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     />
     <NotesView :view="view" :label-id="labelId" :query="query" />
   </main>
-  <button
+  <!-- Phones have no composer bar, so a new list gets its own smaller button above the main one. -->
+  <div
     v-if="compact && composing"
-    type="button"
-    class="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 grid size-14 cursor-pointer place-items-center bg-accent text-on-accent shadow-float active:bg-accent-hover"
-    :aria-label="$t('composer.new')"
-    data-testid="fab"
-    @click="newNote()"
+    class="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 flex flex-col items-center gap-3"
   >
-    <Plus :size="24" />
-  </button>
+    <button
+      type="button"
+      class="grid size-11 cursor-pointer place-items-center border border-line bg-bg text-ink shadow-float active:bg-[color-mix(in_srgb,var(--ink)_6%,var(--bg))]"
+      :aria-label="$t('composer.newList')"
+      :title="$t('composer.newList')"
+      data-testid="fab-list"
+      @click="newNote('checklist')"
+    >
+      <ListChecks :size="20" />
+    </button>
+    <button
+      type="button"
+      class="grid size-14 cursor-pointer place-items-center bg-accent text-on-accent shadow-float active:bg-accent-hover"
+      :aria-label="$t('composer.new')"
+      data-testid="fab"
+      @click="newNote()"
+    >
+      <Plus :size="24" />
+    </button>
+  </div>
   <NoteEditorDialog v-if="editing" :fallback="listPath" />
   <EditLabelsDialog v-model:open="editLabels" />
 </template>

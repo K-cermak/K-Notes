@@ -152,3 +152,18 @@ test('two offline clients checking different items both keep their changes', asy
   }
   await expect(a.page.getByTestId('note-card')).toHaveCount(1)
 })
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 760 }, hasTouch: true, isMobile: true })
+
+  test('a list is started from its own button above the new note button', async ({ browser }) => {
+    const { page } = await signedIn(browser, await newUser(browser))
+    await page.getByTestId('fab-list').tap()
+    const editor = page.getByTestId('editor')
+    await expect(editor.getByTestId('add-item')).toBeFocused()
+    await page.keyboard.type('Bread')
+    await editor.getByTestId('editor-title').fill('Bakery')
+    await editor.getByTestId('close-note').tap()
+    await expect(card(page, 'Bakery').getByTestId('card-items')).toHaveText('Bread')
+  })
+})
