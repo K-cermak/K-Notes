@@ -2,6 +2,10 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { addNote, admin, card, openNote, signedIn } from './helpers'
 
+// One after another: they share the admin's notes, and a note another test adds would arrive over
+// the live sync mid-check, halfway through its entrance, and fail the contrast rule.
+test.describe.configure({ mode: 'serial' })
+
 /** Fails with axe's findings, as rule, impact and the elements involved, so the report is readable. */
 async function expectAccessible(page: Page, where: string): Promise<void> {
   // Mid-animation colours are blends of the final ones, which axe would measure instead.
@@ -60,6 +64,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await openNote(page, title)
     await expectAccessible(page, 'editor')
     await page.getByTestId('close-note').click()
+    // Closing goes back in the history; a navigation started before that is done gets aborted.
+    await expect(page).not.toHaveURL(/\/note\//)
 
     for (const path of [
       '/archive',
