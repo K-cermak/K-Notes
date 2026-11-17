@@ -18,6 +18,7 @@ def test_cross_origin_writes_are_refused(admin: TestClient, new_client: Callable
     )
     assert response.status_code == 403
     assert response.json()["code"] == "cross_origin"
+    assert "came from https://evil.test, but APP_BASE_URL is http://testserver" in response.json()["message"]
     login = new_client().post("/api/v1/auth/login", json=LOGIN, headers={"origin": "https://evil.test"})
     assert login.status_code == 403
     assert admin.get("/api/v1/me").json()["display_name"] == "Admin"

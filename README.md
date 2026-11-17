@@ -194,7 +194,7 @@ cd frontend && pnpm exec playwright install chromium && cd ..   # once, for end-
 just dev                                         # backend on :8000 and Vite on http://localhost:5173
 ```
 
-`just dev` keeps its data in `backend/.data`. Other recipes:
+Open http://localhost:5173 exactly: `127.0.0.1` is a different address to the browser, and the server refuses changes from it. `just dev` keeps its data in `backend/.data`. Other recipes:
 
 | Command | |
 | --- | --- |

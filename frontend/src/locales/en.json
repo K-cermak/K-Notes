@@ -177,7 +177,7 @@
     "account_disabled": "This account has been deactivated.",
     "too_many_requests": "Too many attempts. Try again in {seconds} s.",
     "wrong_password": "The current password is not correct.",
-    "cross_origin": "The request was refused for security reasons.",
+    "cross_origin": "The request was refused: the app is open at a different address than the one it is set up for. Open it at its configured address.",
     "not_admin": "Only administrators can do this.",
     "self_change": "You cannot do this to your own account.",
     "last_admin": "The instance must keep at least one active administrator.",

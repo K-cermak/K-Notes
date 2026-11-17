@@ -66,7 +66,7 @@ class SecurityMiddleware:
         path: str = scope["path"]
         headers = dict(scope["headers"])
         if scope["method"] not in _SAFE_METHODS and path.startswith("/api/") and self._cross_site(headers):
-            await _reject(send)
+            await _reject(send, headers.get(b"origin", b"another site").decode("latin-1"), self.origin)
             return
         csp = (DOCS_CSP if path == self.docs_path else CSP).encode()
 
@@ -82,8 +82,10 @@ class SecurityMiddleware:
         await self.app(scope, receive, send_with_headers)
 
 
-async def _reject(send: Send) -> None:
-    body = json.dumps({"code": "cross_origin", "message": "Cross-site request refused"}).encode()
+async def _reject(send: Send, came_from: str, expected: str) -> None:
+    # Naming both addresses: the usual cause is APP_BASE_URL not matching the address in the browser.
+    message = f"Cross-site request refused: it came from {came_from}, but APP_BASE_URL is {expected}"
+    body = json.dumps({"code": "cross_origin", "message": message}).encode()
     headers: list[Any] = [
         (b"content-type", b"application/json"),
         (b"content-length", str(len(body)).encode()),
