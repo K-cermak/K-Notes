@@ -43,6 +43,8 @@ def test_security_headers(client: TestClient) -> None:
         headers = client.get(path).headers
         assert headers["x-content-type-options"] == "nosniff"
         assert headers["referrer-policy"] == "no-referrer"
+        assert headers["cross-origin-opener-policy"] == "same-origin"
+        assert "camera=()" in headers["permissions-policy"]
         csp = headers["content-security-policy"]
         assert "default-src 'self'" in csp
         assert "script-src 'self'" in csp

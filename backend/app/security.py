@@ -33,6 +33,9 @@ DOCS_CSP = (
 _HEADERS = [
     (b"x-content-type-options", b"nosniff"),
     (b"referrer-policy", b"no-referrer"),
+    # Beyond SPEC 7: no other window keeps a handle on the app, and it never asks for these.
+    (b"cross-origin-opener-policy", b"same-origin"),
+    (b"permissions-policy", b"camera=(), microphone=(), geolocation=(), payment=(), usb=()"),
 ]
 
 

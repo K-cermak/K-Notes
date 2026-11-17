@@ -22,13 +22,18 @@ def install_spa(app: FastAPI, static_dir: Path) -> None:
     def unknown_api(path: str) -> None:  # pyright: ignore[reportUnusedFunction]
         raise NotFoundError()
 
-    @app.get("/{path:path}", include_in_schema=False)
+    # HEAD too, as uptime monitors and link checkers use it.
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def spa(path: str) -> FileResponse:  # pyright: ignore[reportUnusedFunction]
         candidate = (root / path).resolve()
         if path and candidate.is_relative_to(root) and candidate.is_file():
             # Vite fingerprints everything under assets/, so those files never change.
             cache = _IMMUTABLE if path.startswith("assets/") else _REVALIDATE
             return FileResponse(candidate, headers={"Cache-Control": cache})
+        # A chunk an old tab asks for after an update is gone; HTML in its place fails as a script
+        # with a confusing MIME type error rather than as a missing file.
+        if path.startswith("assets/"):
+            raise NotFoundError()
         if not index.is_file():
             raise NotFoundError("The frontend has not been built")
         return FileResponse(index, headers={"Cache-Control": _REVALIDATE})
