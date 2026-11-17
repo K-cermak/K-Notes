@@ -16,7 +16,7 @@ from app.schemas.account import (
     TotpSetup,
     TotpStatus,
 )
-from app.services import accounts, sessions, tokens, totp
+from app.services import accounts, oidc, sessions, tokens, totp
 
 router = APIRouter(prefix="/me", tags=["account"])
 
@@ -102,3 +102,9 @@ def create_token(body: ApiTokenCreate, auth: CurrentAuth, db: DbSession) -> Crea
 @router.delete("/tokens/{token_id}", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_token(token_id: str, auth: CurrentAuth, db: DbSession) -> None:
     tokens.revoke(db, auth.user, token_id)
+
+
+@router.delete("/oidc", status_code=status.HTTP_204_NO_CONTENT)
+def unlink_oidc(auth: CurrentAuth, db: DbSession, settings: AppSettings) -> None:
+    """Removes the single sign-on identity, unless it is the account's only way to sign in."""
+    oidc.unlink(db, settings, auth.user)

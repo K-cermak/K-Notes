@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.api import admin, auth, blobs, me, notes, public, sync
+from app.api import admin, auth, blobs, me, notes, oidc, public, sync
 from app.branding import REPO_ROOT, get_branding
 from app.config import Settings, load_settings
 from app.db import Database
@@ -18,6 +18,7 @@ from app.services import blobs as blob_store
 from app.services import maintenance
 from app.services.clock import DAY_MS
 from app.services.events import EventHub
+from app.services.oidc import OidcClient
 from app.services.throttle import LoginThrottle
 from app.spa import install_spa
 from app.version import VERSION
@@ -90,6 +91,7 @@ def create_app(settings: Settings | None = None, static_dir: Path | None = None)
     app.state.settings = settings
     app.state.throttle = LoginThrottle()
     app.state.events = EventHub()
+    app.state.oidc = OidcClient(settings) if settings.oidc_enabled else None
     install_error_handlers(app)
     install_log_redaction()
     app.add_middleware(SecurityMiddleware, base_url=settings.base_url, docs_path=f"{API_PREFIX}/docs")
@@ -101,6 +103,7 @@ def create_app(settings: Settings | None = None, static_dir: Path | None = None)
         sync.router,
         blobs.router,
         notes.router,
+        oidc.router,
     ):
         app.include_router(router, prefix=API_PREFIX)
     install_spa(app, static_dir or DEFAULT_STATIC_DIR)

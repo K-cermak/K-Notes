@@ -10,7 +10,7 @@ from app.api.deps import (
 )
 from app.config import Settings
 from app.db import DbSession
-from app.errors import AppError, TooManyRequestsError, UnauthorizedError
+from app.errors import AppError, ForbiddenError, TooManyRequestsError, UnauthorizedError
 from app.models import User
 from app.schemas.account import (
     InviteAccept,
@@ -50,10 +50,17 @@ def _sign_in(
     return accounts.to_me(user)
 
 
+def _require_password_login(settings: Settings) -> None:
+    # The form is hidden too, but an OIDC-only instance must not accept passwords at all (SPEC 7).
+    if not settings.password_login_enabled:
+        raise ForbiddenError("password_login_disabled", "Sign in with single sign-on")
+
+
 @router.post("/setup", status_code=status.HTTP_201_CREATED)
 def setup(
     body: SetupRequest, request: Request, response: Response, db: DbSession, settings: AppSettings
 ) -> Me:
+    _require_password_login(settings)
     user = accounts.setup_admin(db, email=body.email, display_name=body.display_name, password=body.password)
     return _sign_in(db, settings, request, response, user)
 
@@ -68,6 +75,7 @@ def login(
     throttle: Throttle,
 ) -> Me | TotpChallenge:
     """Signs in, or with two-factor on returns a pending token for /auth/login/totp."""
+    _require_password_login(settings)
     user = accounts.authenticate(
         db, throttle, email=body.email, password=body.password, ip=client_ip(request)
     )
@@ -113,6 +121,7 @@ def logout(auth: CurrentAuth, response: Response, db: DbSession, settings: AppSe
 def register(
     body: RegisterRequest, request: Request, response: Response, db: DbSession, settings: AppSettings
 ) -> Me:
+    _require_password_login(settings)
     user = invites.register(db, email=body.email, display_name=body.display_name, password=body.password)
     return _sign_in(db, settings, request, response, user)
 
