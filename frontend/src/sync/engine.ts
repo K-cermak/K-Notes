@@ -210,7 +210,7 @@ export class SyncEngine {
       }
       const byOp = new Map(batch.map((e) => [e.opId, e]))
       const rejected: OpResult[] = []
-      await this.db.transaction('rw', this.db.outbox, async () => {
+      await this.db.transaction('rw', [this.db.outbox, ...this.db.syncedTables], async () => {
         for (const result of response.results) {
           const entry = byOp.get(result.op_id)
           if (!entry) continue
@@ -221,6 +221,15 @@ export class SyncEngine {
             continue
           }
           if (result.status === 'rejected') rejected.push(result)
+          if (result.status === 'applied' && entry.kind === 'upsert' && entry.baseSeq === 0) {
+            // The server has the new row now. Until the pull brings its real seq, a serverSeq of 0
+            // would make a delete look like one of a row the server never saw, and it would be
+            // dropped. No other device can have changed a row created up to response.seq.
+            const table = this.db.syncedTable(entry.entity)
+            const row = await table.get(entry.entityId)
+            if (row?.serverSeq === 0)
+              await table.update(entry.entityId, { serverSeq: response.seq })
+          }
           await this.db.outbox.delete(entry.seq)
         }
       })

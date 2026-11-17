@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Failure } from '@/api/client'
 import { getMeta } from '@/db/meta'
-import { createNote, updateNote } from '@/db/notes'
+import { createNote, purgeNote, updateNote } from '@/db/notes'
 import { testDatabase } from '@/db/testing'
 import type { NotesDatabase } from '@/db/schema'
 import {
@@ -162,6 +162,21 @@ describe('sync cycle', () => {
     expect(server.log).toEqual(['push:1', 'pull:0'])
     expect(await db.outbox.toArray()).toEqual([expect.objectContaining({ inFlight: 0 })])
     expect(states.at(-1)).toBe('synced')
+  })
+
+  it('sends a purge for a new row the server has, even before the pull confirms it', async () => {
+    const db = testDatabase()
+    const server = new FakeServer()
+    const id = await createNote({ title: 'pushed' }, db)
+    server.pull = () => Promise.reject(new Failure(null, 'network', 'offline'))
+    const { engine } = makeEngine(db, server)
+    await engine.start()
+    expect(await db.outbox.count()).toBe(0)
+
+    await purgeNote(id, db)
+    expect(await db.outbox.toArray()).toEqual([
+      expect.objectContaining({ kind: 'purge', entityId: id }),
+    ])
   })
 
   it('holds back ops the blob transfer is not ready for', async () => {
