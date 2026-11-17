@@ -4,7 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { Search, X } from '@lucide/vue'
 import { iconButton } from '@/components/ui/menu'
 
-// Search runs locally as you type; the query lives in the URL, so Back leaves the results.
+// Search runs locally as you type; the query lives in the URL, so Back leaves the results. The
+// search view opens with the first character, not on focus: tabbing through the field must not
+// take a keyboard user away from their notes.
 const route = useRoute()
 const router = useRouter()
 const input = ref<HTMLInputElement | null>(null)
@@ -44,7 +46,6 @@ defineExpose({ focus: () => input.value?.focus() })
       :aria-label="$t('search.placeholder')"
       data-testid="search"
       @input="onInput"
-      @focus="route.name !== 'search' && router.push({ name: 'search' })"
       @keydown.escape="close"
     />
     <button
