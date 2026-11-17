@@ -179,6 +179,13 @@ test('a rectangle drawn over empty space selects the notes it touches', async ({
   )
   // The release does not count as a click on the empty space or a note.
   await expect(page.getByTestId('editor')).toHaveCount(0)
+  await expect(page.getByTestId('selection-count')).toHaveText('2 selected')
+
+  // A click on empty space clears the selection.
+  await page.mouse.click(first.x - 12, first.y - 12)
+  await expect(page.getByTestId('selection-bar')).toHaveCount(0)
+  await card(page, 'First').hover()
+  await card(page, 'First').getByTestId('card-select').click()
 
   // Starting on a note drags the note instead.
   await page.keyboard.press('Escape')

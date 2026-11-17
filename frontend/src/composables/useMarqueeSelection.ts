@@ -17,7 +17,8 @@ const NOT_EMPTY =
 /**
  * Selecting several notes by drawing a rectangle over them with the mouse, as in Keep. Touch has
  * long-press for selection instead. A plain drag replaces the selection; with Shift, Ctrl or Cmd it
- * adds to it, as in a file manager. Returns the rectangle to draw, in viewport coordinates.
+ * adds to it, as in a file manager. A click or tap on empty space clears the selection. Returns
+ * the rectangle to draw, in viewport coordinates.
  */
 export function useMarqueeSelection(area: Ref<HTMLElement | null>, enabled: () => boolean) {
   const selection = useSelectionStore()
@@ -96,6 +97,10 @@ export function useMarqueeSelection(area: Ref<HTMLElement | null>, enabled: () =
     stop()
   }
 
+  function onClick(event: MouseEvent): void {
+    if (selection.active && enabled() && emptySpace(event.target)) selection.clear()
+  }
+
   function swallow(event: MouseEvent): void {
     event.stopPropagation()
     event.preventDefault()
@@ -111,9 +116,13 @@ export function useMarqueeSelection(area: Ref<HTMLElement | null>, enabled: () =
     window.removeEventListener('scroll', update)
   }
 
-  onMounted(() => window.addEventListener('pointerdown', onPointerDown))
+  onMounted(() => {
+    window.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('click', onClick)
+  })
   onBeforeUnmount(() => {
     window.removeEventListener('pointerdown', onPointerDown)
+    window.removeEventListener('click', onClick)
     stop()
   })
 
