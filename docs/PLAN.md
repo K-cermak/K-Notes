@@ -96,11 +96,11 @@ Done when: reordering persists across reload and syncs to a second client, dragg
 
 ## Phase 9: PWA and offline polish
 
-- [ ] Service worker, manifest from `branding.json`, icons, update snackbar, iOS install hint (section 10).
-- [ ] Offline start, sync status in the top bar, unsent changes count.
-- [ ] Safe-area and on-screen keyboard handling.
+- [x] Service worker, manifest from `branding.json`, icons, update snackbar, iOS install hint (section 10).
+- [x] Offline start, sync status in the top bar, unsent changes count.
+- [x] Safe-area and on-screen keyboard handling.
 
-Done when: after one online visit the app loads with the network disabled and shows all notes and images; Lighthouse reports it as installable; a new build triggers the update snackbar and does not reload by itself.
+Done when: after one online visit the app loads with the network disabled and shows all notes and images; Chrome reports no installability errors (Lighthouse 12 dropped its installability audit, so the e2e test asks Chrome directly); a new build triggers the update snackbar and does not reload by itself.
 
 ## Phase 10: TOTP, OIDC and API tokens
 
