@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { PopoverAnchor, PopoverContent, PopoverPortal, PopoverRoot } from 'reka-ui'
 import { Plus } from '@lucide/vue'
-import { byName, createLabel, MAX_LABEL_LENGTH, setNoteLabel } from '@/db/labels'
+import { byName, createLabel, MAX_LABEL_LENGTH, setNoteLabel, setNotesLabel } from '@/db/labels'
 import { db } from '@/db/schema'
 import { fold } from '@/db/search'
 import { useLiveQuery } from '@/composables/useLiveQuery'
@@ -15,17 +15,27 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue'
  * back to its button as it closes, so focus moving away must not close the picker; a click
  * outside or Escape still does.
  */
-const props = defineProps<{ noteId: string | null; ensureNote?: () => Promise<string | null> }>()
+const props = defineProps<{
+  noteId?: string | null
+  /** Several selected notes: a label shows as checked when all of them have it. */
+  noteIds?: string[]
+  ensureNote?: () => Promise<string | null>
+}>()
 const open = defineModel<boolean>('open', { required: true })
 
 const filter = ref('')
 const labels = useLiveQuery(async () => (await db.labels.toArray()).sort(byName), [])
+const targets = computed(() => props.noteIds ?? (props.noteId ? [props.noteId] : []))
 const memberships = useLiveQuery(
-  () => (props.noteId ? db.noteLabels.where('note_id').equals(props.noteId).toArray() : []),
+  () => db.noteLabels.where('note_id').anyOf(targets.value).toArray(),
   [],
-  () => props.noteId,
+  () => targets.value.join(),
 )
-const selected = computed(() => new Set(memberships.value.map((m) => m.label_id)))
+function state(labelId: string): boolean | 'indeterminate' {
+  const count = memberships.value.filter((m) => m.label_id === labelId).length
+  if (count === 0) return false
+  return count >= targets.value.length || 'indeterminate'
+}
 const visible = computed(() => {
   const query = fold(filter.value.trim())
   return query ? labels.value.filter((l) => fold(l.name).includes(query)) : labels.value
@@ -46,6 +56,10 @@ async function targetNote(): Promise<string | null> {
 }
 
 async function toggle(labelId: string, on: boolean): Promise<void> {
+  if (props.noteIds) {
+    await setNotesLabel(props.noteIds, labelId, on)
+    return
+  }
   const id = await targetNote()
   if (id) await setNoteLabel(id, labelId, on)
 }
@@ -85,7 +99,7 @@ async function create(): Promise<void> {
               class="flex h-10 cursor-pointer items-center gap-3 px-3 hover:bg-[color-mix(in_srgb,var(--ink)_5%,var(--bg))]"
             >
               <UiCheckbox
-                :model-value="selected.has(label.id)"
+                :model-value="state(label.id)"
                 @update:model-value="(on) => toggle(label.id, on === true)"
               />
               <span class="truncate">{{ label.name }}</span>

@@ -1,3 +1,4 @@
+import type { InjectionKey, Ref } from 'vue'
 import type { LocalNote } from '@/db/schema'
 
 export const NOTE_COLORS = [
@@ -29,3 +30,6 @@ export function noteLine(color: NoteColor): string {
 }
 
 export type NotesView = 'notes' | 'archive' | 'trash' | 'label' | 'search'
+
+/** The IDs of the notes on screen, in the order shown; NotesView provides it for range selection. */
+export const NOTE_ORDER: InjectionKey<Ref<string[]>> = Symbol('note order')

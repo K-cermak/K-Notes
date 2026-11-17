@@ -1,4 +1,13 @@
-import { computed, onBeforeUnmount, reactive, ref, watch, type Ref } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  toValue,
+  watch,
+  type MaybeRefOrGetter,
+  type Ref,
+} from 'vue'
 
 export interface MasonryOptions {
   columnWidth: number
@@ -7,6 +16,9 @@ export interface MasonryOptions {
   minTwoColumns: number
 }
 
+export const GRID: MasonryOptions = { columnWidth: 240, gap: 16, minTwoColumns: 320 }
+export const LIST: MasonryOptions = { columnWidth: 600, gap: 12, minTwoColumns: Infinity }
+
 export interface Placement {
   x: number
   y: number
@@ -14,12 +26,13 @@ export interface Placement {
 
 /**
  * Masonry layout: measures each card with ResizeObserver and places it in the shortest column.
- * Cards are positioned absolutely with transforms, which the drag to reorder in phase 8 builds on.
+ * Cards are positioned absolutely with transforms, so a drag can lay out a preview order and let
+ * the other cards move out of the way. The list view is the same layout with one column.
  */
 export function useMasonry(
   container: Ref<HTMLElement | null>,
   keys: Ref<string[]>,
-  options: MasonryOptions = { columnWidth: 240, gap: 16, minTwoColumns: 320 },
+  options: MaybeRefOrGetter<MasonryOptions> = GRID,
 ) {
   const width = ref(0)
   const heights = reactive(new Map<string, number>())
@@ -55,7 +68,7 @@ export function useMasonry(
   }
 
   const layout = computed(() => {
-    const { columnWidth, gap, minTwoColumns } = options
+    const { columnWidth, gap, minTwoColumns } = toValue(options)
     const available = width.value
     let columns = Math.max(1, Math.floor((available + gap) / (columnWidth + gap)))
     if (columns === 1 && available >= minTwoColumns) columns = 2
@@ -88,5 +101,5 @@ export function useMasonry(
     cardObserver.disconnect()
   })
 
-  return { layout, track }
+  return { layout, heights, track }
 }

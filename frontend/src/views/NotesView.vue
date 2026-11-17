@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, provide } from 'vue'
 import { Archive, Lightbulb, Search, Tag, Trash2 } from '@lucide/vue'
 import { byName } from '@/db/labels'
 import { byPosition } from '@/db/notes'
 import { db, type LocalAttachment, type LocalChecklistItem, type LocalLabel } from '@/db/schema'
 import { matches } from '@/db/search'
-import type { NotesView } from '@/notes'
+import { NOTE_ORDER, type NotesView } from '@/notes'
 import { useLiveQuery } from '@/composables/useLiveQuery'
 import { useNoteActions } from '@/composables/useNoteActions'
 import { useInstanceStore } from '@/stores/instance'
@@ -81,6 +81,11 @@ const sections = computed((): [string, typeof all.value][] => {
     [pinned.length ? 'notes.others' : '', active.filter((note) => !note.pinned)],
   ]
 })
+// Shift+click selects a range in the order the notes are shown, across sections.
+provide(
+  NOTE_ORDER,
+  computed(() => sections.value.flatMap(([, notes]) => notes.map((note) => note.id))),
+)
 const visibleCount = computed(() =>
   sections.value.reduce((sum, [, notes]) => sum + notes.length, 0),
 )
@@ -126,6 +131,7 @@ const empty = computed(() => {
         :labels="labelsByNote"
         :items="itemsByNote"
         :attachments="attachmentsByNote"
+        :sortable="view !== 'trash' && view !== 'search'"
         :heading="heading ? $t(heading) : undefined"
       />
     </template>

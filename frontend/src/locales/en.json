@@ -268,6 +268,17 @@
     "rename": "Rename label {name}",
     "remove": "Remove label {name}"
   },
+  "selection": {
+    "select": "Select note",
+    "count": "{count} selected",
+    "clear": "Clear selection",
+    "labels": "Change labels",
+    "archived": "{count} note archived | {count} notes archived",
+    "unarchived": "{count} note unarchived | {count} notes unarchived",
+    "trashed": "{count} note moved to trash | {count} notes moved to trash",
+    "restored": "{count} note restored | {count} notes restored",
+    "deleteForeverTitle": "Delete this note forever? | Delete {count} notes forever?"
+  },
   "settings": {
     "downloadOnDemand": "Download images on demand",
     "storage": "{mb} MB stored on this device"

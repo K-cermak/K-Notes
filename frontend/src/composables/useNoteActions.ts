@@ -1,5 +1,13 @@
 import { useI18n } from 'vue-i18n'
-import { copyNote, emptyTrash, purgeNote, updateNote } from '@/db/notes'
+import {
+  copyNote,
+  emptyTrash,
+  purgeNote,
+  restoreNotes,
+  updateNote,
+  updateNotes,
+  type NotePatch,
+} from '@/db/notes'
 import { useConfirmStore } from '@/stores/confirm'
 import { useSnackbarStore } from '@/stores/snackbar'
 
@@ -8,6 +16,14 @@ export function useNoteActions() {
   const { t } = useI18n()
   const snackbar = useSnackbarStore()
   const confirm = useConfirmStore()
+
+  // Bulk actions on selected notes (SPEC 9); one Undo puts every note back as it was.
+  async function updateMany(ids: string[], patch: NotePatch, message?: string): Promise<void> {
+    const previous = await updateNotes(ids, patch)
+    if (message) {
+      snackbar.show(message, { label: t('common.undo'), run: () => restoreNotes(previous) })
+    }
+  }
 
   return {
     async archive(id: string, archived = true): Promise<void> {
@@ -52,6 +68,40 @@ export function useNoteActions() {
     },
     pin(id: string, pinned: boolean): Promise<void> {
       return updateNote(id, { pinned })
+    },
+
+    updateMany,
+    archiveMany(ids: string[], archived = true): Promise<void> {
+      const key = archived ? 'selection.archived' : 'selection.unarchived'
+      return updateMany(
+        ids,
+        { archived, ...(archived ? { pinned: false } : {}) },
+        t(key, { count: ids.length }, ids.length),
+      )
+    },
+    trashMany(ids: string[]): Promise<void> {
+      return updateMany(
+        ids,
+        { trashed_at: Date.now(), pinned: false },
+        t('selection.trashed', { count: ids.length }, ids.length),
+      )
+    },
+    restoreMany(ids: string[]): Promise<void> {
+      return updateMany(
+        ids,
+        { trashed_at: null },
+        t('selection.restored', { count: ids.length }, ids.length),
+      )
+    },
+    async purgeMany(ids: string[]): Promise<boolean> {
+      const sure = await confirm.ask({
+        title: t('selection.deleteForeverTitle', { count: ids.length }, ids.length),
+        message: t('note.deleteForeverMessage'),
+        confirmLabel: t('note.deleteForever'),
+        danger: true,
+      })
+      if (sure) for (const id of ids) await purgeNote(id)
+      return sure
     },
   }
 }

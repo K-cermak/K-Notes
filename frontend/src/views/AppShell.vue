@@ -11,8 +11,10 @@ import EditLabelsDialog from '@/components/labels/EditLabelsDialog.vue'
 import NavDrawer from '@/components/shell/NavDrawer.vue'
 import NoteComposer from '@/components/shell/NoteComposer.vue'
 import NoteEditorDialog from '@/components/shell/NoteEditorDialog.vue'
+import SelectionBar from '@/components/shell/SelectionBar.vue'
 import TopBar from '@/components/shell/TopBar.vue'
 import UiNotice from '@/components/ui/UiNotice.vue'
+import { useSelectionStore } from '@/stores/selection'
 import { useSyncStore } from '@/stores/sync'
 
 // One shell for the notes, archive and trash routes and for /note/:id, which opens the editor
@@ -21,6 +23,7 @@ const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
 const sync = useSyncStore()
+const selection = useSelectionStore()
 const wide = useMediaQuery('(min-width: 640px)')
 const compact = computed(() => !wide.value)
 const drawerOpen = ref(false)
@@ -45,6 +48,8 @@ const query = computed(() =>
   view.value === 'search' ? String(background.value?.query.q ?? '') : '',
 )
 const listPath = computed(() => background.value?.fullPath ?? '/')
+// A selection belongs to the list it was made in.
+watch(listPath, () => selection.clear())
 const editing = computed(() => route.name === 'note')
 const composing = computed(() => view.value === 'notes' || view.value === 'label')
 
@@ -80,7 +85,10 @@ function onKeydown(event: KeyboardEvent): void {
   )
     return
   if (editing.value) return
-  if (event.key === 'c' || event.key === 'l') {
+  if (event.key === 'Escape' && selection.active) {
+    event.preventDefault()
+    selection.clear()
+  } else if (event.key === 'c' || event.key === 'l') {
     event.preventDefault()
     newNote(event.key === 'l' ? 'checklist' : 'text')
   } else if (event.key === '/') {
@@ -93,7 +101,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
+  <SelectionBar v-if="selection.active" :view="view" />
   <TopBar
+    v-show="!selection.active"
     ref="topBar"
     :compact="compact"
     :drawer-open="drawerOpen"

@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Archive, ArchiveRestore, ImagePlus, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
+import { Archive, ArchiveRestore, Check, ImagePlus, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
 import { convertNote, updateItem } from '@/db/checklist'
 import type { LocalAttachment, LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import LabelChips from '@/components/labels/LabelChips.vue'
 import LabelPicker from '@/components/labels/LabelPicker.vue'
 import { updateNote } from '@/db/notes'
 import { plainText } from '@/db/richtext'
-import { noteBackground, noteLine } from '@/notes'
+import { NOTE_ORDER, noteBackground, noteLine } from '@/notes'
 import { useNoteActions } from '@/composables/useNoteActions'
 import { iconButton } from '@/components/ui/menu'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
 import ImageCollage from '@/components/images/ImageCollage.vue'
 import { useImageAttach } from '@/composables/useImageAttach'
+import { useSelectionStore } from '@/stores/selection'
 import { useSyncStore } from '@/stores/sync'
 import ColorPicker from './ColorPicker.vue'
 import NoteMenu from './NoteMenu.vue'
@@ -30,6 +31,9 @@ const router = useRouter()
 const actions = useNoteActions()
 const images = useImageAttach()
 const sync = useSyncStore()
+const selection = useSelectionStore()
+const order = inject(NOTE_ORDER, ref([]))
+const selected = computed(() => selection.has(props.note.id))
 const body = ref<HTMLElement | null>(null)
 const clipped = ref(false)
 const picking = ref(false)
@@ -68,14 +72,27 @@ onBeforeUnmount(() => observer.disconnect())
 function open(): void {
   void router.push(`/note/${props.note.id}`)
 }
+
+// While notes are selected, a click selects or deselects instead of opening (SPEC 9).
+function activate(event?: MouseEvent | KeyboardEvent): void {
+  if (!selection.active) open()
+  else if (event?.shiftKey) selection.extend(props.note.id, order.value)
+  else selection.toggle(props.note.id)
+}
+
+function select(event: MouseEvent): void {
+  if (event.shiftKey && selection.active) selection.extend(props.note.id, order.value)
+  else selection.toggle(props.note.id)
+}
 </script>
 
 <template>
   <article
     class="group relative flex flex-col border transition-[border-color] duration-150 hover:border-(--line-hover-card) focus-visible:border-ink focus-visible:outline-none"
+    :class="selected && 'outline-2! -outline-offset-2! outline-ink!'"
     :style="{
       background: noteBackground(color),
-      borderColor: noteLine(color),
+      borderColor: selected ? 'var(--ink)' : noteLine(color),
       '--line-hover-card':
         color === 'default'
           ? 'var(--line-hover)'
@@ -85,15 +102,27 @@ function open(): void {
     :aria-label="note.title || $t('note.untitled')"
     data-testid="note-card"
     :data-note-id="note.id"
-    @click="open"
-    @keydown.enter.self="open"
+    :data-selected="selected || undefined"
+    @click="activate"
+    @keydown.enter.self="activate"
   >
-    <ImageCollage
-      :attachments="attachments"
-      lazy
-      @open="open"
-      @missing="sync.downloadImages(note.id)"
-    />
+    <button
+      type="button"
+      class="absolute -top-2.5 -left-2.5 z-[1] grid size-6 cursor-pointer place-items-center border border-ink transition-opacity duration-150 focus-visible:opacity-100"
+      :class="
+        selected
+          ? 'bg-ink text-bg'
+          : 'bg-bg text-ink opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:hidden'
+      "
+      :aria-label="$t('selection.select')"
+      :aria-pressed="selected"
+      :title="$t('selection.select')"
+      data-testid="card-select"
+      @click.stop="select"
+    >
+      <Check :size="14" class="[stroke-width:2.2]" />
+    </button>
+    <ImageCollage :attachments="attachments" lazy @missing="sync.downloadImages(note.id)" />
     <div class="px-4 pt-3 pb-2">
       <p
         v-if="note.conflict_of"

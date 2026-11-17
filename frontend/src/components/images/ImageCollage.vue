@@ -15,7 +15,11 @@ const props = defineProps<{
   /** Shows a remove button on each image. */
   removable?: boolean
 }>()
-const emit = defineEmits<{ open: [index: number]; remove: [id: string]; missing: [] }>()
+const emit = defineEmits<{
+  open: [index: number, event: MouseEvent]
+  remove: [id: string]
+  missing: []
+}>()
 
 function rowSizes(count: number): number[] {
   const sizes: number[] = []
@@ -49,11 +53,13 @@ const rows = computed(() => {
         class="group/image relative min-w-0"
         :style="{ flex: `${(100 * a.width) / a.height} 1 0%` }"
       >
+        <!-- On cards (lazy), a tall image is cropped so it does not fill the whole screen. -->
         <NoteImage
           :attachment="a"
           :lazy="lazy"
           class="cursor-pointer"
-          @click="emit('open', index)"
+          :class="lazy && 'max-h-[480px]'"
+          @click="(event: MouseEvent) => emit('open', index, event)"
           @missing="emit('missing')"
         />
         <button
