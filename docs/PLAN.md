@@ -78,12 +78,12 @@ Done when: two clients checking different items of the same list offline both ke
 
 ## Phase 7: Images
 
-- [ ] Client image processing, hashing and local blob storage (section 6).
-- [ ] Blob endpoints with verification and per-user access control.
-- [ ] Blob upload and download steps in the sync cycle.
-- [ ] Images on cards and in the editor, viewer on click, remove image.
-- [ ] "Download images on demand" setting, storage persistence request and storage use display.
-- [ ] Blob cleanup after purge.
+- [x] Client image processing, hashing and local blob storage (section 6).
+- [x] Blob endpoints with verification and per-user access control.
+- [x] Blob upload and download steps in the sync cycle.
+- [x] Images on cards and in the editor, viewer on click, remove image.
+- [x] "Download images on demand" setting, storage persistence request and storage use display.
+- [x] Blob cleanup after purge.
 
 Done when: an image attached offline appears on a second device after reconnecting; a second user cannot fetch the blob by its hash; the same file attached twice is stored once.
 
