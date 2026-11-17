@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.db import READ_METHODS, Database, DbSession
 from app.errors import ForbiddenError, UnauthorizedError
-from app.models import AuthSession, User
-from app.services import sessions
+from app.models import ApiToken, AuthSession, User
+from app.services import sessions, tokens
 from app.services.clock import DAY_MS
 from app.services.throttle import LoginThrottle
 
@@ -72,6 +72,8 @@ def _write(request: Request, db: Session, work: Callable[[Session], None]) -> No
 
 
 def get_auth(request: Request, response: Response, db: DbSession, settings: AppSettings) -> Auth:
+    if "authorization" in request.headers:
+        raise ForbiddenError("token_not_allowed", "API tokens cannot be used for this")
     token = request.cookies.get(SESSION_COOKIE)
     found = sessions.resolve(db, token) if token else None
     if token is None or found is None:
@@ -106,3 +108,29 @@ def get_admin(auth: CurrentAuth) -> Auth:
 
 
 AdminAuth = Annotated[Auth, Depends(get_admin)]
+
+
+@dataclass
+class ApiAuth:
+    user: User
+    token: ApiToken | None
+
+
+def get_api_auth(request: Request, response: Response, db: DbSession, settings: AppSettings) -> ApiAuth:
+    """For the REST API (SPEC 8): a Bearer token within its scope, or the browser session."""
+    header = request.headers.get("authorization")
+    if header is None:
+        return ApiAuth(user=get_auth(request, response, db, settings).user, token=None)
+    scheme, _, secret = header.partition(" ")
+    found = tokens.resolve(db, secret.strip()) if scheme.lower() == "bearer" else None
+    if found is None:
+        raise UnauthorizedError("The token is not valid, has expired or was revoked")
+    token, user = found
+    if request.method not in READ_METHODS and token.scope != "write":
+        raise ForbiddenError("insufficient_scope", "This token can only read")
+    if tokens.touch_due(token):
+        _write(request, db, lambda writer: tokens.touch(writer, token.id))
+    return ApiAuth(user=user, token=token)
+
+
+CurrentApiAuth = Annotated[ApiAuth, Depends(get_api_auth)]

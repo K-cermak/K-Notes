@@ -73,3 +73,62 @@ class InviteAccept(TokenRequest):
 
 class PasswordReset(TokenRequest):
     password: str = Field(max_length=1024)
+
+
+class TotpChallenge(BaseModel):
+    """The password was right; a TOTP or recovery code is still needed to sign in."""
+
+    totp_required: Literal[True] = True
+    pending_token: str
+
+
+class TotpLogin(BaseModel):
+    pending_token: str = Field(max_length=200)
+    code: str = Field(max_length=32)
+
+
+class TotpSetup(BaseModel):
+    secret: str
+    uri: str
+
+
+class TotpCode(BaseModel):
+    code: str = Field(max_length=32)
+
+
+class TotpDisable(TotpCode):
+    password: str = Field(max_length=1024)
+
+
+class TotpStatus(BaseModel):
+    enabled: bool
+    recovery_codes_left: int
+
+
+class RecoveryCodes(BaseModel):
+    codes: list[str]
+
+
+TokenScope = Literal["read", "write"]
+
+
+class ApiTokenCreate(BaseModel):
+    name: str = Field(max_length=100)
+    scope: TokenScope
+    expires_in_days: int | None = Field(default=None, ge=1, le=3650)
+
+
+class ApiTokenInfo(BaseModel):
+    id: str
+    name: str
+    prefix: str
+    scope: TokenScope
+    created_at: int
+    last_used_at: int | None
+    expires_at: int | None
+
+
+class CreatedApiToken(ApiTokenInfo):
+    """Includes the token itself, which is never shown again."""
+
+    token: str

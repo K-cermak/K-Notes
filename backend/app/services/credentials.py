@@ -4,6 +4,8 @@ import secrets
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
+from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 _hasher = PasswordHasher()
 # Verifying against this when the account does not exist keeps login timing the same either way.
@@ -35,3 +37,8 @@ def verify_password(password_hash: str | None, password: str) -> bool:
 
 def password_needs_rehash(password_hash: str) -> bool:
     return _hasher.check_needs_rehash(password_hash)
+
+
+def derive_key(secret_key: str, purpose: str) -> bytes:
+    """A separate 256-bit key per purpose, so one key never serves two jobs."""
+    return HKDF(algorithm=SHA256(), length=32, salt=None, info=purpose.encode()).derive(secret_key.encode())

@@ -60,3 +60,29 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[str]
+
+
+class RecoveryCode(Base):
+    """One-time TOTP recovery codes, stored as hashes (SPEC 7)."""
+
+    __tablename__ = "recovery_codes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    used_at: Mapped[int | None]
+
+
+class ApiToken(Base):
+    __tablename__ = "api_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    token_prefix: Mapped[str] = mapped_column(String(16))
+    scope: Mapped[str] = mapped_column(String(8))
+    created_at: Mapped[int]
+    last_used_at: Mapped[int | None]
+    expires_at: Mapped[int | None]
+    revoked_at: Mapped[int | None]

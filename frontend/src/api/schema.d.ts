@@ -64,8 +64,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login */
+        /**
+         * Login
+         * @description Signs in, or with two-factor on returns a pending token for /auth/login/totp.
+         */
         post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Login Totp
+         * @description The second step: the pending token from /auth/login with a TOTP or recovery code.
+         */
+        post: operations["login_totp"];
         delete?: never;
         options?: never;
         head?: never;
@@ -244,6 +267,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Totp Status */
+        get: operations["totp_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/totp/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Begin Totp
+         * @description Starts enrolment: a new secret for the authenticator app, active only once confirmed.
+         */
+        post: operations["begin_totp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/totp/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable Totp
+         * @description Confirms enrolment with a code from the app. The recovery codes are shown only now.
+         */
+        post: operations["enable_totp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/totp/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Renew Recovery Codes
+         * @description Replaces all recovery codes; the old ones stop working.
+         */
+        post: operations["renew_recovery_codes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/totp/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Disable Totp */
+        post: operations["disable_totp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tokens */
+        get: operations["list_tokens"];
+        put?: never;
+        /**
+         * Create Token
+         * @description Creates an API token. The token itself is in this response only.
+         */
+        post: operations["create_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Token */
+        delete: operations["revoke_token"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -277,6 +432,26 @@ export interface paths {
         head?: never;
         /** Update User */
         patch: operations["update_user"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{user_id}/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Reset Totp
+         * @description Turns off two-factor for a user who lost their authenticator and recovery codes.
+         */
+        delete: operations["reset_totp"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/users/{user_id}/reset-link": {
@@ -448,6 +623,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notes
+         * @description Notes in the order the app shows them, pinned first. Needs the read scope.
+         */
+        get: operations["list_notes"];
+        put?: never;
+        /**
+         * Create Note
+         * @description Creates a text note from `text`, or a checklist from `items`, at the top. Needs the write scope.
+         */
+        post: operations["create_note"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Note */
+        get: operations["get_note"];
+        put?: never;
+        post?: never;
+        /**
+         * Trash Note
+         * @description Moves the note to the trash, from where it is purged after the retention period.
+         */
+        delete: operations["trash_note"];
+        options?: never;
+        head?: never;
+        /** Update Note */
+        patch: operations["update_note"];
+        trace?: never;
+    };
+    "/api/v1/labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Labels */
+        get: operations["list_labels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -481,6 +719,147 @@ export interface components {
             is_active?: boolean | null;
             /** Is Admin */
             is_admin?: boolean | null;
+        };
+        /** ApiItem */
+        ApiItem: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Checked */
+            checked: boolean;
+        };
+        /** ApiLabel */
+        ApiLabel: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** ApiNote */
+        ApiNote: {
+            /** Id */
+            id: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "text" | "checklist";
+            /** Title */
+            title: string;
+            /**
+             * Text
+             * @description The body as plain text; empty for checklists
+             */
+            text: string;
+            /** Items */
+            items: components["schemas"]["ApiItem"][];
+            /**
+             * Color
+             * @enum {string}
+             */
+            color: "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "fog" | "storm" | "dusk" | "blossom" | "clay" | "chalk";
+            /** Pinned */
+            pinned: boolean;
+            /** Archived */
+            archived: boolean;
+            /** Trashed */
+            trashed: boolean;
+            /** Labels */
+            labels: string[];
+            /** Created At */
+            created_at: number;
+            /** Updated At */
+            updated_at: number;
+        };
+        /** ApiNoteCreate */
+        ApiNoteCreate: {
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Text
+             * @description Makes a text note
+             */
+            text?: string | null;
+            /**
+             * Items
+             * @description Makes a checklist
+             */
+            items?: string[] | null;
+            /**
+             * Color
+             * @default default
+             * @enum {string}
+             */
+            color: "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "fog" | "storm" | "dusk" | "blossom" | "clay" | "chalk";
+            /**
+             * Pinned
+             * @default false
+             */
+            pinned: boolean;
+            /**
+             * Labels
+             * @description Created if missing
+             * @default []
+             */
+            labels: string[];
+        };
+        /** ApiNoteList */
+        ApiNoteList: {
+            /** Notes */
+            notes: components["schemas"]["ApiNote"][];
+            /** Total */
+            total: number;
+        };
+        /** ApiNotePatch */
+        ApiNotePatch: {
+            /** Title */
+            title?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Color */
+            color?: ("default" | "coral" | "peach" | "sand" | "mint" | "sage" | "fog" | "storm" | "dusk" | "blossom" | "clay" | "chalk") | null;
+            /** Pinned */
+            pinned?: boolean | null;
+            /** Archived */
+            archived?: boolean | null;
+            /** Trashed */
+            trashed?: boolean | null;
+        };
+        /** ApiTokenCreate */
+        ApiTokenCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "read" | "write";
+            /** Expires In Days */
+            expires_in_days?: number | null;
+        };
+        /** ApiTokenInfo */
+        ApiTokenInfo: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Prefix */
+            prefix: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "read" | "write";
+            /** Created At */
+            created_at: number;
+            /** Last Used At */
+            last_used_at: number | null;
+            /** Expires At */
+            expires_at: number | null;
         };
         /** AttachmentRow */
         AttachmentRow: {
@@ -549,6 +928,31 @@ export interface components {
             checked: boolean;
             /** Position */
             position: string;
+        };
+        /**
+         * CreatedApiToken
+         * @description Includes the token itself, which is never shown again.
+         */
+        CreatedApiToken: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Prefix */
+            prefix: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "read" | "write";
+            /** Created At */
+            created_at: number;
+            /** Last Used At */
+            last_used_at: number | null;
+            /** Expires At */
+            expires_at: number | null;
+            /** Token */
+            token: string;
         };
         /**
          * CreatedLink
@@ -878,6 +1282,11 @@ export interface components {
             /** Results */
             results: components["schemas"]["OpResult"][];
         };
+        /** RecoveryCodes */
+        RecoveryCodes: {
+            /** Codes */
+            codes: string[];
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /** Email */
@@ -944,6 +1353,53 @@ export interface components {
         TokenRequest: {
             /** Token */
             token: string;
+        };
+        /**
+         * TotpChallenge
+         * @description The password was right; a TOTP or recovery code is still needed to sign in.
+         */
+        TotpChallenge: {
+            /**
+             * Totp Required
+             * @default true
+             * @constant
+             */
+            totp_required: true;
+            /** Pending Token */
+            pending_token: string;
+        };
+        /** TotpCode */
+        TotpCode: {
+            /** Code */
+            code: string;
+        };
+        /** TotpDisable */
+        TotpDisable: {
+            /** Code */
+            code: string;
+            /** Password */
+            password: string;
+        };
+        /** TotpLogin */
+        TotpLogin: {
+            /** Pending Token */
+            pending_token: string;
+            /** Code */
+            code: string;
+        };
+        /** TotpSetup */
+        TotpSetup: {
+            /** Secret */
+            secret: string;
+            /** Uri */
+            uri: string;
+        };
+        /** TotpStatus */
+        TotpStatus: {
+            /** Enabled */
+            enabled: boolean;
+            /** Recovery Codes Left */
+            recovery_codes_left: number;
         };
     };
     responses: never;
@@ -1055,6 +1511,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"] | components["schemas"]["TotpChallenge"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    login_totp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TotpLogin"];
             };
         };
         responses: {
@@ -1448,6 +1937,252 @@ export interface operations {
             };
         };
     };
+    totp_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotpStatus"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    begin_totp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotpSetup"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    enable_totp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TotpCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodes"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    renew_recovery_codes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TotpCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodes"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    disable_totp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TotpDisable"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_tokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenInfo"][];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiTokenCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedApiToken"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revoke_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_users: {
         parameters: {
             query?: never;
@@ -1529,6 +2264,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminUser"];
                 };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reset_totp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Default Response */
             default: {
@@ -1976,6 +2740,204 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_notes: {
+        parameters: {
+            query?: {
+                /** @description Leave out for both */
+                archived?: boolean | null;
+                trashed?: boolean;
+                /** @description A label name */
+                label?: string | null;
+                /** @description Words that must all appear */
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiNoteList"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiNoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiNote"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiNote"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    trash_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiNote"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiNotePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiNote"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_labels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiLabel"][];
+                };
             };
             /** @description Default Response */
             default: {

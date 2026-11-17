@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.errors import ConflictError, NotFoundError
 from app.models import AuthSession, User
 from app.schemas.admin import AdminUser, AdminUserUpdate
-from app.services import sessions
+from app.services import sessions, totp
 
 
 def _to_admin_user(user: User, last_active_at: int | None) -> AdminUser:
@@ -73,6 +73,11 @@ def update_user(db: Session, actor: User | None, user_id: str, update: AdminUser
         sessions.revoke_all(db, user.id)
     db.commit()
     return _to_admin_user(user, None)
+
+
+def reset_totp(db: Session, user_id: str) -> None:
+    totp.clear(db, _get(db, user_id))
+    db.commit()
 
 
 def delete_user(db: Session, actor: User | None, user_id: str) -> None:

@@ -1,9 +1,22 @@
 from fastapi import APIRouter, status
 
-from app.api.deps import CurrentAuth
+from app.api.deps import AppSettings, CurrentAuth
 from app.db import DbSession
-from app.schemas.account import Me, PasswordChange, ProfileUpdate, SessionInfo
-from app.services import accounts, sessions
+from app.schemas.account import (
+    ApiTokenCreate,
+    ApiTokenInfo,
+    CreatedApiToken,
+    Me,
+    PasswordChange,
+    ProfileUpdate,
+    RecoveryCodes,
+    SessionInfo,
+    TotpCode,
+    TotpDisable,
+    TotpSetup,
+    TotpStatus,
+)
+from app.services import accounts, sessions, tokens, totp
 
 router = APIRouter(prefix="/me", tags=["account"])
 
@@ -39,3 +52,53 @@ def revoke_other_sessions(auth: CurrentAuth, db: DbSession) -> None:
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_session(session_id: str, auth: CurrentAuth, db: DbSession) -> None:
     sessions.revoke(db, auth.user, session_id)
+
+
+@router.get("/totp")
+def totp_status(auth: CurrentAuth, db: DbSession) -> TotpStatus:
+    return TotpStatus(
+        enabled=auth.user.totp_enabled, recovery_codes_left=totp.recovery_codes_left(db, auth.user)
+    )
+
+
+@router.post("/totp/setup")
+def begin_totp(auth: CurrentAuth, db: DbSession, settings: AppSettings) -> TotpSetup:
+    """Starts enrolment: a new secret for the authenticator app, active only once confirmed."""
+    secret, uri = totp.begin_enrolment(db, settings, auth.user)
+    return TotpSetup(secret=secret, uri=uri)
+
+
+@router.post("/totp/enable")
+def enable_totp(body: TotpCode, auth: CurrentAuth, db: DbSession, settings: AppSettings) -> RecoveryCodes:
+    """Confirms enrolment with a code from the app. The recovery codes are shown only now."""
+    return RecoveryCodes(codes=totp.confirm_enrolment(db, settings, auth.user, body.code))
+
+
+@router.post("/totp/recovery-codes")
+def renew_recovery_codes(
+    body: TotpCode, auth: CurrentAuth, db: DbSession, settings: AppSettings
+) -> RecoveryCodes:
+    """Replaces all recovery codes; the old ones stop working."""
+    return RecoveryCodes(codes=totp.new_recovery_codes(db, settings, auth.user, body.code))
+
+
+@router.post("/totp/disable", status_code=status.HTTP_204_NO_CONTENT)
+def disable_totp(body: TotpDisable, auth: CurrentAuth, db: DbSession, settings: AppSettings) -> None:
+    totp.disable(db, settings, auth.user, password=body.password, code=body.code)
+
+
+@router.get("/tokens")
+def list_tokens(auth: CurrentAuth, db: DbSession) -> list[ApiTokenInfo]:
+    return tokens.list_for(db, auth.user)
+
+
+@router.post("/tokens", status_code=status.HTTP_201_CREATED)
+def create_token(body: ApiTokenCreate, auth: CurrentAuth, db: DbSession) -> CreatedApiToken:
+    """Creates an API token. The token itself is in this response only."""
+    info, secret = tokens.create(db, auth.user, body)
+    return CreatedApiToken(**info.model_dump(), token=secret)
+
+
+@router.delete("/tokens/{token_id}", status_code=status.HTTP_204_NO_CONTENT)
+def revoke_token(token_id: str, auth: CurrentAuth, db: DbSession) -> None:
+    tokens.revoke(db, auth.user, token_id)

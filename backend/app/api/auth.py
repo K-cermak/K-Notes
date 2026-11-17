@@ -10,6 +10,7 @@ from app.api.deps import (
 )
 from app.config import Settings
 from app.db import DbSession
+from app.errors import AppError, TooManyRequestsError, UnauthorizedError
 from app.models import User
 from app.schemas.account import (
     InviteAccept,
@@ -20,18 +21,27 @@ from app.schemas.account import (
     RegisterRequest,
     SetupRequest,
     TokenRequest,
+    TotpChallenge,
+    TotpLogin,
 )
-from app.services import accounts, invites, sessions
+from app.services import accounts, invites, sessions, totp
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _sign_in(db: DbSession, settings: Settings, request: Request, response: Response, user: User) -> Me:
+def _sign_in(
+    db: DbSession,
+    settings: Settings,
+    request: Request,
+    response: Response,
+    user: User,
+    method: str = "password",
+) -> Me:
     token = sessions.create(
         db,
         settings,
         user,
-        method="password",
+        method=method,
         user_agent=request.headers.get("user-agent"),
         ip=client_ip(request),
     )
@@ -56,10 +66,40 @@ def login(
     db: DbSession,
     settings: AppSettings,
     throttle: Throttle,
-) -> Me:
+) -> Me | TotpChallenge:
+    """Signs in, or with two-factor on returns a pending token for /auth/login/totp."""
     user = accounts.authenticate(
         db, throttle, email=body.email, password=body.password, ip=client_ip(request)
     )
+    if user.totp_enabled:
+        db.commit()
+        return TotpChallenge(pending_token=totp.pending_login_token(settings, user))
+    return _sign_in(db, settings, request, response, user)
+
+
+@router.post("/login/totp")
+def login_totp(
+    body: TotpLogin,
+    request: Request,
+    response: Response,
+    db: DbSession,
+    settings: AppSettings,
+    throttle: Throttle,
+) -> Me:
+    """The second step: the pending token from /auth/login with a TOTP or recovery code."""
+    user_id = totp.pending_login_user(settings, body.pending_token)
+    user = db.get(User, user_id) if user_id else None
+    if user is None or not user.is_active or not user.totp_enabled:
+        raise AppError(401, "login_expired", "The sign-in has expired. Start again.")
+    # Six digits are guessable, so attempts are throttled per account like passwords.
+    account, ip = f"totp:{user.id}", client_ip(request)
+    retry_after = throttle.retry_after(account, ip)
+    if retry_after:
+        raise TooManyRequestsError(retry_after)
+    if not totp.verify(db, settings, user, body.code):
+        throttle.failed(account, ip)
+        raise UnauthorizedError("The code is not correct")
+    throttle.succeeded(account)
     return _sign_in(db, settings, request, response, user)
 
 
