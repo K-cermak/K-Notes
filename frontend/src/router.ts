@@ -82,7 +82,7 @@ router.beforeEach(async (to) => {
   const instance = useInstanceStore()
   const session = useSessionStore()
   if (!instance.config) await instance.load()
-  // Without the server there is nothing to decide on yet; offline start arrives with the sync engine.
+  // Offline on the very first visit there is no cached configuration to decide anything with.
   if (!instance.config) return true
 
   if (instance.config.setup_required) {

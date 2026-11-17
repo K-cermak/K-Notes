@@ -9,14 +9,18 @@ export const useInstanceStore = defineStore('instance', () => {
   const failed = ref(false)
 
   async function load(): Promise<void> {
+    let fresh: PublicConfig
     try {
-      config.value = await call(() => api.GET('/api/v1/config'))
-      failed.value = false
-      await rememberConfig(db, config.value)
+      fresh = await call(() => api.GET('/api/v1/config'))
     } catch {
       failed.value = true
       config.value ??= (await cachedConfig(db)) ?? null
+      return
     }
+    config.value = fresh
+    failed.value = false
+    // The plain response, not config.value: IndexedDB cannot store the reactive proxy.
+    await rememberConfig(db, fresh)
   }
 
   return { config, failed, load }
