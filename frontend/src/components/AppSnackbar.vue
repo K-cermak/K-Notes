@@ -7,11 +7,12 @@ const snackbar = useSnackbarStore()
 
 <template>
   <div
-    class="pointer-events-none fixed inset-x-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-50 flex sm:right-auto sm:left-6"
+    class="pointer-events-none fixed inset-x-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-50 grid items-end justify-items-start sm:right-auto sm:left-6"
     aria-live="polite"
   >
     <!-- Transitions rather than keyframes: a new message can replace one that is still arriving.
-         It leaves the way it came, a little faster. -->
+         It leaves the way it came, a little faster. While one leaves and the next arrives, both
+         share the one grid cell, so the new one does not start beside the old and then jump. -->
     <Transition
       enter-from-class="opacity-0 translate-y-2 motion-reduce:translate-y-0"
       leave-to-class="opacity-0 translate-y-2 motion-reduce:translate-y-0"
@@ -22,7 +23,7 @@ const snackbar = useSnackbarStore()
         v-if="snackbar.current"
         :key="snackbar.current.id"
         role="status"
-        class="ui-snackbar pointer-events-auto w-full max-w-[480px] sm:w-auto sm:min-w-[320px]"
+        class="ui-snackbar pointer-events-auto col-start-1 row-start-1 w-full max-w-[480px] sm:w-auto sm:min-w-[320px]"
         data-testid="snackbar"
       >
         <span class="flex-1">{{ snackbar.current.text }}</span>

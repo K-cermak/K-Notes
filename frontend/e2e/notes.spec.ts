@@ -101,3 +101,17 @@ test('the theme is saved in the profile and follows the user', async ({ browser 
   const b = await signedIn(browser, user)
   await expect(b.page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
+
+test('a message replacing another one shows in the same place', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  for (const title of ['First', 'Second']) await addNote(page, title)
+  for (const title of ['First', 'Second']) {
+    await card(page, title).hover()
+    await card(page, title).getByRole('button', { name: 'Archive' }).click()
+  }
+  // Both are on screen for a moment: the first leaving, the second arriving.
+  const lefts = await page
+    .getByTestId('snackbar')
+    .evaluateAll((bars) => bars.map((bar) => Math.round(bar.getBoundingClientRect().left)))
+  expect(new Set(lefts).size).toBe(1)
+})
