@@ -6,7 +6,7 @@ from app.config import Settings
 from app.models import Setting
 from app.schemas.admin import InstanceSettings, InstanceSettingsUpdate, InstanceStatus
 from app.schemas.public import PublicConfig
-from app.services import accounts
+from app.services import accounts, storage
 from app.version import VERSION
 
 _REGISTRATION = "registration_enabled"
@@ -36,12 +36,17 @@ def public_config(settings: Settings, db: Session) -> PublicConfig:
 
 
 def get_settings(db: Session) -> InstanceSettings:
-    return InstanceSettings(registration_enabled=registration_enabled(db))
+    return InstanceSettings(
+        registration_enabled=registration_enabled(db),
+        default_storage_limit_bytes=storage.default_limit(db),
+    )
 
 
 def update_settings(db: Session, update: InstanceSettingsUpdate) -> InstanceSettings:
     if update.registration_enabled is not None:
         db.merge(Setting(key=_REGISTRATION, value="true" if update.registration_enabled else "false"))
+    if "default_storage_limit_bytes" in update.model_fields_set:
+        storage.set_default_limit(db, update.default_storage_limit_bytes)
     db.commit()
     return get_settings(db)
 

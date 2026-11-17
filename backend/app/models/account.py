@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -24,6 +24,8 @@ class User(Base):
     default_view: Mapped[str] = mapped_column(String(8), default="grid")
     seq: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[int]
+    # None follows the instance default, -1 is unlimited, anything else a limit in bytes.
+    storage_limit_bytes: Mapped[int | None] = mapped_column(BigInteger)
 
 
 class AuthSession(Base):

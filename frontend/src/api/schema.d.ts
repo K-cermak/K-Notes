@@ -419,6 +419,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Storage Status
+         * @description How much the user stores and may store (SPEC 7, Storage quotas).
+         */
+        get: operations["storage_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -773,6 +793,15 @@ export interface components {
             created_at: number;
             /** Last Active At */
             last_active_at: number | null;
+            /** Storage Limit */
+            storage_limit: ("default" | "unlimited") | number;
+            /** Storage Used Bytes */
+            storage_used_bytes: number;
+            /**
+             * Storage Limit Bytes
+             * @description The limit that applies; None when unlimited
+             */
+            storage_limit_bytes: number | null;
         };
         /** AdminUserUpdate */
         AdminUserUpdate: {
@@ -780,6 +809,8 @@ export interface components {
             is_active?: boolean | null;
             /** Is Admin */
             is_admin?: boolean | null;
+            /** Storage Limit */
+            storage_limit?: ("default" | "unlimited") | number | null;
         };
         /** ApiItem */
         ApiItem: {
@@ -1073,11 +1104,18 @@ export interface components {
         InstanceSettings: {
             /** Registration Enabled */
             registration_enabled: boolean;
+            /**
+             * Default Storage Limit Bytes
+             * @description None when unlimited
+             */
+            default_storage_limit_bytes: number | null;
         };
         /** InstanceSettingsUpdate */
         InstanceSettingsUpdate: {
             /** Registration Enabled */
             registration_enabled?: boolean | null;
+            /** Default Storage Limit Bytes */
+            default_storage_limit_bytes?: number | null;
         };
         /** InstanceStatus */
         InstanceStatus: {
@@ -1397,6 +1435,21 @@ export interface components {
             display_name: string;
             /** Password */
             password: string;
+        };
+        /** StorageStatus */
+        StorageStatus: {
+            /** Used Bytes */
+            used_bytes: number;
+            /**
+             * Limit Bytes
+             * @description None when unlimited
+             */
+            limit_bytes: number | null;
+            /**
+             * Full
+             * @description At or over the limit: no new notes or images
+             */
+            full: boolean;
         };
         /** Text */
         Text: {
@@ -2259,6 +2312,35 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    storage_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageStatus"];
+                };
             };
             /** @description Default Response */
             default: {

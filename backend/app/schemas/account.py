@@ -132,3 +132,9 @@ class CreatedApiToken(ApiTokenInfo):
     """Includes the token itself, which is never shown again."""
 
     token: str
+
+
+class StorageStatus(BaseModel):
+    used_bytes: int
+    limit_bytes: int | None = Field(description="None when unlimited")
+    full: bool = Field(description="At or over the limit: no new notes or images")

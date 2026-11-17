@@ -16,7 +16,7 @@ from app.models import ChecklistItem, Label, Note, NoteLabel, User
 from app.schemas.notes_api import ApiItem, ApiLabel, ApiNote, ApiNoteCreate, ApiNoteList, ApiNotePatch
 from app.schemas.richtext import RichDoc, from_plain_text, plain_text
 from app.schemas.sync import MAX_OPS_PER_PUSH, Op, PushRequest
-from app.services import clock, merge
+from app.services import clock, merge, storage
 from app.services.positions import key_between
 
 
@@ -135,6 +135,9 @@ def _push(db: Session, user: User, device_id: str, ops: list[Op]) -> None:
 
 
 def create_note(db: Session, user: User, device_id: str, body: ApiNoteCreate) -> ApiNote:
+    # Only here: sync and uploads accept changes over the quota, as they may have been made offline.
+    if storage.status(db, user).full:
+        raise ConflictError("storage_full", "Your storage is full. Delete notes or images to make room.")
     now = clock.now_ms()
     note_id = str(uuid.uuid4())
     first = db.scalar(select(func.min(Note.position)).where(Note.user_id == user.id, Note.deleted.is_(False)))

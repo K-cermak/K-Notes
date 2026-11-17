@@ -11,12 +11,13 @@ from app.schemas.account import (
     ProfileUpdate,
     RecoveryCodes,
     SessionInfo,
+    StorageStatus,
     TotpCode,
     TotpDisable,
     TotpSetup,
     TotpStatus,
 )
-from app.services import accounts, oidc, sessions, tokens, totp
+from app.services import accounts, oidc, sessions, storage, tokens, totp
 
 router = APIRouter(prefix="/me", tags=["account"])
 
@@ -108,3 +109,9 @@ def revoke_token(token_id: str, auth: CurrentAuth, db: DbSession) -> None:
 def unlink_oidc(auth: CurrentAuth, db: DbSession, settings: AppSettings) -> None:
     """Removes the single sign-on identity, unless it is the account's only way to sign in."""
     oidc.unlink(db, settings, auth.user)
+
+
+@router.get("/storage")
+def storage_status(auth: CurrentAuth, db: DbSession) -> StorageStatus:
+    """How much the user stores and may store (SPEC 7, Storage quotas)."""
+    return storage.status(db, auth.user)
