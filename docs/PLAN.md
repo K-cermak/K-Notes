@@ -89,8 +89,8 @@ Done when: an image attached offline appears on a second device after reconnecti
 
 ## Phase 8: Ordering and multi-select
 
-- [ ] Drag to reorder notes in the masonry grid and list view, with mouse and touch.
-- [ ] Selection mode and bulk actions.
+- [x] Drag to reorder notes in the masonry grid and list view, with mouse and touch.
+- [x] Selection mode and bulk actions.
 
 Done when: reordering persists across reload and syncs to a second client, dragging works on a real phone or touch emulation without triggering page scroll or text selection, and bulk archive of several notes can be undone in one action.
 
