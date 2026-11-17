@@ -72,7 +72,7 @@ Done when: label rename and delete propagate between two clients, and searching 
 
 ## Phase 6: Checklists
 
-- [ ] Checklist editor, card preview, checked section, item reordering, paste of several lines, conversion to and from text (section 9, Checklists).
+- [x] Checklist editor, card preview, checked section, item reordering, paste of several lines, conversion to and from text (section 9, Checklists).
 
 Done when: two clients checking different items of the same list offline both keep their changes after sync, covered by a Playwright test.
 
