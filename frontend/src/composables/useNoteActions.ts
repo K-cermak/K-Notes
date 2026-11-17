@@ -85,7 +85,8 @@ export function useNoteActions() {
     trashMany(ids: string[]): Promise<void> {
       return updateMany(
         ids,
-        { trashed_at: Date.now(), pinned: false },
+        // The pin stays, as for a single note: restoring puts the note back where it was.
+        { trashed_at: Date.now() },
         t('selection.trashed', { count: ids.length }, ids.length),
       )
     },
