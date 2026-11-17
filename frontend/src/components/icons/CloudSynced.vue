@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
- * Lucide's cloud with a check inside it. Lucide's own cloud-check lets the check cross the cloud's
- * outline, which at 18 px reads as a smudge rather than a check.
+ * A cloud with a check inside it, drawn in Lucide's style. Lucide's cloud-check lets the check
+ * cross the outline, which at 18 px reads as a smudge, and its one-humped cloud reads poorly at
+ * that size too; this cloud has two humps, built from circles so the curves meet smoothly.
  */
 withDefaults(defineProps<{ size?: number }>(), { size: 18 })
 </script>
@@ -16,7 +17,9 @@ withDefaults(defineProps<{ size?: number }>(), { size: 18 })
     stroke="currentColor"
     class="lucide"
   >
-    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
-    <path d="m9 14.5 2.5 2.5 4.5-4.5" />
+    <path
+      d="M5.5 19A3.5 3.5 0 0 1 5.23 12.01A5 5 0 0 1 14.27 7.89A4 4 0 0 1 19.95 12.13A3.5 3.5 0 0 1 19 19Z"
+    />
+    <path d="m9.75 13 2 2 3.75-3.75" />
   </svg>
 </template>
