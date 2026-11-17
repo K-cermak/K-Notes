@@ -93,6 +93,7 @@ describe('sync cycle', () => {
       upload: () => Promise.resolve(void server.log.push('upload')),
       download: () => Promise.resolve(void server.log.push('download')),
       holdsBack: () => Promise.resolve(false),
+      missing: () => Promise.resolve(false),
     }
     await createNote({ title: 'x' }, db)
     const { engine, states } = makeEngine(db, server, { blobs })
@@ -164,6 +165,27 @@ describe('sync cycle', () => {
     expect(states.at(-1)).toBe('synced')
   })
 
+  it('runs another cycle when a blob_missing image will be uploaded again', async () => {
+    const db = testDatabase()
+    const server = new FakeServer()
+    let uploaded = false
+    server.results = (op) =>
+      uploaded
+        ? { op_id: op.op_id, status: 'applied' }
+        : { op_id: op.op_id, status: 'rejected', error: 'blob_missing' }
+    const blobs: BlobTransfer = {
+      upload: () => Promise.resolve(void server.log.push('upload')),
+      download: () => Promise.resolve(),
+      holdsBack: () => Promise.resolve(false),
+      missing: () => Promise.resolve((uploaded = true)),
+    }
+    await createNote({}, db)
+    const { engine } = makeEngine(db, server, { blobs })
+    await engine.start()
+    expect(server.log).toEqual(['upload', 'push:1', 'pull:0', 'upload', 'push:1', 'pull:1'])
+    expect(await db.outbox.count()).toBe(0)
+  })
+
   it('sends a purge for a new row the server has, even before the pull confirms it', async () => {
     const db = testDatabase()
     const server = new FakeServer()
@@ -188,6 +210,7 @@ describe('sync cycle', () => {
       upload: () => Promise.resolve(),
       download: () => Promise.resolve(),
       holdsBack: (entry) => Promise.resolve(entry.fields.title === 'wait'),
+      missing: () => Promise.resolve(false),
     }
     const { engine } = makeEngine(db, server, { blobs })
     await engine.start()

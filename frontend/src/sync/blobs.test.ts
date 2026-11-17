@@ -54,6 +54,22 @@ describe('blob sync', () => {
     expect(server.exists).toHaveBeenCalledTimes(2)
   })
 
+  it('uploads an image again when the server no longer has it', async () => {
+    const db = testDatabase()
+    const server = fakeServer()
+    const blobs = new BlobSync(db, server.api)
+    await noteWithImages(db, 'a')
+    await blobs.upload()
+    const op = (await db.outbox.toArray()).find((entry) => entry.entity === 'attachment')!
+    server.stored.clear()
+
+    await blobs.missing(op)
+    expect(await blobs.holdsBack(op)).toBe(true)
+    await blobs.upload()
+    expect(server.upload).toHaveBeenCalledTimes(2)
+    expect(await blobs.holdsBack(op)).toBe(false)
+  })
+
   it('keeps an image for the next cycle when the network fails', async () => {
     const db = testDatabase()
     const server = fakeServer()

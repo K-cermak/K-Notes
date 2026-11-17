@@ -22,6 +22,8 @@ export interface BlobTransfer {
   download(): Promise<void>
   /** Attachment ops wait until their image is on the server. */
   holdsBack(entry: OutboxEntry): Promise<boolean>
+  /** The server answered blob_missing for an op that was not held back; true if it will upload. */
+  missing(entry: OutboxEntry): Promise<boolean>
 }
 
 export type SyncState = 'idle' | 'syncing' | 'synced' | 'offline' | 'error' | 'unauthorized'
@@ -49,6 +51,7 @@ const noBlobs: BlobTransfer = {
   upload: () => Promise.resolve(),
   download: () => Promise.resolve(),
   holdsBack: () => Promise.resolve(false),
+  missing: () => Promise.resolve(false),
 }
 
 /**
@@ -210,6 +213,7 @@ export class SyncEngine {
       }
       const byOp = new Map(batch.map((e) => [e.opId, e]))
       const rejected: OpResult[] = []
+      const missing: OutboxEntry[] = []
       await this.db.transaction('rw', [this.db.outbox, ...this.db.syncedTables], async () => {
         for (const result of response.results) {
           const entry = byOp.get(result.op_id)
@@ -217,6 +221,7 @@ export class SyncEngine {
           if (result.status === 'rejected' && result.error === 'blob_missing') {
             // Kept and retried after the image is uploaded, in a later cycle.
             skip.add(entry.opId)
+            missing.push(entry)
             await this.db.outbox.update(entry.seq, { inFlight: 0 })
             continue
           }
@@ -233,6 +238,9 @@ export class SyncEngine {
           await this.db.outbox.delete(entry.seq)
         }
       })
+      for (const entry of missing) {
+        if (await this.blobs.missing(entry)) this.again = true
+      }
       if (rejected.length > 0) {
         console.warn('Sync rejected ops', rejected)
         this.options.onRejected?.(rejected)

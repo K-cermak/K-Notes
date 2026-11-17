@@ -48,6 +48,17 @@ export class BlobSync implements BlobTransfer {
     return (await this.db.blobs.get(hash))?.uploaded === 0
   }
 
+  /**
+   * The server no longer has an image this device marked as uploaded, as when it was cleaned up
+   * after its last note was deleted elsewhere. Uploading it again lets the op through.
+   */
+  async missing(entry: OutboxEntry): Promise<boolean> {
+    const hash = entry.fields.blob_hash
+    if (typeof hash !== 'string' || !(await this.db.blobs.get(hash))) return false
+    await this.db.blobs.update(hash, { uploaded: 0 })
+    return true
+  }
+
   async download(): Promise<void> {
     await pruneBlobs(this.db)
     if (await this.options.onDemand?.()) return
