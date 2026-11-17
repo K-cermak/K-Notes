@@ -439,19 +439,20 @@ Tokens. Define these as CSS custom properties using `light-dark()`, with `color-
 | --- | --- | --- | --- |
 | `bg` | `#ffffff` | `#0a0a0a` | Page and surfaces |
 | `ink` | `#171717` | `#ededed` | Text, focused borders |
-| `muted` | `#666666` | `#a1a1a1` | Secondary text, labels |
-| `faint` | `#8f8f8f` | `#8f8f8f` | Meta, placeholders, disabled |
+| `muted` | `#666666` | `#a1a1a1` | Secondary text, labels, meta |
+| `faint` | `#8f8f8f` | `#8f8f8f` | Placeholders, disabled controls, decorative icons; never text that carries information, as it is below 4.5:1 on white |
 | `line` | `#eaeaea` | `#2e2e2e` | Borders, grid lines |
 | `line-hover` | `#c9c9c9` | `#454545` | Hovered borders |
 | `accent` | `#1f6fd6` | `#1f6fd6` | Primary action, links, selection |
 | `accent-hover` | `#1a5fc8` | `#1a5fc8` | |
 | `danger` | `#d1242f` | `#ff6369` | Errors, destructive actions |
 | `warning` | `#b45309` | `#f5a524` | |
-| `success` | `#1a8c3e` | `#3fb950` | |
+| `success` | `#18803a` | `#3fb950` | Darker than the reference's `#1a8c3e`, which is 4.3:1 on white, so that it can be used for text |
 
 Applying it to notes, which the reference does not cover:
 
 - **Cards.** A hairline border in `line`, filled with the note's colour; a `default` note is filled with `bg`. Hover darkens the border to `line-hover`, a selected card has an `ink` border. Title and text are `ink` on every note colour.
+- **Secondary text on a coloured note.** Inside a card or the editor of a coloured note, `muted` is replaced by 85 % `ink` mixed into the note colour: plain `muted` falls to 2.6:1 on some note colours, the mix keeps at least 4.5:1 on all twelve in both themes.
 - **Label chips.** A hairline box with the label name. On a coloured card the border is a few percent of ink mixed into the note colour, so it stays visible.
 - **Controls.** Inputs are 40 px high. The composer is a hairline box on `bg`. Primary buttons are solid accent with white text; secondary buttons are a hairline border on `bg`; destructive actions use `danger` as text or border and are never solid by default. Checkboxes are squares, filled with ink when checked.
 - **Banners and snackbars** follow the reference's notice: a border and a faint tint of one tone colour, with a thin icon.
