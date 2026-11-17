@@ -19,6 +19,18 @@ const emit = defineEmits<{
   labels: []
   convert: [to: 'text' | 'checklist']
 }>()
+
+// The label picker opens in the menu's place and focuses its filter field; the menu must not hand
+// the focus back to its button as it closes, or typing would go nowhere.
+let pickingLabels = false
+function pickLabels(): void {
+  pickingLabels = true
+  emit('labels')
+}
+function onCloseAutoFocus(event: Event): void {
+  if (pickingLabels) event.preventDefault()
+  pickingLabels = false
+}
 </script>
 
 <template>
@@ -27,7 +39,13 @@ const emit = defineEmits<{
       <EllipsisVertical :size="18" />
     </DropdownMenuTrigger>
     <DropdownMenuPortal>
-      <DropdownMenuContent :class="menuPanel" side="top" align="start" :side-offset="4">
+      <DropdownMenuContent
+        :class="menuPanel"
+        side="top"
+        align="start"
+        :side-offset="4"
+        @close-auto-focus="onCloseAutoFocus"
+      >
         <template v-if="trashed">
           <DropdownMenuItem :class="menuItem" @select="emit('restore')">
             <Undo2 :size="16" /> {{ $t('note.restore') }}
@@ -40,7 +58,7 @@ const emit = defineEmits<{
           <DropdownMenuItem :class="menuItem" @select="emit('trash')">
             <Trash2 :size="16" /> {{ $t('note.delete') }}
           </DropdownMenuItem>
-          <DropdownMenuItem :class="menuItem" @select="emit('labels')">
+          <DropdownMenuItem :class="menuItem" @select="pickLabels">
             <Tag :size="16" /> {{ $t('labels.add') }}
           </DropdownMenuItem>
           <DropdownMenuItem :class="menuItem" @select="emit('copy')">

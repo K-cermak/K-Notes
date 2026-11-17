@@ -6,7 +6,9 @@ async function labelNote(page: import('@playwright/test').Page, title: string, l
   await card(page, title).getByRole('button', { name: 'More' }).click()
   await page.getByRole('menuitem', { name: 'Add label' }).click()
   const picker = page.getByTestId('label-picker')
-  await picker.getByRole('textbox').fill(label)
+  // The filter field has the focus, so typing goes straight into it.
+  await expect(picker.getByRole('textbox')).toBeFocused()
+  await page.keyboard.type(label)
   const create = picker.getByTestId('create-label')
   if (await create.isVisible()) await create.click()
   else await picker.getByText(label, { exact: true }).click()
