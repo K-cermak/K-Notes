@@ -334,6 +334,16 @@ After purging, delete blob files that no live attachment of that user references
 - **Lost passwords.** The app sends no e-mail. The login page says to ask the administrator, who generates a single-use reset link and passes it on; the user sets the new password themselves. For a locked-out admin: `docker exec <container> python -m app.cli reset-password <email>`. The CLI can also disable TOTP for a user (`disable-totp`) and promote a user to admin (`make-admin`).
 - **Secrets.** Session tokens, API tokens, invite and reset tokens and recovery codes are stored only as hashes and compared in constant time. Never log secrets, tokens or passwords.
 
+### Storage quotas
+
+Added after phase 9 at the owner's request.
+
+- **What counts.** The text of the user's notes (titles, rich text and checklist items) and the user's images, each stored image once even when several notes use it. Notes in the trash count until they are purged.
+- **Limits.** An instance default set by an admin, which may be unlimited (the default), and a per-user setting: the instance default, unlimited, or a custom size. Admins are always unlimited.
+- **Over the limit** the user cannot create new notes (including copies) or add images. Editing existing notes, even making them longer, restoring from the trash, and everything else stays allowed, and so do reading and deleting, which brings the user back under the limit.
+- **Enforcement.** The app knows the usage and the limit from `GET /me/storage`, refreshed after every sync cycle, and disables the actions above while the user is over. The server does not refuse sync pushes or image uploads because of the quota: a device that was offline could not have known, and its changes must not be lost, so they may take the user over the limit. The REST API for tokens, which is always online, refuses to create notes over the limit (`storage_full`). A modified client could therefore exceed the quota; it protects against accidents on a trusted instance, not against a hostile user.
+- **Shown** in settings as used and available space, and in the admin user list with each user's usage and limit.
+
 ### Security headers
 
 Send a Content-Security-Policy that allows scripts and styles only from the app's own origin, images from `self`, `blob:` and `data:`, and connections only to `self`. Also send `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and `frame-ancestors 'none'`. All fonts and icons are bundled; the app loads nothing from third-party origins.
@@ -462,7 +472,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - **Make a copy** duplicates a note with its items, labels and image references.
 - **Keyboard**: `c` new note, `l` new checklist, `/` focus search, `Esc` close editor or clear selection, `Ctrl/Cmd+Enter` close editor.
 - **Trash view**: a notice saying notes are deleted after N days (from `/config`; hidden when purging is off) and an "Empty trash" button. Cards offer restore and delete forever.
-- **Settings**: theme, language, default view, download images on demand, storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management, the registration toggle and instance status.
+- **Settings**: theme, language, default view, download images on demand, storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota and instance status.
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
 - **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal.

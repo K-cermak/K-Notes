@@ -113,15 +113,13 @@ Done when: pytest covers TOTP, recovery codes, token auth and token scope limits
 
 ## Phase 11: Storage quotas
 
-Requested by the owner after phase 9; SPEC needs a section for it before this phase starts.
+Requested by the owner after phase 9; specified in SPEC section 7, Storage quotas.
 
 - [ ] A limit on the data each user can store: an instance default, which may be unlimited, and a per-user override set by an admin. Admins are always unlimited.
-- [ ] Over the limit, the user cannot add anything new; everything already stored stays readable and can be deleted to get back under it.
+- [ ] Over the limit, the user cannot create notes or add images; everything else stays allowed, and deleting gets them back under it.
 - [ ] Usage and the limit shown in settings and in the admin user list.
 
-To decide before building: what counts towards the limit (images only, or note text as well; an image shared by several notes once); which actions "anything new" covers (new notes and images certainly; edits that make a note longer, restoring from the trash, conflict copies made by the server); how offline edits that arrive over the limit are handled, since the client cannot know the server-side total; and whether the trash counts.
-
-Done when: a user over the limit is refused new notes and images with a clear message, on the server as well as in the UI, can still read and delete, and gets going again after deleting enough; an admin is never limited.
+Done when: a user over the limit cannot create notes or add images in the app and is told why, the REST API refuses new notes for them, they can still read, edit and delete, and they can create again after deleting enough; an admin is never limited.
 
 ## Phase 12: Release
 
