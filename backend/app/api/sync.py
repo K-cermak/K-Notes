@@ -6,11 +6,11 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import StreamingResponse
 from starlette.concurrency import run_in_threadpool
 
-from app.api.deps import SESSION_COOKIE, CurrentAuth
+from app.api.deps import SESSION_COOKIE, CurrentAuth, session_user
 from app.db import Database, DbSession
 from app.errors import UnauthorizedError
 from app.schemas.sync import PullResponse, PushRequest, PushResponse
-from app.services import merge, pull, sessions
+from app.services import merge, pull
 from app.services.events import EventHub
 
 router = APIRouter(prefix="/sync", tags=["sync"])
@@ -36,15 +36,6 @@ def pull_changes(auth: CurrentAuth, db: DbSession, since: Annotated[int, Query(g
     return pull.pull(db, auth.user, since)
 
 
-def _session_user(database: Database, token: str | None) -> tuple[str, int] | None:
-    """(user id, change counter) for a valid session, in a short transaction of its own."""
-    if token is None:
-        return None
-    with database.reader() as db:
-        found = sessions.resolve(db, token)
-        return (found[1].id, found[1].seq) if found else None
-
-
 @router.get(
     "/events",
     response_class=StreamingResponse,
@@ -54,7 +45,7 @@ async def events(request: Request) -> StreamingResponse:
     """Sends `change` with the user's counter whenever it moves, and a heartbeat comment."""
     database: Database = request.app.state.db
     token = request.cookies.get(SESSION_COOKIE)
-    found = await run_in_threadpool(_session_user, database, token)
+    found = await run_in_threadpool(session_user, database, token)
     if found is None:
         raise UnauthorizedError()
     user_id, seq = found
@@ -71,7 +62,7 @@ async def events(request: Request) -> StreamingResponse:
                     await asyncio.wait_for(listener.wake.wait(), timeout=heartbeat)
                 except TimeoutError:
                     # A revoked session or deactivated account ends the stream; the reconnect gets 401.
-                    if await run_in_threadpool(_session_user, database, token) is None:
+                    if await run_in_threadpool(session_user, database, token) is None:
                         return
                     yield ": heartbeat\n\n"
                     continue

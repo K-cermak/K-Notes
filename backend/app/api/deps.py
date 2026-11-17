@@ -73,6 +73,19 @@ def get_auth(request: Request, response: Response, db: DbSession, settings: AppS
 CurrentAuth = Annotated[Auth, Depends(get_auth)]
 
 
+def session_user(database: Database, token: str | None) -> tuple[str, int] | None:
+    """(user id, change counter) for a valid session, in a short transaction of its own.
+
+    For long-running endpoints (the event stream, uploads), which must not hold a database
+    transaction open the way a request-scoped session would.
+    """
+    if token is None:
+        return None
+    with database.reader() as db:
+        found = sessions.resolve(db, token)
+        return (found[1].id, found[1].seq) if found else None
+
+
 def get_admin(auth: CurrentAuth) -> Auth:
     if not auth.user.is_admin:
         raise ForbiddenError("not_admin", "Only admins can do this")

@@ -7,13 +7,14 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.api import admin, auth, me, public, sync
+from app.api import admin, auth, blobs, me, public, sync
 from app.branding import REPO_ROOT, get_branding
 from app.config import Settings, load_settings
 from app.db import Database
 from app.errors import ErrorResponse, install_error_handlers
 from app.migrations import run_migrations
 from app.security import SecurityMiddleware, install_log_redaction
+from app.services import blobs as blob_store
 from app.services import maintenance
 from app.services.clock import DAY_MS
 from app.services.events import EventHub
@@ -39,6 +40,7 @@ def run_maintenance(app: FastAPI, *, clean_up: bool) -> None:
     settings: Settings = app.state.settings
     with db.writer() as session:
         changed = maintenance.purge_expired_trash(session, settings)
+        blob_store.clean_up(session, settings)
         if clean_up:
             maintenance.clean_up(session)
     for user_id, seq in changed.items():
@@ -91,7 +93,7 @@ def create_app(settings: Settings | None = None, static_dir: Path | None = None)
     install_error_handlers(app)
     install_log_redaction()
     app.add_middleware(SecurityMiddleware, base_url=settings.base_url, docs_path=f"{API_PREFIX}/docs")
-    for router in (public.router, auth.router, me.router, admin.router, sync.router):
+    for router in (public.router, auth.router, me.router, admin.router, sync.router, blobs.router):
         app.include_router(router, prefix=API_PREFIX)
     install_spa(app, static_dir or DEFAULT_STATIC_DIR)
     return app
