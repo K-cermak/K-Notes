@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Cloud, CloudAlert, CloudCheck, CloudOff, RefreshCw } from '@lucide/vue'
+import { Cloud, CloudAlert, CloudOff, RefreshCw } from '@lucide/vue'
+import CloudSynced from '@/components/icons/CloudSynced.vue'
 import { useSyncStore } from '@/stores/sync'
 
 const sync = useSyncStore()
@@ -9,7 +10,7 @@ const icon = computed(
   () =>
     ({
       idle: Cloud,
-      synced: CloudCheck,
+      synced: CloudSynced,
       syncing: RefreshCw,
       offline: CloudOff,
       error: CloudAlert,
