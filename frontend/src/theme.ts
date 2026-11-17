@@ -4,11 +4,18 @@ export type Theme = (typeof themes)[number]
 
 const STORAGE_KEY = 'theme'
 
+// The --bg token of each scheme in main.css, for the browser and system bars around the app.
+const BAR_COLORS = { light: '#ffffff', dark: '#0a0a0a' } as const
+
 export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): void {
   if (theme === 'system') {
     delete root.dataset.theme
   } else {
     root.dataset.theme = theme
+  }
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    const scheme = meta.media.includes('dark') ? 'dark' : 'light'
+    meta.content = BAR_COLORS[theme === 'system' ? scheme : theme]
   }
 }
 

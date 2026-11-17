@@ -5,6 +5,7 @@ import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } f
 import NoteForm from '@/components/notes/NoteForm.vue'
 
 // The open note has its own route, so Back and the Android back gesture close it (SPEC 9, Editor).
+// On phones it fills the visual viewport, so the on-screen keyboard does not cover its toolbar.
 const props = defineProps<{ fallback: string }>()
 
 const route = useRoute()
@@ -29,7 +30,7 @@ async function close(): Promise<void> {
         class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)]"
       />
       <DialogContent
-        class="fixed inset-0 z-30 flex flex-col overflow-hidden bg-bg outline-none motion-reduce:animate-fade sm:inset-auto sm:top-[10dvh] sm:left-1/2 sm:max-h-[80dvh] sm:w-[600px] sm:-translate-x-1/2 sm:animate-rise sm:border sm:border-line sm:shadow-float"
+        class="fixed inset-x-0 top-[var(--viewport-top,0px)] z-30 flex h-[var(--viewport-height,100dvh)] flex-col overflow-hidden bg-bg outline-none motion-reduce:animate-fade sm:inset-auto sm:top-[10dvh] sm:left-1/2 sm:h-auto sm:max-h-[80dvh] sm:w-[600px] sm:-translate-x-1/2 sm:animate-rise sm:border sm:border-line sm:shadow-float"
         :aria-describedby="undefined"
         data-testid="editor"
       >

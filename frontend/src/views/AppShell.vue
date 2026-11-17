@@ -5,6 +5,7 @@ import { ListChecks, Plus } from '@lucide/vue'
 import type { LocalNote } from '@/db/schema'
 import type { NotesView as View } from '@/notes'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { dismissInstallHint, wantsInstallHint } from '@/pwa'
 import { useSessionStore } from '@/stores/session'
 import NotesView from '@/views/NotesView.vue'
 import EditLabelsDialog from '@/components/labels/EditLabelsDialog.vue'
@@ -29,6 +30,12 @@ const compact = computed(() => !wide.value)
 const drawerOpen = ref(false)
 const composer = ref<{ start: (type?: LocalNote['type']) => void } | null>(null)
 const editLabels = ref(false)
+const installHint = ref(wantsInstallHint())
+
+function closeInstallHint(): void {
+  dismissInstallHint()
+  installHint.value = false
+}
 const topBar = ref<{ focusSearch: () => void } | null>(null)
 
 // The list behind the editor: the last route that was not a note, so closing returns to it.
@@ -124,6 +131,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       {{ $t('sync.signInAgain') }}
       <RouterLink to="/login" class="font-medium text-accent">{{ $t('login.submit') }}</RouterLink>
     </UiNotice>
+    <UiNotice
+      v-if="installHint"
+      tone="info"
+      class="mx-auto w-full max-w-[600px]"
+      data-testid="install-hint"
+    >
+      <p>{{ $t('pwa.installHint') }}</p>
+      <button
+        type="button"
+        class="mt-1 cursor-pointer font-medium text-accent"
+        @click="closeInstallHint"
+      >
+        {{ $t('pwa.dismiss') }}
+      </button>
+    </UiNotice>
     <UiNotice v-if="sync.rejected > 0" tone="error" class="mx-auto w-full max-w-[600px]">
       {{ $t('sync.rejected', { count: sync.rejected }, sync.rejected) }}
     </UiNotice>
@@ -138,7 +160,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   <!-- Phones have no composer bar, so a new list gets its own smaller button above the main one. -->
   <div
     v-if="compact && composing"
-    class="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 flex flex-col items-center gap-3"
+    class="fixed right-[max(16px,env(safe-area-inset-right))] bottom-[max(16px,env(safe-area-inset-bottom))] z-20 flex flex-col items-center gap-3"
   >
     <button
       type="button"

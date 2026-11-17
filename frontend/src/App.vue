@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { setLucideProps } from '@lucide/vue'
 import AppSnackbar from '@/components/AppSnackbar.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { registerServiceWorker, trackVisualViewport } from '@/pwa'
 import { applyTheme, rememberTheme } from '@/theme'
 import { useSessionStore } from '@/stores/session'
+import { useSnackbarStore } from '@/stores/snackbar'
 import { useSyncStore } from '@/stores/sync'
 
 setLucideProps({ strokeWidth: 1.6, size: 18 })
 
 const session = useSessionStore()
 const sync = useSyncStore()
+const snackbar = useSnackbarStore()
+const { t } = useI18n()
+
+onMounted(() => {
+  trackVisualViewport()
+  registerServiceWorker((reload) =>
+    snackbar.pin(t('pwa.updateReady'), { label: t('pwa.reload'), run: reload }),
+  )
+})
 
 watch(
   () => [session.user?.id, session.expired] as const,

@@ -2,9 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- resizes-content: on Android the keyboard shrinks the layout, so the editor toolbar stays visible. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <meta name="description" content="%BRANDING_DESCRIPTION%" />
-    <meta name="theme-color" content="%BRANDING_THEME_COLOR%" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="%BRANDING_SHORT_NAME%" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="color-scheme" content="light dark" />
     <title>%BRANDING_NAME%</title>
   </head>
