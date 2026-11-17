@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
-FROM node:26-slim AS frontend
+# The build output is plain JS and CSS, so it is built once on the native platform, not under emulation.
+FROM --platform=$BUILDPLATFORM node:26-slim AS frontend
 WORKDIR /app/frontend
 RUN npm install -g pnpm@12.21.0
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./

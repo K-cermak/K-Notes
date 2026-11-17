@@ -1,8 +1,11 @@
 name: CI
 
 on:
+  # Tags run it through the release workflow, which publishes only when it passes.
   push:
+    branches: ['**']
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
