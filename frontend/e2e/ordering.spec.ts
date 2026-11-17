@@ -153,3 +153,39 @@ test('labels are added to several selected notes at once', async ({ browser }) =
     await expect(card(page, title)).toContainText('Shared')
   }
 })
+
+test('a rectangle drawn over empty space selects the notes it touches', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  for (const title of ['Left out', 'Second', 'First']) await addNote(page, title)
+  const first = await settledBox(card(page, 'First'))
+  const second = await settledBox(card(page, 'Second'))
+
+  // From the empty space above and left of the first card to the middle of the second one.
+  await page.mouse.move(first.x - 12, first.y - 12)
+  await page.mouse.down()
+  for (let step = 1; step <= 8; step++) {
+    await page.mouse.move(
+      first.x - 12 + ((second.x + second.width / 2 - first.x + 12) * step) / 8,
+      first.y - 12 + ((second.y + second.height / 2 - first.y + 12) * step) / 8,
+    )
+  }
+  await expect(page.getByTestId('marquee')).toBeVisible()
+  await page.mouse.up()
+  await expect(page.getByTestId('marquee')).toHaveCount(0)
+  await expect(page.getByTestId('selection-count')).toHaveText('2 selected')
+  await expect(card(page, 'Left out').getByTestId('card-select')).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  )
+  // The release does not count as a click on the empty space or a note.
+  await expect(page.getByTestId('editor')).toHaveCount(0)
+
+  // Starting on a note drags the note instead.
+  await page.keyboard.press('Escape')
+  const third = await settledBox(card(page, 'Left out'))
+  await page.mouse.move(third.x + third.width / 2, third.y + 20)
+  await page.mouse.down()
+  await page.mouse.move(third.x + third.width / 2 + 40, third.y + 60, { steps: 4 })
+  await expect(page.getByTestId('marquee')).toHaveCount(0)
+  await page.mouse.up()
+})

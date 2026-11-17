@@ -516,6 +516,15 @@
     }
   }
 
+  /* The rectangle drawn to select several items: .ui-marquee with fixed left, top, width, height. */
+  .ui-marquee {
+    position: fixed;
+    z-index: 30;
+    border: 1px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    pointer-events: none;
+  }
+
   /* A boxed group of controls inside a page. */
   .ui-box {
     display: flex;

@@ -463,7 +463,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 ### Ordering and selection
 
 - **Drag to reorder notes.** Implement the masonry layout as a composable that measures card heights (ResizeObserver) and positions cards absolutely with transforms. Build note dragging on top of it with pointer events: on desktop drag starts after a few pixels of movement, on touch after a long-press. Other cards animate out of the way. Dropping writes a new `position`. Dragging between the Pinned and Others sections is not supported. Evaluate an existing library first, but generic sortable libraries assume uniform grids or lists and tend to fight masonry; do not spend long forcing one to fit.
-- **Multi-select.** Selecting any note replaces the top bar with a selection bar: count, pin, color, labels, archive, delete, clear. On desktop, Shift+click selects a range.
+- **Multi-select.** Selecting any note replaces the top bar with a selection bar: count, pin, color, labels, archive, delete, clear. On desktop, Shift+click selects a range, and dragging the mouse from empty space draws a rectangle that selects the notes it touches (with Shift, Ctrl or Cmd it adds to the selection); on touch, long-press selects.
 
 ### Other behaviour
 

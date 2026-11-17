@@ -4,6 +4,7 @@ import { useRoute, useRouter, type RouteLocationNormalizedLoaded } from 'vue-rou
 import { ListChecks, Plus } from '@lucide/vue'
 import type { LocalNote } from '@/db/schema'
 import type { NotesView as View } from '@/notes'
+import { useMarqueeSelection } from '@/composables/useMarqueeSelection'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { dismissInstallHint, wantsInstallHint } from '@/pwa'
 import { useSessionStore } from '@/stores/session'
@@ -55,6 +56,7 @@ const drawerOpen = computed({
   },
 })
 const composer = ref<{ start: (type?: LocalNote['type']) => void } | null>(null)
+const main = ref<HTMLElement | null>(null)
 const editLabels = ref(false)
 const installHint = ref(wantsInstallHint())
 
@@ -84,6 +86,7 @@ const listPath = computed(() => background.value?.fullPath ?? '/')
 // A selection belongs to the list it was made in.
 watch(listPath, () => selection.clear())
 const editing = computed(() => route.name === 'note')
+const marquee = useMarqueeSelection(main, () => !editing.value)
 const composing = computed(() => view.value === 'notes' || view.value === 'label')
 
 function newNote(type: LocalNote['type'] = 'text'): void {
@@ -151,6 +154,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     @edit-labels="editLabels = true"
   />
   <main
+    ref="main"
     class="flex flex-col gap-8 px-3 pt-6 pb-28 transition-[margin] duration-200 ease-out motion-reduce:transition-none sm:px-6"
     :class="!compact && (drawerOpen ? 'ml-[280px]' : 'ml-[72px]')"
   >
@@ -195,6 +199,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     />
     <NotesView :view="view" :label-id="labelId" :query="query" />
   </main>
+  <div
+    v-if="marquee.box.value"
+    class="ui-marquee"
+    :style="{
+      left: `${marquee.box.value.left}px`,
+      top: `${marquee.box.value.top}px`,
+      width: `${marquee.box.value.width}px`,
+      height: `${marquee.box.value.height}px`,
+    }"
+    data-testid="marquee"
+  />
   <!-- Phones have no composer bar, so a new list gets its own smaller button above the main one. -->
   <div
     v-if="compact && composing"

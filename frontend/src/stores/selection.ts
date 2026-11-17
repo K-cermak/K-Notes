@@ -35,5 +35,11 @@ export const useSelectionStore = defineStore('selection', () => {
     anchor = null
   }
 
-  return { ids, active, has, toggle, extend, clear }
+  /** Selects exactly these notes, as a drawn selection rectangle does while it changes. */
+  function replace(next: string[]): void {
+    if (next.length === ids.value.length && next.every((id) => ids.value.includes(id))) return
+    ids.value = next
+  }
+
+  return { ids, active, has, toggle, extend, clear, replace }
 })
