@@ -12,12 +12,12 @@ import {
 export interface MasonryOptions {
   columnWidth: number
   gap: number
-  /** Below this width two narrower columns still fit, as on a phone. */
-  minTwoColumns: number
+  /** Where only one column fits, as on a phone, the card takes the width up to this. */
+  singleColumnMax: number
 }
 
-export const GRID: MasonryOptions = { columnWidth: 240, gap: 16, minTwoColumns: 320 }
-export const LIST: MasonryOptions = { columnWidth: 600, gap: 12, minTwoColumns: Infinity }
+export const GRID: MasonryOptions = { columnWidth: 240, gap: 16, singleColumnMax: 600 }
+export const LIST: MasonryOptions = { columnWidth: 600, gap: 12, singleColumnMax: 600 }
 
 export interface Placement {
   x: number
@@ -68,14 +68,10 @@ export function useMasonry(
   }
 
   const layout = computed(() => {
-    const { columnWidth, gap, minTwoColumns } = toValue(options)
+    const { columnWidth, gap, singleColumnMax } = toValue(options)
     const available = width.value
-    let columns = Math.max(1, Math.floor((available + gap) / (columnWidth + gap)))
-    if (columns === 1 && available >= minTwoColumns) columns = 2
-    const cardWidth =
-      columns * columnWidth + (columns - 1) * gap <= available
-        ? columnWidth
-        : (available - (columns - 1) * gap) / columns
+    const columns = Math.max(1, Math.floor((available + gap) / (columnWidth + gap)))
+    const cardWidth = columns === 1 ? Math.min(available, singleColumnMax) : columnWidth
     const offset = (available - (columns * cardWidth + (columns - 1) * gap)) / 2
     const bottoms: number[] = Array.from({ length: columns }, () => 0)
     const placements = new Map<string, Placement>()
