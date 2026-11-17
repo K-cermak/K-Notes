@@ -16,7 +16,7 @@ export interface SyncTransport {
   pull(since: number): Promise<PullResponse>
 }
 
-/** Images move in the first and last step of a cycle; phase 7 fills these in. */
+/** Images move in the first and last step of a cycle. */
 export interface BlobTransfer {
   upload(): Promise<void>
   download(): Promise<void>

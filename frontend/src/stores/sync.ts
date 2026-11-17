@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { liveQuery, type Subscription } from 'dexie'
 import { ref } from 'vue'
-import { deviceId } from '@/db/meta'
+import { deviceId, deviceSettings } from '@/db/meta'
 import { db } from '@/db/schema'
+import { BlobSync } from '@/sync/blobs'
 import { SyncEngine, type SyncState } from '@/sync/engine'
-import { apiTransport } from '@/sync/transport'
+import { apiTransport, blobApi } from '@/sync/transport'
 import { useSessionStore } from './session'
 
 export const useSyncStore = defineStore('sync', () => {
@@ -12,6 +13,12 @@ export const useSyncStore = defineStore('sync', () => {
   const unsent = ref(0)
   const rejected = ref(0)
   let engine: SyncEngine | null = null
+  const blobs = new BlobSync(db, blobApi, {
+    onDemand: async () => (await deviceSettings(db)).downloadOnDemand,
+    onRefused: (count) => {
+      rejected.value += count
+    },
+  })
   let outboxCount: Subscription | null = null
 
   async function start(): Promise<void> {
@@ -20,6 +27,7 @@ export const useSyncStore = defineStore('sync', () => {
     engine = new SyncEngine({
       db,
       transport: apiTransport,
+      blobs,
       deviceId: await deviceId(db),
       onState: (value) => {
         state.value = value
@@ -51,5 +59,10 @@ export const useSyncStore = defineStore('sync', () => {
     engine?.request()
   }
 
-  return { state, unsent, rejected, start, stop, resume, syncNow }
+  /** Fetches one note's images now, for a device that downloads images on demand. */
+  async function downloadImages(noteId: string): Promise<void> {
+    await blobs.downloadNote(noteId)
+  }
+
+  return { state, unsent, rejected, start, stop, resume, syncNow, downloadImages }
 })

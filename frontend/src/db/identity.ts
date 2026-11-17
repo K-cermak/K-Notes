@@ -31,11 +31,11 @@ export async function unsentCount(db: NotesDatabase): Promise<number> {
   return db.outbox.count()
 }
 
-/** Removes every note and pending change, keeping only this browser's device ID. */
+/** Removes every note and pending change, keeping only this browser's ID and settings. */
 export async function wipeLocalData(db: NotesDatabase): Promise<void> {
   await db.transaction('rw', db.tables, async () => {
-    const device = await getMeta<string>(db, 'deviceId')
+    const kept = await db.meta.bulkGet(['deviceId', 'device'])
     await Promise.all(db.tables.map((table) => table.clear()))
-    if (device) await setMeta(db, 'deviceId', device)
+    await db.meta.bulkPut(kept.filter((entry) => entry !== undefined))
   })
 }
