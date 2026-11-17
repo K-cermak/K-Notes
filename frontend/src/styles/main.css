@@ -132,6 +132,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* The browser's bolder would be 700; nothing is heavier than 600 (SPEC 9, Visual design). */
+  b,
+  strong {
+    font-weight: 600;
+  }
+
   h1,
   h2,
   h3 {

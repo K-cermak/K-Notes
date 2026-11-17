@@ -51,7 +51,10 @@ async function finish(action: (ids: string[]) => Promise<unknown>): Promise<void
     >
       <X :size="20" />
     </button>
-    <span class="ml-1 flex-1 truncate text-base font-semibold" data-testid="selection-count">
+    <span
+      class="ml-1 flex-1 truncate font-mono text-base font-semibold tabular-nums"
+      data-testid="selection-count"
+    >
       {{ $t('selection.count', { count: selection.ids.length }) }}
     </span>
     <template v-if="view === 'trash'">

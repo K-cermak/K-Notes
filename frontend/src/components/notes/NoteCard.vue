@@ -158,7 +158,7 @@ function select(event: MouseEvent): void {
           </li>
           <li
             v-if="checkedCount > 0"
-            class="pt-1 pl-6 text-label text-muted"
+            class="pt-1 pl-6 font-mono text-meta text-muted tabular-nums"
             data-testid="card-checked"
           >
             {{ $t('checklist.moreChecked', { count: checkedCount }, checkedCount) }}

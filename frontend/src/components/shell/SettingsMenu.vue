@@ -88,7 +88,7 @@ function megabytes(bytes: number): string {
         </DropdownMenuCheckboxItem>
         <p
           v-if="usage !== null"
-          class="px-3 pt-1 pb-2 pl-10 text-meta text-muted"
+          class="px-3 pt-1 pb-2 pl-10 font-mono text-meta text-muted tabular-nums"
           data-testid="storage-use"
         >
           {{ $t('settings.storage', { mb: megabytes(usage) }) }}
