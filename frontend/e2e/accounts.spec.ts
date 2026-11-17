@@ -3,7 +3,10 @@ import { accountMenu, addNote, admin, card } from './helpers'
 
 const friend = { name: 'Fred Friend', email: 'fred@example.com', password: 'friend-password' }
 
-test('first-run setup, first note, invite by link, sign out and sign in', async ({ page, browser }) => {
+test('first-run setup, first note, invite by link, sign out and sign in', async ({
+  page,
+  browser,
+}) => {
   await page.goto('/')
   await expect(page).toHaveURL(/\/setup$/)
   await page.getByLabel('Display name').fill(admin.name)

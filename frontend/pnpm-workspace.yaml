@@ -1,2 +1,5 @@
 allowBuilds:
   esbuild: false
+overrides:
+  # 4.14.1 was a day old when the accessibility tests were added; move on once it has settled.
+  axe-core: 4.14.0
