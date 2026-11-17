@@ -377,7 +377,7 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 
 - Square corners, a 1 px hairline border, the note's color as background. Hover darkens the border; there is no shadow.
 - Content order: images at the top edge to edge (a collage when there are several), title, body or checklist preview, label chips.
-- Long content is cut off with a fade. Checklists show unchecked items and then "+ N checked items".
+- Long content is cut off with a fade. Checklists show unchecked items and then "N checked items", which opens the checked items right on the card, as in Keep; whether a card shows them is remembered on the device.
 - On hover (desktop): a select checkbox at the top left, a pin button at the top right, and a bottom toolbar with color, add image, archive and a "more" menu (delete, add label, make a copy, show or hide checkboxes).
 - On touch devices there is no hover: tap opens the note, long-press starts selection, and the same actions live in the editor's toolbar.
 
@@ -463,7 +463,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 ### Ordering and selection
 
 - **Drag to reorder notes.** Implement the masonry layout as a composable that measures card heights (ResizeObserver) and positions cards absolutely with transforms. Build note dragging on top of it with pointer events: on desktop drag starts after a few pixels of movement, on touch after a long-press. Other cards animate out of the way. Dropping writes a new `position`. Dragging between the Pinned and Others sections is not supported. Evaluate an existing library first, but generic sortable libraries assume uniform grids or lists and tend to fight masonry; do not spend long forcing one to fit.
-- **Multi-select.** Selecting any note replaces the top bar with a selection bar: count, pin, color, labels, archive, delete, clear. On desktop, Shift+click selects a range, and dragging the mouse from empty space draws a rectangle that selects the notes it touches (with Shift, Ctrl or Cmd it adds to the selection); on touch, long-press selects.
+- **Multi-select.** Selecting any note replaces the top bar with a selection bar: count, pin, color, labels, archive, delete, clear. On desktop, Shift+click selects a range, and dragging the mouse from empty space draws a rectangle that selects the notes it touches (with Shift, Ctrl or Cmd it adds to the selection); on touch, long-press selects. A click or tap on empty space clears the selection.
 
 ### Other behaviour
 

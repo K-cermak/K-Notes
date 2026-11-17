@@ -1,7 +1,17 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Archive, ArchiveRestore, Check, ImagePlus, Pin, PinOff, Trash2, Undo2 } from '@lucide/vue'
+import {
+  Archive,
+  ArchiveRestore,
+  Check,
+  ChevronDown,
+  ImagePlus,
+  Pin,
+  PinOff,
+  Trash2,
+  Undo2,
+} from '@lucide/vue'
 import { convertNote, updateItem } from '@/db/checklist'
 import type { LocalAttachment, LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import LabelChips from '@/components/labels/LabelChips.vue'
@@ -14,6 +24,7 @@ import { iconButton } from '@/components/ui/menu'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
 import ImageCollage from '@/components/images/ImageCollage.vue'
 import { useImageAttach } from '@/composables/useImageAttach'
+import { useExpandedChecklistsStore } from '@/stores/expandedChecklists'
 import { useSelectionStore } from '@/stores/selection'
 import { useSyncStore } from '@/stores/sync'
 import ColorPicker from './ColorPicker.vue'
@@ -46,9 +57,12 @@ function pickLabels(): void {
 const color = computed(() => props.note.color)
 const trashed = computed(() => props.note.trashed_at !== null)
 const checklist = computed(() => props.note.type === 'checklist')
-// Checklists show unchecked items, then a count of the checked ones (SPEC 9, Note card).
+// Checklists show unchecked items, then a count of the checked ones, which opens them right on
+// the card (SPEC 9, Note card).
 const openItems = computed(() => props.items.filter((item) => !item.checked))
-const checkedCount = computed(() => props.items.length - openItems.value.length)
+const checkedItems = computed(() => props.items.filter((item) => item.checked))
+const expanded = useExpandedChecklistsStore()
+const showChecked = computed(() => expanded.has(props.note.id))
 const empty = computed(() => {
   if (props.note.title || props.attachments.length > 0) return false
   return checklist.value
@@ -156,9 +170,35 @@ function select(event: MouseEvent): void {
             </span>
             <span class="min-w-0 break-words">{{ item.text }}</span>
           </li>
-          <li v-if="checkedCount > 0" class="ui-meta pt-1 pl-6" data-testid="card-checked">
-            {{ $t('checklist.moreChecked', { count: checkedCount }, checkedCount) }}
+          <li v-if="checkedItems.length > 0" class="pt-1">
+            <button
+              type="button"
+              class="ui-meta flex cursor-pointer items-center gap-1 py-0.5 hover:text-ink"
+              :aria-expanded="showChecked"
+              data-testid="card-checked"
+              @click.stop="expanded.toggle(note.id)"
+            >
+              <ChevronDown
+                :size="14"
+                class="transition-transform duration-150"
+                :class="!showChecked && '-rotate-90'"
+              />
+              {{ $t('checklist.checked', { count: checkedItems.length }, checkedItems.length) }}
+            </button>
           </li>
+          <template v-if="showChecked">
+            <li v-for="item in checkedItems" :key="item.id" class="flex items-start gap-2 py-0.5">
+              <span class="grid h-5 shrink-0 place-items-center" @click.stop>
+                <UiCheckbox
+                  :model-value="true"
+                  :disabled="trashed"
+                  :aria-label="item.text"
+                  @update:model-value="(value) => updateItem(item.id, { checked: value === true })"
+                />
+              </span>
+              <span class="min-w-0 break-words text-muted line-through">{{ item.text }}</span>
+            </li>
+          </template>
         </ul>
         <RichTextView v-else :doc="note.content" />
       </div>

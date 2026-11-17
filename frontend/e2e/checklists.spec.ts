@@ -79,9 +79,16 @@ test('a checklist is written, checked, edited and reordered', async ({ browser }
     .toEqual(['Plums', 'Milk', 'Egg', 'Apples', 'Pears', 'Bread'])
 
   await page.getByTestId('close-note').click()
-  await expect(card(page, 'Groceries').getByTestId('card-checked')).toHaveText('+ 1 checked item')
+  await expect(card(page, 'Groceries').getByTestId('card-checked')).toHaveText('1 checked item')
+  // The checked items open right on the card, without opening the note, and stay open.
+  const checkedOnCard = card(page, 'Groceries').getByRole('checkbox', { checked: true })
+  await expect(checkedOnCard).toHaveCount(0)
+  await card(page, 'Groceries').getByTestId('card-checked').click()
+  await expect(page.getByTestId('editor')).toHaveCount(0)
+  await expect(checkedOnCard).toHaveCount(1)
   await expect(page.getByTestId('unsent')).toHaveCount(0)
   await page.reload()
+  await expect(checkedOnCard).toHaveCount(1)
   await openNote(page, 'Groceries')
   await expect
     .poll(() => itemTexts(page.getByTestId('editor')))
@@ -104,7 +111,7 @@ test('a text note converts to a checklist and back', async ({ browser }) => {
   const items = card(page, 'Packing').getByTestId('card-items')
   await expect(items).toContainText('Passport')
   await card(page, 'Packing').getByRole('checkbox', { name: 'Charger' }).click()
-  await expect(card(page, 'Packing').getByTestId('card-checked')).toHaveText('+ 1 checked item')
+  await expect(card(page, 'Packing').getByTestId('card-checked')).toHaveText('1 checked item')
 
   await openNote(page, 'Packing')
   await page.getByTestId('editor').getByRole('button', { name: 'More' }).click()
@@ -147,7 +154,7 @@ test('two offline clients checking different items both keep their changes', asy
 
   for (const page of [a.page, b.page]) {
     await expect(card(page, 'Trip').getByTestId('card-items')).toContainText('Tent')
-    await expect(card(page, 'Trip').getByTestId('card-checked')).toHaveText('+ 2 checked items')
+    await expect(card(page, 'Trip').getByTestId('card-checked')).toHaveText('2 checked items')
     await expect(card(page, 'Trip').getByTestId('card-items')).not.toContainText('Tickets')
   }
   await expect(a.page.getByTestId('note-card')).toHaveCount(1)

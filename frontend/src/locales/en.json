@@ -246,8 +246,7 @@
     "item": "List item",
     "add": "List item",
     "remove": "Remove item",
-    "checked": "{count} checked item | {count} checked items",
-    "moreChecked": "+ {count} checked item | + {count} checked items"
+    "checked": "{count} checked item | {count} checked items"
   },
   "colors": {
     "default": "Default",
