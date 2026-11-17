@@ -476,7 +476,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - **Settings**: theme, language, default view, download images on demand, storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota and instance status.
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
-- **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal.
+- **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal. Known limitation, accepted by the owner: reordering notes and checklist items works only by dragging with a pointer or touch, as in Keep; there is no keyboard equivalent.
 
 ## 10. PWA
 
