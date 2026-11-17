@@ -22,6 +22,19 @@ export function noteBackground(color: NoteColor): string {
   return `var(--note-${color})`
 }
 
+/**
+ * The background of a card or the editor in the note's colour. On a coloured note the muted colour
+ * of secondary text and icons is mostly ink, since plain muted grey falls below the WCAG contrast
+ * on several note colours (down to 2.6:1); 85 % keeps at least 4.5:1 on all of them.
+ */
+export function noteSurface(color: NoteColor): Record<string, string> {
+  if (color === 'default') return { background: noteBackground(color) }
+  return {
+    background: noteBackground(color),
+    '--muted': `color-mix(in srgb, var(--ink) 85%, var(--note-${color}))`,
+  }
+}
+
 /** Hairlines on a coloured card mix a little ink into the note colour, so they stay visible. */
 export function noteLine(color: NoteColor): string {
   return color === 'default'

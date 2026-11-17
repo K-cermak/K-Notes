@@ -12,7 +12,7 @@ import { createNote, isNoteEmpty, purgeNote, updateNote } from '@/db/notes'
 import { emptyDoc } from '@/db/richtext'
 import { db, type LocalNote, type RichDoc } from '@/db/schema'
 import { noteExtensions } from '@/editor/extensions'
-import { noteBackground, type NoteColor } from '@/notes'
+import { noteSurface, type NoteColor } from '@/notes'
 import { useDebouncedSave } from '@/composables/useDebouncedSave'
 import { useLiveQuery } from '@/composables/useLiveQuery'
 import { useImageAttach } from '@/composables/useImageAttach'
@@ -260,7 +260,7 @@ defineExpose({ finish })
 <template>
   <div
     class="flex min-h-0 flex-1 flex-col text-ink"
-    :style="{ background: noteBackground(color) }"
+    :style="noteSurface(color)"
     data-testid="note-form"
     @keydown="onKeydown"
   >
@@ -323,7 +323,7 @@ defineExpose({ finish })
           </button>
         </div>
         <!-- v-show: the editor keeps its instance while the note is a checklist. -->
-        <EditorContent v-show="noteType === 'text'" :editor="editor" class="min-h-12 pb-2" />
+        <EditorContent v-show="noteType === 'text'" :editor="editor" class="pb-2" />
         <ChecklistEditor
           v-if="noteType === 'checklist' && loaded"
           ref="checklist"

@@ -19,7 +19,7 @@ const instance = useInstanceStore()
     <slot />
     <footer
       v-if="instance.config"
-      class="font-mono text-meta text-faint tabular-nums"
+      class="font-mono text-meta text-muted tabular-nums"
       data-testid="version"
     >
       {{ $t('home.version', { version: instance.config.version }) }}

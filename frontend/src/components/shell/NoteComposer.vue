@@ -58,7 +58,7 @@ defineExpose({ start })
     >
       <button
         type="button"
-        class="h-full flex-1 cursor-text px-4 text-left font-medium text-faint"
+        class="h-full flex-1 cursor-text px-4 text-left font-medium text-muted"
         data-testid="composer"
         @click="start('text')"
       >

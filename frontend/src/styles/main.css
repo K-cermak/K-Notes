@@ -18,7 +18,7 @@
   --on-accent: #ffffff;
   --danger: light-dark(#d1242f, #ff6369);
   --warning: light-dark(#b45309, #f5a524);
-  --success: light-dark(#1a8c3e, #3fb950);
+  --success: light-dark(#18803a, #3fb950);
   --float: light-dark(0 8px 24px -6px rgb(0 0 0 / 0.12), 0 8px 24px -6px rgb(0 0 0 / 0.6));
 
   --note-default: var(--bg);
@@ -187,6 +187,8 @@
 
   .ProseMirror {
     position: relative;
+    /* The whole empty body is the tap target, not just its first line (WCAG target size). */
+    min-height: 3rem;
     outline: none;
     white-space: pre-wrap;
     word-wrap: break-word;

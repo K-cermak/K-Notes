@@ -100,7 +100,7 @@ defineExpose({
   >
     <span
       v-if="!readonly"
-      class="drag-handle grid h-8 w-5 shrink-0 cursor-grab touch-none place-items-center text-faint opacity-0 group-focus-within/item:opacity-100 group-hover/item:opacity-100 pointer-coarse:opacity-100"
+      class="drag-handle grid h-8 w-5 shrink-0 cursor-grab touch-none place-items-center text-muted opacity-0 group-focus-within/item:opacity-100 group-hover/item:opacity-100 pointer-coarse:opacity-100"
       :aria-hidden="true"
     >
       <GripVertical :size="16" />

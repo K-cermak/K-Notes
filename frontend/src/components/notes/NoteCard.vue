@@ -8,7 +8,7 @@ import LabelChips from '@/components/labels/LabelChips.vue'
 import LabelPicker from '@/components/labels/LabelPicker.vue'
 import { updateNote } from '@/db/notes'
 import { plainText } from '@/db/richtext'
-import { NOTE_ORDER, noteBackground, noteLine } from '@/notes'
+import { NOTE_ORDER, noteLine, noteSurface } from '@/notes'
 import { useNoteActions } from '@/composables/useNoteActions'
 import { iconButton } from '@/components/ui/menu'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
@@ -91,7 +91,7 @@ function select(event: MouseEvent): void {
     class="group relative flex flex-col border transition-[border-color] duration-150 hover:border-(--line-hover-card) focus-visible:border-ink focus-visible:outline-none"
     :class="selected && 'outline-2! -outline-offset-2! outline-ink!'"
     :style="{
-      background: noteBackground(color),
+      ...noteSurface(color),
       borderColor: selected ? 'var(--ink)' : noteLine(color),
       '--line-hover-card':
         color === 'default'
@@ -166,7 +166,7 @@ function select(event: MouseEvent): void {
         </ul>
         <RichTextView v-else :doc="note.content" />
       </div>
-      <p v-if="empty" class="text-[22px] leading-snug text-faint">{{ $t('note.emptyCard') }}</p>
+      <p v-if="empty" class="text-[22px] leading-snug text-muted">{{ $t('note.emptyCard') }}</p>
       <LabelChips :note-id="note.id" :labels="labels" :color="color" :limit="3" class="mt-3" />
     </div>
 

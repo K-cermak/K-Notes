@@ -78,7 +78,7 @@ const palette = [
       <div class="flex flex-col gap-1 border border-line p-4">
         <p class="text-base font-semibold tracking-[-0.02em]">{{ $t('showcase.headingSample') }}</p>
         <p>{{ $t('showcase.bodySample') }}</p>
-        <p class="font-mono text-meta text-faint tabular-nums">{{ $t('showcase.metaSample') }}</p>
+        <p class="font-mono text-meta text-muted tabular-nums">{{ $t('showcase.metaSample') }}</p>
       </div>
     </section>
 
@@ -141,7 +141,7 @@ const palette = [
       </UiField>
       <UiField :label="$t('showcase.displayName')" for="sc-name">
         <template #aside>
-          <span class="font-mono text-meta text-faint tabular-nums"
+          <span class="font-mono text-meta text-muted tabular-nums"
             >{{ displayName.length }} / 50</span
           >
         </template>

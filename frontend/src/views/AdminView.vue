@@ -250,7 +250,7 @@ onMounted(refresh)
             <Copy v-else />
           </UiButton>
         </div>
-        <p class="text-meta text-faint">
+        <p class="text-meta text-muted">
           {{ $t('admin.invite.once', { date: formatDate(link.expires_at) }) }}
         </p>
       </div>
@@ -263,7 +263,7 @@ onMounted(refresh)
           <span class="min-w-0 flex-1 truncate">{{
             invite.email ?? $t('admin.invite.anyone')
           }}</span>
-          <span class="font-mono text-meta text-faint tabular-nums">
+          <span class="font-mono text-meta text-muted tabular-nums">
             {{ $t('admin.invite.expires', { date: formatDate(invite.expires_at) }) }}
           </span>
           <UiButton
@@ -290,7 +290,7 @@ onMounted(refresh)
           <div class="flex min-w-0 flex-1 flex-col">
             <span class="truncate font-medium">{{ user.display_name }}</span>
             <span class="truncate text-label text-muted">{{ user.email }}</span>
-            <span class="font-mono text-meta text-faint tabular-nums" data-testid="user-storage">
+            <span class="font-mono text-meta text-muted tabular-nums" data-testid="user-storage">
               {{ formatBytes(user.storage_used_bytes) }} /
               {{
                 user.storage_limit_bytes === null
@@ -408,7 +408,7 @@ onMounted(refresh)
             <Copy v-else />
           </UiButton>
         </div>
-        <p class="text-meta text-faint">
+        <p class="text-meta text-muted">
           {{ $t('admin.users.resetOnce', { date: formatDate(resetLink.link.expires_at) }) }}
         </p>
       </div>

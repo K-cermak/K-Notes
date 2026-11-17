@@ -26,6 +26,6 @@ defineProps<{
     >
       {{ error }}
     </p>
-    <p v-else-if="hint" :id="`${$props.for}-hint`" class="text-meta text-faint">{{ hint }}</p>
+    <p v-else-if="hint" :id="`${$props.for}-hint`" class="text-meta text-muted">{{ hint }}</p>
   </div>
 </template>
