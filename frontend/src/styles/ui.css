@@ -542,22 +542,25 @@
 
   /* A line that shows or hides what follows: button.ui-disclosure[aria-expanded] > svg.ui-disclosure__icon (a down chevron) + text. */
   .ui-disclosure {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    display: inline-block;
     color: var(--muted);
     font-size: var(--size-meta);
     line-height: 1.4;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     cursor: pointer;
     transition: color var(--motion-fast);
   }
 
   .ui-disclosure__icon {
+    display: inline-block;
     width: 14px;
     height: 14px;
-    /* On the middle of the letters, measured: the line box also holds room for descenders. */
-    translate: 0 -1px;
+    margin-right: 4px;
+    /* Placed on the text's baseline rather than centred in a box beside it, then lowered so that
+       its middle meets the middle of capitals and figures. Centring in the line box left it up to
+       a pixel off, depending on how the baseline was rounded. */
+    vertical-align: calc(0.5cap - 7px);
     transition: rotate var(--motion-fast) var(--motion-ease);
 
     [aria-expanded='false'] > & {

@@ -276,7 +276,7 @@ defineExpose({
     <template v-if="checked.length > 0">
       <button
         type="button"
-        class="ui-disclosure mt-2 ml-2 flex h-8 gap-2 border-t border-[color-mix(in_srgb,var(--ink)_10%,transparent)] pt-1"
+        class="ui-disclosure mt-2 ml-2 block h-8 border-t border-[color-mix(in_srgb,var(--ink)_10%,transparent)] pt-1 text-left leading-[27px]"
         :aria-expanded="showChecked"
         data-testid="checked-toggle"
         @click="showChecked = !showChecked"
