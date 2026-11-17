@@ -173,16 +173,12 @@ function select(event: MouseEvent): void {
           <li v-if="checkedItems.length > 0" class="pt-1">
             <button
               type="button"
-              class="ui-meta flex cursor-pointer items-center gap-1 py-0.5 hover:text-ink"
+              class="ui-disclosure py-0.5"
               :aria-expanded="showChecked"
               data-testid="card-checked"
               @click.stop="expanded.toggle(note.id)"
             >
-              <ChevronDown
-                :size="14"
-                class="transition-transform duration-150"
-                :class="!showChecked && '-rotate-90'"
-              />
+              <ChevronDown class="ui-disclosure__icon" />
               {{ $t('checklist.checked', { count: checkedItems.length }, checkedItems.length) }}
             </button>
           </li>

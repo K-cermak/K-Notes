@@ -540,6 +540,31 @@
     letter-spacing: -0.02em;
   }
 
+  /* A line that shows or hides what follows: button.ui-disclosure[aria-expanded] > svg.ui-disclosure__icon (a down chevron) + text. */
+  .ui-disclosure {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--muted);
+    font-size: var(--size-meta);
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: color var(--motion-fast);
+  }
+
+  .ui-disclosure__icon {
+    width: 14px;
+    height: 14px;
+    /* On the middle of the letters, measured: the line box also holds room for descenders. */
+    translate: 0 -1px;
+    transition: rotate var(--motion-fast) var(--motion-ease);
+
+    [aria-expanded='false'] > & {
+      rotate: -90deg;
+    }
+  }
+
   /* Small secondary text: timestamps, counts, sizes. Figures line up in columns. */
   .ui-meta {
     color: var(--muted);
@@ -596,7 +621,8 @@
       border-color: var(--ink);
     }
 
-    .ui-segmented__option:hover {
+    .ui-segmented__option:hover,
+    .ui-disclosure:hover {
       color: var(--ink);
     }
   }
