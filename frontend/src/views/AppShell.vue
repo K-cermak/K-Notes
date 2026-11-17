@@ -27,7 +27,33 @@ const sync = useSyncStore()
 const selection = useSelectionStore()
 const wide = useMediaQuery('(min-width: 640px)')
 const compact = computed(() => !wide.value)
-const drawerOpen = ref(false)
+
+// The desktop rail stays as it was left, on this device; the phone's overlay always starts closed.
+const RAIL_KEY = 'rail-open'
+function storedRail(): boolean {
+  try {
+    return localStorage.getItem(RAIL_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+const railOpen = ref(storedRail())
+const overlayOpen = ref(false)
+const drawerOpen = computed({
+  get: () => (compact.value ? overlayOpen.value : railOpen.value),
+  set: (open) => {
+    if (compact.value) {
+      overlayOpen.value = open
+      return
+    }
+    railOpen.value = open
+    try {
+      localStorage.setItem(RAIL_KEY, open ? '1' : '0')
+    } catch {
+      // Unavailable storage (private mode) only means the rail is not remembered.
+    }
+  },
+})
 const composer = ref<{ start: (type?: LocalNote['type']) => void } | null>(null)
 const editLabels = ref(false)
 const installHint = ref(wantsInstallHint())
