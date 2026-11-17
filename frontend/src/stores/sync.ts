@@ -25,8 +25,10 @@ export const useSyncStore = defineStore('sync', () => {
 
   async function refreshStorage(): Promise<void> {
     try {
-      storage.value = await call(() => api.GET('/api/v1/me/storage'))
-      await setMeta(db, 'storage', storage.value)
+      const status = await call(() => api.GET('/api/v1/me/storage'))
+      storage.value = status
+      // The plain object: IndexedDB cannot store Vue's reactive proxy that storage.value returns.
+      await setMeta(db, 'storage', status)
     } catch (e) {
       if (!isFailure(e)) throw e
     }
