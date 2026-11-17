@@ -44,6 +44,21 @@ fmt:
 icons:
     cd frontend && node scripts/icons.ts
 
+# Render the README screenshots in docs/screenshots from a fresh container of the built image
+screenshots:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    name="notes-screenshots-$$"
+    port=18200
+    docker run -d --rm --name "$name" -p "127.0.0.1:$port:8000" \
+        -e APP_BASE_URL="http://127.0.0.1:$port" --tmpfs /data:uid=1000 {{image}} > /dev/null
+    trap 'docker stop "$name" > /dev/null' EXIT
+    for _ in $(seq 1 60); do
+        curl -fs "http://127.0.0.1:$port/api/v1/health" > /dev/null && break
+        sleep 0.5
+    done
+    cd frontend && node scripts/screenshots.ts "http://127.0.0.1:$port"
+
 # Regenerate frontend/src/api/schema.d.ts from the OpenAPI schema
 api-types:
     #!/usr/bin/env bash
