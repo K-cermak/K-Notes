@@ -30,7 +30,7 @@ Done when: `just docker` succeeds, the container shows a placeholder page that d
 - [x] Invite acceptance, self-registration and password reset pages.
 - [x] CLI: `reset-password`, `disable-totp`, `make-admin`.
 - [x] Minimal setup and login screens, enough to obtain a session.
-- [x] Playwright against the built image runs in CI from this phase on, moved forward from phase 11 so that the sync work in phases 2 and 3 is guarded end to end from the start.
+- [x] Playwright against the built image runs in CI from this phase on, moved forward from the release phase (now phase 12) so that the sync work in phases 2 and 3 is guarded end to end from the start.
 
 Done when: pytest covers the flows above, including that a non-admin cannot reach admin endpoints, that the last active admin cannot be demoted, deactivated or deleted, that admins cannot demote or deactivate themselves, that an invite or reset link works once and expires, and that a deactivated user's session stops working at once and they cannot log in again; and on a fresh instance you can create the admin, invite a second user by link, log out and log in through the browser.
 
@@ -111,7 +111,19 @@ Done when: after one online visit the app loads with the network disabled and sh
 
 Done when: pytest covers TOTP, recovery codes, token auth and token scope limits; OIDC is tested against a mock provider in pytest and manually against one real provider (Authentik or Keycloak in Docker), with the steps recorded in the report, and an unknown user is refused unless auto-provisioning is on. A read token can list notes with `curl` and is refused when it tries to create a note or touch the token endpoints.
 
-## Phase 11: Release
+## Phase 11: Storage quotas
+
+Requested by the owner after phase 9; SPEC needs a section for it before this phase starts.
+
+- [ ] A limit on the data each user can store: an instance default, which may be unlimited, and a per-user override set by an admin. Admins are always unlimited.
+- [ ] Over the limit, the user cannot add anything new; everything already stored stays readable and can be deleted to get back under it.
+- [ ] Usage and the limit shown in settings and in the admin user list.
+
+To decide before building: what counts towards the limit (images only, or note text as well; an image shared by several notes once); which actions "anything new" covers (new notes and images certainly; edits that make a note longer, restoring from the trash, conflict copies made by the server); how offline edits that arrive over the limit are handled, since the client cannot know the server-side total; and whether the trash counts.
+
+Done when: a user over the limit is refused new notes and images with a clear message, on the server as well as in the UI, can still read and delete, and gets going again after deleting enough; an admin is never limited.
+
+## Phase 12: Release
 
 - [ ] Startup configuration validation with clear messages.
 - [ ] Complete the Playwright list in section 12 (CI already runs Playwright against the built image since phase 1).
