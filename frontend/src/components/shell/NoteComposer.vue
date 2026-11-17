@@ -4,12 +4,14 @@ import { ImagePlus, ListChecks } from '@lucide/vue'
 import type { LocalNote } from '@/db/schema'
 import NoteForm from '@/components/notes/NoteForm.vue'
 import { pickImages } from '@/composables/useImageAttach'
+import { useSyncStore } from '@/stores/sync'
 import { iconButton } from '@/components/ui/menu'
 
 // The desktop "Take a note…" bar; it expands in place and saves when it loses focus (SPEC 9).
 defineProps<{ labelIds?: string[] }>()
 
 const open = ref(false)
+const sync = useSyncStore()
 const type = ref<LocalNote['type']>('text')
 const files = ref<File[]>([])
 const root = ref<HTMLElement | null>(null)
@@ -33,12 +35,14 @@ onMounted(() => document.addEventListener('pointerdown', onPointerDown))
 onBeforeUnmount(() => document.removeEventListener('pointerdown', onPointerDown))
 
 function start(kind: LocalNote['type'] = 'text', images: File[] = []): void {
+  if (!sync.hasRoom()) return
   type.value = kind
   files.value = images
   open.value = true
 }
 
 async function startWithImages(): Promise<void> {
+  if (!sync.hasRoom()) return
   const picked = await pickImages()
   if (picked.length > 0) start('text', picked)
 }

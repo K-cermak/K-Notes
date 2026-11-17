@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { formatBytes } from '@/format'
 import { LOCALES } from '@/i18n'
 import { useSessionStore } from '@/stores/session'
+import { useSyncStore } from '@/stores/sync'
 import ThemeSwitch from '@/components/ThemeSwitch.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiField from '@/components/ui/UiField.vue'
@@ -9,6 +11,13 @@ import UiInput from '@/components/ui/UiInput.vue'
 import UiNotice from '@/components/ui/UiNotice.vue'
 
 const session = useSessionStore()
+const sync = useSyncStore()
+const storage = computed(() => sync.storage)
+const share = computed(() => {
+  const s = storage.value
+  return s?.limit_bytes ? Math.min(1, s.used_bytes / Math.max(s.limit_bytes, 1)) : 0
+})
+onMounted(() => sync.syncNow())
 const name = ref(session.user?.display_name ?? '')
 const saved = ref(false)
 watch(name, () => (saved.value = false))
@@ -55,6 +64,35 @@ async function saveName(): Promise<void> {
         :model-value="session.user?.theme ?? 'system'"
         @update:model-value="(theme) => session.updateProfile({ theme })"
       />
+    </div>
+    <div v-if="storage" class="flex flex-col gap-2" data-testid="storage-use">
+      <span class="text-label font-medium text-muted">{{ $t('storage.title') }}</span>
+      <span class="font-mono text-meta tabular-nums">
+        {{
+          storage.limit_bytes === null
+            ? $t('storage.usedUnlimited', { used: formatBytes(storage.used_bytes) })
+            : $t('storage.used', {
+                used: formatBytes(storage.used_bytes),
+                limit: formatBytes(storage.limit_bytes),
+              })
+        }}
+      </span>
+      <div
+        v-if="storage.limit_bytes !== null"
+        class="h-1 w-full max-w-80 bg-line"
+        role="meter"
+        :aria-valuenow="Math.round(share * 100)"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="$t('storage.title')"
+      >
+        <div
+          class="h-full"
+          :class="storage.full ? 'bg-danger' : 'bg-ink'"
+          :style="{ width: `${share * 100}%` }"
+        />
+      </div>
+      <p v-if="storage.full" class="text-label text-danger">{{ $t('storage.fullNotice') }}</p>
     </div>
     <div class="flex flex-col gap-2">
       <span class="text-label font-medium text-muted">{{ $t('settings.profile.view') }}</span>

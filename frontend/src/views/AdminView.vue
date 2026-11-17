@@ -13,6 +13,7 @@ import { ArrowLeft, Check, Copy, EllipsisVertical, X } from '@lucide/vue'
 import { api, call, type AdminUser, type CreatedLink, type PendingInvite } from '@/api/client'
 import type { components } from '@/api/schema'
 import { useSubmit } from '@/composables/useSubmit'
+import { formatBytes } from '@/format'
 import { useConfirmStore } from '@/stores/confirm'
 import { useSessionStore } from '@/stores/session'
 import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
@@ -29,6 +30,17 @@ const users = ref<AdminUser[]>([])
 const status = ref<components['schemas']['InstanceStatus'] | null>(null)
 const resetLink = ref<{ user: AdminUser; link: CreatedLink } | null>(null)
 const userAction = useSubmit()
+const defaultLimitMb = ref('')
+const limitEdit = ref<{
+  user: AdminUser
+  mode: 'default' | 'unlimited' | 'custom'
+  mb: string
+} | null>(null)
+const MB = 1_000_000
+
+function mbText(bytes: number | null): string {
+  return bytes === null ? '' : String(Math.round((bytes / MB) * 1000) / 1000)
+}
 const invites = ref<PendingInvite[]>([])
 const registration = ref(false)
 const inviteEmail = ref('')
@@ -49,6 +61,7 @@ async function refresh(): Promise<void> {
     users.value = u
     invites.value = i
     registration.value = s.registration_enabled
+    defaultLimitMb.value = mbText(s.default_storage_limit_bytes)
     status.value = st
   })
 }
@@ -103,11 +116,45 @@ function lastAdmin(user: AdminUser): boolean {
   return user.is_admin && user.is_active && activeAdmins.value <= 1
 }
 
-async function updateUser(user: AdminUser, body: { is_admin?: boolean; is_active?: boolean }) {
+async function updateUser(
+  user: AdminUser,
+  body: components['schemas']['AdminUserUpdate'],
+): Promise<void> {
   await userAction.run(async () => {
     await call(() =>
       api.PATCH('/api/v1/admin/users/{user_id}', { params: { path: { user_id: user.id } }, body }),
     )
+    users.value = await call(() => api.GET('/api/v1/admin/users'))
+  })
+}
+
+function editLimit(user: AdminUser): void {
+  const limit = user.storage_limit
+  limitEdit.value =
+    typeof limit === 'number'
+      ? { user, mode: 'custom', mb: mbText(limit) }
+      : { user, mode: limit, mb: '' }
+}
+
+async function saveLimit(): Promise<void> {
+  const edit = limitEdit.value
+  if (!edit) return
+  const limit =
+    edit.mode === 'custom' ? Math.round(Number(edit.mb.replace(',', '.')) * MB) : edit.mode
+  if (typeof limit === 'number' && (!Number.isFinite(limit) || limit < 0)) return
+  await updateUser(edit.user, { storage_limit: limit })
+  if (!userAction.error.value) limitEdit.value = null
+}
+
+async function saveDefaultLimit(): Promise<void> {
+  const text = defaultLimitMb.value.trim().replace(',', '.')
+  const bytes = text ? Math.round(Number(text) * MB) : null
+  if (bytes !== null && (!Number.isFinite(bytes) || bytes < 0)) return
+  await toggle.run(async () => {
+    const result = await call(() =>
+      api.PATCH('/api/v1/admin/settings', { body: { default_storage_limit_bytes: bytes } }),
+    )
+    defaultLimitMb.value = mbText(result.default_storage_limit_bytes)
     users.value = await call(() => api.GET('/api/v1/admin/users'))
   })
 }
@@ -243,6 +290,14 @@ onMounted(refresh)
           <div class="flex min-w-0 flex-1 flex-col">
             <span class="truncate font-medium">{{ user.display_name }}</span>
             <span class="truncate text-label text-muted">{{ user.email }}</span>
+            <span class="font-mono text-meta text-faint tabular-nums" data-testid="user-storage">
+              {{ formatBytes(user.storage_used_bytes) }} /
+              {{
+                user.storage_limit_bytes === null
+                  ? $t('admin.storage.unlimited')
+                  : formatBytes(user.storage_limit_bytes)
+              }}
+            </span>
           </div>
           <span v-if="user.is_admin" class="border border-line px-1.5 text-meta text-muted">
             {{ $t('admin.users.admin') }}
@@ -277,6 +332,13 @@ onMounted(refresh)
                 >
                   {{ $t('admin.users.resetTotp') }}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  :class="menuItem"
+                  :disabled="user.is_admin"
+                  @select="editLimit(user)"
+                >
+                  {{ $t('admin.storage.edit') }}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator class="my-1 h-px bg-line" />
                 <DropdownMenuItem
                   :class="menuItem"
@@ -305,6 +367,36 @@ onMounted(refresh)
         </li>
       </ul>
       <UiNotice v-if="userAction.error.value" tone="error">{{ userAction.error.value }}</UiNotice>
+      <form
+        v-if="limitEdit"
+        class="flex flex-col gap-3 border border-line p-4"
+        data-testid="limit-editor"
+        @submit.prevent="saveLimit"
+      >
+        <p class="font-medium">
+          {{ $t('admin.storage.for', { name: limitEdit.user.display_name }) }}
+        </p>
+        <label
+          v-for="mode in ['default', 'unlimited', 'custom'] as const"
+          :key="mode"
+          class="flex gap-2"
+        >
+          <input v-model="limitEdit.mode" type="radio" :value="mode" class="accent-ink" />
+          {{ $t(`admin.storage.${mode}`) }}
+        </label>
+        <UiField
+          v-if="limitEdit.mode === 'custom'"
+          :label="$t('admin.storage.mb')"
+          for="limit-mb"
+          class="sm:w-48"
+        >
+          <UiInput id="limit-mb" v-model="limitEdit.mb" inputmode="decimal" />
+        </UiField>
+        <div class="flex gap-2">
+          <UiButton type="submit" variant="primary">{{ $t('common.save') }}</UiButton>
+          <UiButton variant="ghost" @click="limitEdit = null">{{ $t('common.cancel') }}</UiButton>
+        </div>
+      </form>
       <div v-if="resetLink" class="flex flex-col gap-2" data-testid="reset-link">
         <p class="text-muted">
           {{ $t('admin.users.resetLinkFor', { name: resetLink.user.display_name }) }}
@@ -337,6 +429,21 @@ onMounted(refresh)
         </span>
       </label>
       <UiNotice v-if="toggle.error.value" tone="error">{{ toggle.error.value }}</UiNotice>
+    </section>
+
+    <section class="flex flex-col gap-3">
+      <h2 class="text-base">{{ $t('admin.storage.title') }}</h2>
+      <form class="flex flex-col gap-3 sm:flex-row sm:items-end" @submit.prevent="saveDefaultLimit">
+        <UiField
+          :label="$t('admin.storage.defaultLabel')"
+          for="default-limit"
+          :hint="$t('admin.storage.defaultHint')"
+          class="sm:w-60"
+        >
+          <UiInput id="default-limit" v-model="defaultLimitMb" inputmode="decimal" />
+        </UiField>
+        <UiButton type="submit">{{ $t('common.save') }}</UiButton>
+      </form>
     </section>
 
     <section v-if="status" class="flex flex-col gap-3" data-testid="instance-status">

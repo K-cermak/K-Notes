@@ -150,6 +150,17 @@
       "passwordLogin": "Password sign-in",
       "yes": "On",
       "no": "Off"
+    },
+    "storage": {
+      "title": "Storage",
+      "edit": "Storage limit…",
+      "for": "Storage limit for {name}",
+      "default": "Instance default",
+      "unlimited": "Unlimited",
+      "custom": "Custom",
+      "mb": "Limit in MB",
+      "defaultLabel": "Default limit per user (MB)",
+      "defaultHint": "Leave empty for unlimited. Admins are never limited."
     }
   },
   "errors": {
@@ -181,7 +192,8 @@
     "setup_required": "Set up the instance first.",
     "totp_enabled": "Two-step verification is already on.",
     "no_password": "Accounts that use single sign-on get two-step verification from it.",
-    "insufficient_scope": "This token can only read."
+    "insufficient_scope": "This token can only read.",
+    "storage_full": "Your storage is full. Delete notes or images to make room."
   },
   "sync": {
     "idle": "Starting",
@@ -425,5 +437,13 @@
   "oidc": {
     "signIn": "Sign in with {provider}",
     "link": "Link {provider}"
+  },
+  "storage": {
+    "title": "Storage",
+    "used": "{used} of {limit} used",
+    "usedUnlimited": "{used} used",
+    "full": "Your storage is full. Delete notes or images to make room.",
+    "fullNotice": "Your storage is full: you can edit and delete notes, but not create notes or add images until you free up space.",
+    "details": "Details"
   }
 }

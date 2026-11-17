@@ -10,12 +10,14 @@ import {
 } from '@/db/notes'
 import { useConfirmStore } from '@/stores/confirm'
 import { useSnackbarStore } from '@/stores/snackbar'
+import { useSyncStore } from '@/stores/sync'
 
 /** Note actions shared by cards and the editor; reversible ones offer Undo in the snackbar. */
 export function useNoteActions() {
   const { t } = useI18n()
   const snackbar = useSnackbarStore()
   const confirm = useConfirmStore()
+  const sync = useSyncStore()
 
   // Bulk actions on selected notes (SPEC 9); one Undo puts every note back as it was.
   async function updateMany(ids: string[], patch: NotePatch, message?: string): Promise<void> {
@@ -64,7 +66,7 @@ export function useNoteActions() {
       if (sure) await emptyTrash()
     },
     async copy(id: string): Promise<void> {
-      if (await copyNote(id)) snackbar.show(t('note.copied'))
+      if (sync.hasRoom() && (await copyNote(id))) snackbar.show(t('note.copied'))
     },
     pin(id: string, pinned: boolean): Promise<void> {
       return updateNote(id, { pinned })

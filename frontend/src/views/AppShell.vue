@@ -61,6 +61,7 @@ const editing = computed(() => route.name === 'note')
 const composing = computed(() => view.value === 'notes' || view.value === 'label')
 
 function newNote(type: LocalNote['type'] = 'text'): void {
+  if (!sync.hasRoom()) return
   if (!compact.value && composing.value) {
     composer.value?.start(type)
     return
@@ -145,6 +146,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       >
         {{ $t('pwa.dismiss') }}
       </button>
+    </UiNotice>
+    <UiNotice
+      v-if="sync.storageFull"
+      tone="warning"
+      class="mx-auto w-full max-w-[600px]"
+      data-testid="storage-full"
+    >
+      {{ $t('storage.fullNotice') }}
+      <RouterLink to="/settings/profile" class="font-medium text-accent">
+        {{ $t('storage.details') }}
+      </RouterLink>
     </UiNotice>
     <UiNotice v-if="sync.rejected > 0" tone="error" class="mx-auto w-full max-w-[600px]">
       {{ $t('sync.rejected', { count: sync.rejected }, sync.rejected) }}

@@ -3,6 +3,7 @@ import { attachImages } from '@/db/attachments'
 import { ACCEPTED_TYPES, ImageError, processImage, type ProcessedImage } from '@/images/process'
 import { useInstanceStore } from '@/stores/instance'
 import { useSnackbarStore } from '@/stores/snackbar'
+import { useSyncStore } from '@/stores/sync'
 
 /** Asks for image files. Must be called from a user gesture, which the file dialog needs. */
 export function pickImages(): Promise<File[]> {
@@ -22,6 +23,7 @@ export function useImageAttach() {
   const { t } = useI18n()
   const instance = useInstanceStore()
   const snackbar = useSnackbarStore()
+  const sync = useSyncStore()
 
   async function prepare(files: File[]): Promise<ProcessedImage[]> {
     const maxBytes = (instance.config?.max_image_mb ?? 10) * 1024 * 1024
@@ -43,6 +45,7 @@ export function useImageAttach() {
 
   /** Picks images and attaches them to the note the target resolves to (a draft is created first). */
   async function pickAndAttach(target: string | (() => Promise<string | null>)): Promise<void> {
+    if (!sync.hasRoom()) return
     const files = await pickImages()
     await attachFiles(target, files)
   }
