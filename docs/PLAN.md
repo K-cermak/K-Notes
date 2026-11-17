@@ -123,12 +123,12 @@ Done when: a user over the limit cannot create notes or add images in the app an
 
 ## Phase 12: Release
 
-- [ ] Startup configuration validation with clear messages.
-- [ ] Complete the Playwright list in section 12 (CI already runs Playwright against the built image since phase 1).
+- [x] Startup configuration validation with clear messages.
+- [x] Complete the Playwright list in section 12 (CI already runs Playwright against the built image since phase 1).
 - [ ] Release workflow publishing a multi-architecture image (`linux/amd64` and `linux/arm64`) to GHCR on a version tag.
-- [ ] `README.md` as described in section 11, with screenshots; `CONTRIBUTING.md`, `CHANGELOG.md`.
-- [ ] Accessibility pass (section 9, Accessibility) and a review of the security headers with the final bundle.
-- [ ] Design pass against section 9 "Visual design": no rounded corners, no raw colour values outside the tokens and the note palette, no stray shadows, mono used for timestamps and numbers.
-- [ ] A full run-through on a clean volume using only the README.
+- [x] `README.md` as described in section 11, with screenshots; `CONTRIBUTING.md`, `CHANGELOG.md`.
+- [x] Accessibility pass (section 9, Accessibility) and a review of the security headers with the final bundle.
+- [x] Design pass against section 9 "Visual design": no rounded corners, no raw colour values outside the tokens and the note palette, no stray shadows, mono used for timestamps and numbers.
+- [x] A full run-through on a clean volume using only the README.
 
 Done when: a person following the README on a fresh machine has a working instance behind HTTPS, and the tagged image is on GHCR for both architectures (confirm with `docker buildx imagetools inspect`).
