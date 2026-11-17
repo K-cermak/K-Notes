@@ -26,9 +26,11 @@ const icon = computed(
     data-testid="sync-status"
     :data-state="sync.state"
   >
+    <!-- A little larger than the toolbar icons beside it: the cloud is wide and flat, and at 18 px
+         the check inside it is too small to read. -->
     <component
       :is="icon"
-      :size="18"
+      :size="20"
       :class="[
         sync.state === 'error' && 'text-danger',
         sync.state === 'syncing' &&
