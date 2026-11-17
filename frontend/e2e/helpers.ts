@@ -2,8 +2,6 @@ import { expect, type Browser, type BrowserContext, type Page } from '@playwrigh
 
 export const admin = { name: 'Ada Admin', email: 'ada@example.com', password: 'admin-password' }
 
-let counter = 0
-
 /** A fresh user per test, invited by the admin through the API, so parallel tests do not share notes. */
 export async function newUser(browser: Browser): Promise<{ email: string; password: string }> {
   const context = await browser.newContext()
@@ -15,8 +13,8 @@ export async function newUser(browser: Browser): Promise<{ email: string; passwo
   ).json()) as {
     url: string
   }
-  counter += 1
-  const user = { email: `user-${Date.now()}-${counter}@example.com`, password: 'user-password' }
+  // Workers run in parallel, so a timestamp alone can repeat.
+  const user = { email: `user-${crypto.randomUUID()}@example.com`, password: 'user-password' }
   const accepted = await context.request.post('/api/v1/auth/invite/accept', {
     data: {
       token: invite.url.split('/').pop(),
