@@ -67,6 +67,11 @@ test.describe('on a touch screen', () => {
     const { page, context } = await signedIn(browser, user)
     await addNotesOnPhone(page, ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'])
     await expect.poll(() => titles(page)).toEqual(['H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'])
+    // A phone shows two columns (SPEC 9, Grid).
+    const newest = await settledBox(card(page, 'H'))
+    const next = await settledBox(card(page, 'G'))
+    expect(next.y).toBe(newest.y)
+    expect(next.x).toBeGreaterThan(newest.x + newest.width)
 
     const touch = await context.newCDPSession(page)
     const start = await settledBox(card(page, 'F'))

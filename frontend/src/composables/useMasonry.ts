@@ -12,12 +12,30 @@ import {
 export interface MasonryOptions {
   columnWidth: number
   gap: number
-  /** Where only one column fits, as on a phone, the card takes the width up to this. */
+  /** Where only one column fits, the card takes the width up to this. */
   singleColumnMax: number
+  /**
+   * Where fewer than this many columns of `columnWidth` fit, as on a phone, the columns narrow to
+   * keep this many, as long as each stays at least `minColumnWidth` wide.
+   */
+  minColumns: number
+  minColumnWidth: number
 }
 
-export const GRID: MasonryOptions = { columnWidth: 240, gap: 16, singleColumnMax: 600 }
-export const LIST: MasonryOptions = { columnWidth: 600, gap: 12, singleColumnMax: 600 }
+export const GRID: MasonryOptions = {
+  columnWidth: 240,
+  gap: 16,
+  singleColumnMax: 600,
+  minColumns: 2,
+  minColumnWidth: 140,
+}
+export const LIST: MasonryOptions = {
+  columnWidth: 600,
+  gap: 12,
+  singleColumnMax: 600,
+  minColumns: 1,
+  minColumnWidth: 600,
+}
 
 export interface Placement {
   x: number
@@ -68,10 +86,17 @@ export function useMasonry(
   }
 
   const layout = computed(() => {
-    const { columnWidth, gap, singleColumnMax } = toValue(options)
+    const { columnWidth, gap, singleColumnMax, minColumns, minColumnWidth } = toValue(options)
     const available = width.value
-    const columns = Math.max(1, Math.floor((available + gap) / (columnWidth + gap)))
-    const cardWidth = columns === 1 ? Math.min(available, singleColumnMax) : columnWidth
+    let columns = Math.max(1, Math.floor((available + gap) / (columnWidth + gap)))
+    let cardWidth = columnWidth
+    const narrowed = (available - (minColumns - 1) * gap) / minColumns
+    if (columns < minColumns && narrowed >= minColumnWidth) {
+      columns = minColumns
+      cardWidth = narrowed
+    } else if (columns === 1) {
+      cardWidth = Math.min(available, singleColumnMax)
+    }
     const offset = (available - (columns * cardWidth + (columns - 1) * gap)) / 2
     const bottoms: number[] = Array.from({ length: columns }, () => 0)
     const placements = new Map<string, Placement>()
