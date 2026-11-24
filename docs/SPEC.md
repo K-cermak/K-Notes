@@ -309,7 +309,7 @@ After purging, delete blob files that no live attachment of that user references
 - **Access control.** A user can read a blob only if a `blobs` row links that user to the hash. Knowing a hash is not enough.
 - **Display.** Create object URLs only for cards that are on screen (IntersectionObserver) and revoke them when cards leave, so a grid with many photos does not exhaust memory.
 - **Download on demand.** A per-device setting. When on, the sync cycle skips step 4, cards show a placeholder with the image's aspect ratio, and tapping it downloads that note's images. There is no automatic Wi-Fi detection because iOS does not expose the connection type to web pages.
-- **Storage persistence.** After the first successful sign-in, call `navigator.storage.persist()`. Show storage use from `navigator.storage.estimate()` in settings.
+- **Storage persistence.** After the first successful sign-in, call `navigator.storage.persist()`. Show the space the app takes on the device, from `navigator.storage.estimate()`, in the device settings, worded so it is not mistaken for the account quota: it includes the cached app itself and the downloaded images.
 
 ## 7. Authentication and accounts
 
@@ -342,7 +342,7 @@ Added after phase 9 at the owner's request.
 - **Limits.** An instance default set by an admin, which may be unlimited (the default), and a per-user setting: the instance default, unlimited, or a custom size. Admins are always unlimited.
 - **Over the limit** the user cannot create new notes (including copies) or add images. Editing existing notes, even making them longer, restoring from the trash, and everything else stays allowed, and so do reading and deleting, which brings the user back under the limit.
 - **Enforcement.** The app knows the usage and the limit from `GET /me/storage`, refreshed after every sync cycle, and disables the actions above while the user is over. The server does not refuse sync pushes or image uploads because of the quota: a device that was offline could not have known, and its changes must not be lost, so they may take the user over the limit. The REST API for tokens, which is always online, refuses to create notes over the limit (`storage_full`). A modified client could therefore exceed the quota; it protects against accidents on a trusted instance, not against a hostile user.
-- **Shown** in settings as used and available space, and in the admin user list with each user's usage and limit.
+- **Shown** at the bottom of the navigation drawer and in the Storage section of settings, as "X of Y used" with a usage bar, or as "X used" without a bar when the user has no limit; and in the admin user list with each user's usage and limit. (The drawer and the settings section were added by the owner after phase 12.)
 
 ### Security headers
 
@@ -367,8 +367,8 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 
 ### Layout
 
-- **Top bar**: menu button, app icon and name, a wide search field, sync status, grid/list toggle, a display options menu (theme, images on demand, storage use on this device; its icon is not the settings gear, which belongs to the settings page in the account menu), account menu. On phones the search field takes the available width and the secondary buttons move into the account menu.
-- **Navigation drawer**: Notes, one entry per label, Edit labels, Archive, Trash. On desktop it collapses to an icon rail and expands on hover or with the menu button; whether it was left expanded is remembered on the device. On phones it is an overlay opened with the menu button, closed at start.
+- **Top bar**: menu button, app icon and name, a wide search field, sync status, grid/list toggle, a display options menu (theme, images on demand; its icon is not the settings gear, which belongs to the settings page in the account menu), account menu. On phones the search field takes the available width and the secondary buttons move into the account menu.
+- **Navigation drawer**: Notes, one entry per label, Edit labels, Archive, Trash, and at the bottom the account's storage use, linking to the Storage section of settings (section 7, Storage quotas); it is hidden while the drawer is collapsed to the rail. On desktop it collapses to an icon rail and expands on hover or with the menu button; whether it was left expanded is remembered on the device. On phones it is an overlay opened with the menu button, closed at start.
 - **Composer**: on desktop, a "Take a note…" bar centred above the grid, with buttons for a new checklist and a new note with image. Clicking it expands in place to title, body and toolbar. On phones, a floating action button at the bottom right opens a full-screen editor.
 - **Grid**: masonry columns of fixed card width (about 240 px), as many as fit; where only one fits, as on a phone, one column takes the full width, up to 600 px. A "Pinned" section and an "Others" section, each with a small uppercase heading, shown only when pinned notes exist. List view is a single centred column about 600 px wide.
 - **Empty states**: a large faint icon and one line of text, per view (notes, archive, trash, label, search).
@@ -473,7 +473,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - **Make a copy** duplicates a note with its items, labels and image references.
 - **Keyboard**: `c` new note, `l` new checklist, `/` focus search, `Esc` close editor or clear selection, `Ctrl/Cmd+Enter` close editor.
 - **Trash view**: a notice saying notes are deleted after N days (from `/config`; hidden when purging is off) and an "Empty trash" button. Cards offer restore and delete forever.
-- **Settings**: theme, language, default view, download images on demand, storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota and instance status.
+- **Settings**: theme, language, default view, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota and instance status.
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
 - **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal. Known limitation, accepted by the owner: reordering notes and checklist items works only by dragging with a pointer or touch, as in Keep; there is no keyboard equivalent.
