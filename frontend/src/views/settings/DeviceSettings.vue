@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { formatBytes } from '@/format'
 import { deviceSettings, setDeviceSettings } from '@/db/meta'
 import { db } from '@/db/schema'
 import { useSyncStore } from '@/stores/sync'
@@ -7,23 +8,17 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue'
 
 const sync = useSyncStore()
 const onDemand = ref(false)
-const usage = ref<{ used: number; quota: number } | null>(null)
+const usage = ref<number | null>(null)
 
 onMounted(async () => {
   onDemand.value = (await deviceSettings(db)).downloadOnDemand
-  const estimate = await navigator.storage?.estimate?.()
-  if (estimate?.usage !== undefined)
-    usage.value = { used: estimate.usage, quota: estimate.quota ?? 0 }
+  usage.value = (await navigator.storage?.estimate?.())?.usage ?? null
 })
 
 async function setOnDemand(value: boolean): Promise<void> {
   onDemand.value = value
   await setDeviceSettings(db, { downloadOnDemand: value })
   if (!value) sync.syncNow()
-}
-
-function megabytes(bytes: number): string {
-  return (bytes / 1_000_000).toFixed(bytes < 10_000_000 ? 1 : 0)
 }
 </script>
 
@@ -43,8 +38,8 @@ function megabytes(bytes: number): string {
         <span class="text-label text-muted">{{ $t('settings.device.onDemandHint') }}</span>
       </span>
     </label>
-    <p v-if="usage" class="ui-meta">
-      {{ $t('settings.storage', { mb: megabytes(usage.used) }) }}
+    <p v-if="usage !== null" class="ui-meta" data-testid="device-usage">
+      {{ $t('settings.device.usage', { size: formatBytes(usage) }) }}
     </p>
   </section>
 </template>

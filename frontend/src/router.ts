@@ -78,6 +78,11 @@ export const router = createRouter({
           component: () => import('@/views/settings/TokenSettings.vue'),
         },
         {
+          path: 'storage',
+          name: 'settings-storage',
+          component: () => import('@/views/settings/StorageSettings.vue'),
+        },
+        {
           path: 'device',
           name: 'settings-device',
           component: () => import('@/views/settings/DeviceSettings.vue'),

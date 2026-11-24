@@ -74,6 +74,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       '/settings/profile',
       '/settings/security',
       '/settings/tokens',
+      '/settings/storage',
       '/settings/device',
       '/admin',
     ]) {

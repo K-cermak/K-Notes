@@ -184,7 +184,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       data-testid="storage-full"
     >
       {{ $t('storage.fullNotice') }}
-      <RouterLink to="/settings/profile" class="font-medium text-accent">
+      <RouterLink to="/settings/storage" class="font-medium text-accent">
         {{ $t('storage.details') }}
       </RouterLink>
     </UiNotice>

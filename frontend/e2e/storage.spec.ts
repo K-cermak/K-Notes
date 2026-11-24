@@ -31,9 +31,11 @@ test('over the quota a user cannot create notes until they delete enough', async
   await expect(row.getByTestId('user-storage')).toContainText('/ 300 B')
   await adminSession.context.close()
 
-  await page.goto('/settings/profile')
+  await page.goto('/settings/storage')
   await expect(page.getByTestId('storage-use')).toContainText('of 300 B used')
+  await expect(page.getByRole('meter', { name: 'Storage' })).toHaveAttribute('aria-valuenow', '100')
   await page.goto('/')
+  await expect(page.getByTestId('drawer-storage')).toContainText('of 300 B used')
   await expect(page.getByTestId('storage-full')).toBeVisible()
   await page.getByTestId('composer').click()
   await expect(page.getByTestId('snackbar')).toContainText('Your storage is full')

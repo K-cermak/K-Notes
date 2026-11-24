@@ -23,23 +23,17 @@ import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
 const session = useSessionStore()
 const sync = useSyncStore()
 const onDemand = ref(false)
-const usage = ref<number | null>(null)
 
-// Device settings and storage use are read when the menu opens, as they can change elsewhere.
+// The device setting is read when the menu opens, as it can change elsewhere.
 async function refresh(open: boolean): Promise<void> {
   if (!open) return
   onDemand.value = (await deviceSettings(db)).downloadOnDemand
-  usage.value = (await navigator.storage?.estimate?.())?.usage ?? null
 }
 
 async function setOnDemand(value: boolean): Promise<void> {
   onDemand.value = value
   await setDeviceSettings(db, { downloadOnDemand: value })
   if (!value) sync.syncNow()
-}
-
-function megabytes(bytes: number): string {
-  return (bytes / 1_000_000).toFixed(bytes < 10_000_000 ? 1 : 0)
 }
 </script>
 
@@ -84,9 +78,6 @@ function megabytes(bytes: number): string {
           </span>
           {{ $t('settings.downloadOnDemand') }}
         </DropdownMenuCheckboxItem>
-        <p v-if="usage !== null" class="ui-meta px-3 pt-1 pb-2 pl-10" data-testid="storage-use">
-          {{ $t('settings.storage', { mb: megabytes(usage) }) }}
-        </p>
       </DropdownMenuContent>
     </DropdownMenuPortal>
   </DropdownMenuRoot>

@@ -5,6 +5,8 @@ import { Archive, Lightbulb, NotebookPen, Pencil, Tag, Trash2 } from '@lucide/vu
 import { byName } from '@/db/labels'
 import { db } from '@/db/schema'
 import { useLiveQuery } from '@/composables/useLiveQuery'
+import { useSyncStore } from '@/stores/sync'
+import StorageUsage from '@/components/StorageUsage.vue'
 import branding from '@branding'
 import type { NotesView } from '@/notes'
 
@@ -16,6 +18,7 @@ const props = defineProps<{ compact: boolean; current: NotesView; labelId?: stri
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ editLabels: [] }>()
 
+const sync = useSyncStore()
 const labels = useLiveQuery(async () => (await db.labels.toArray()).sort(byName), [])
 const expanded = computed(() => props.compact || open.value || hovered.value)
 
@@ -113,5 +116,17 @@ function navigated(): void {
         </button>
       </template>
     </template>
+    <!-- A fixed width keeps the text from wrapping while the rail animates open. -->
+    <RouterLink
+      v-if="sync.storage"
+      to="/settings/storage"
+      class="mt-auto flex w-[280px] shrink-0 flex-col gap-1 border-t border-line px-6 pt-4 pb-[max(12px,env(safe-area-inset-bottom))] text-label text-muted transition-[opacity,visibility] duration-150 hover:text-ink"
+      :class="!expanded && 'invisible opacity-0'"
+      data-testid="drawer-storage"
+      @click="navigated"
+    >
+      <span>{{ $t('storage.title') }}</span>
+      <StorageUsage :storage="sync.storage" />
+    </RouterLink>
   </nav>
 </template>

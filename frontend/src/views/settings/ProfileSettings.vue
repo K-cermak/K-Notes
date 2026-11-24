@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { formatBytes } from '@/format'
 import { LOCALES } from '@/i18n'
 import type { components } from '@/api/schema'
 import { useSessionStore } from '@/stores/session'
 import { useSnackbarStore } from '@/stores/snackbar'
-import { useSyncStore } from '@/stores/sync'
 import ThemeSwitch from '@/components/ThemeSwitch.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiField from '@/components/ui/UiField.vue'
@@ -17,14 +15,7 @@ type ProfileUpdate = components['schemas']['ProfileUpdate']
 
 const { t } = useI18n()
 const session = useSessionStore()
-const sync = useSyncStore()
 const snackbar = useSnackbarStore()
-const storage = computed(() => sync.storage)
-const share = computed(() => {
-  const s = storage.value
-  return s?.limit_bytes ? Math.min(1, s.used_bytes / Math.max(s.limit_bytes, 1)) : 0
-})
-onMounted(() => sync.syncNow())
 const name = ref(session.user?.display_name ?? '')
 
 const views = computed(() => [
@@ -88,32 +79,6 @@ async function saveName(): Promise<void> {
         :label="$t('settings.profile.view')"
         @update:model-value="(view) => update({ default_view: view })"
       />
-    </div>
-    <div v-if="storage" class="flex flex-col gap-2" data-testid="storage-use">
-      <span class="ui-label">{{ $t('storage.title') }}</span>
-      <span class="ui-numeric">
-        {{
-          storage.limit_bytes === null
-            ? $t('storage.usedUnlimited', { used: formatBytes(storage.used_bytes) })
-            : $t('storage.used', {
-                used: formatBytes(storage.used_bytes),
-                limit: formatBytes(storage.limit_bytes),
-              })
-        }}
-      </span>
-      <div
-        v-if="storage.limit_bytes !== null"
-        class="ui-meter"
-        :class="storage.full && 'ui-meter--full'"
-        role="meter"
-        :aria-valuenow="Math.round(share * 100)"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-label="$t('storage.title')"
-      >
-        <div class="ui-meter__bar" :style="{ width: `${share * 100}%` }" />
-      </div>
-      <p v-if="storage.full" class="text-label text-danger">{{ $t('storage.fullNotice') }}</p>
     </div>
   </section>
 </template>

@@ -341,7 +341,6 @@
   },
   "settings": {
     "downloadOnDemand": "Download images on demand",
-    "storage": "{mb} MB stored on this device",
     "title": "Settings",
     "profile": {
       "title": "Profile",
@@ -350,10 +349,15 @@
       "grid": "Grid",
       "list": "List"
     },
+    "storage": {
+      "title": "Storage",
+      "intro": "The text of your notes and your images, notes in the trash included."
+    },
     "device": {
       "title": "This device",
       "intro": "These settings apply to this browser only.",
-      "onDemandHint": "Images stay on the server until you tap them. Saves data and space on phones."
+      "onDemandHint": "Images stay on the server until you tap them. Saves data and space on phones.",
+      "usage": "{size} on this device: the app itself and the notes and images downloaded to it"
     },
     "password": {
       "title": "Password",

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
 
-const sections = ['profile', 'security', 'tokens', 'device'] as const
+const sections = ['profile', 'security', 'tokens', 'storage', 'device'] as const
 </script>
 
 <template>
