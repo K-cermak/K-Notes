@@ -1,11 +1,11 @@
-// Renders the README screenshots in docs/screenshots from a fresh instance filled with sample notes.
+// Renders the README screenshots in Images from a fresh instance filled with sample notes.
 // Run with `just screenshots`, which starts that instance; the base URL is the first argument.
 import { mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { chromium, type Page } from '@playwright/test'
 
 const base = process.argv[2] ?? 'http://127.0.0.1:18200'
-const outDir = fileURLToPath(new URL('../../docs/screenshots/', import.meta.url))
+const outDir = fileURLToPath(new URL('../../Images/', import.meta.url))
 mkdirSync(outDir, { recursive: true })
 
 const account = { display_name: 'Alex', email: 'alex@example.com', password: 'sample-password' }
@@ -116,7 +116,7 @@ async function shoot(file: string): Promise<void> {
   // Let fades and the masonry settle, so nothing is caught mid-way.
   await page.waitForTimeout(600)
   await page.screenshot({ path: `${outDir}${file}` })
-  console.log(`Wrote docs/screenshots/${file}`)
+  console.log(`Wrote Images/${file}`)
 }
 
 await shoot('notes-light.png')

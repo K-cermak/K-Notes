@@ -24,5 +24,8 @@ backend/.data/
 .vscode/
 *.swp
 
+# Screenshots and logos, published on a CDN rather than kept in the repository
+/Images/
+
 # Playwright MCP screenshots
 .playwright-mcp/
