@@ -16,6 +16,7 @@ from app.migrations import run_migrations
 from app.security import SecurityMiddleware, install_log_redaction
 from app.services import blobs as blob_store
 from app.services import maintenance
+from app.services.captcha import CaptchaVerifier
 from app.services.clock import DAY_MS
 from app.services.events import EventHub
 from app.services.oidc import OidcClient
@@ -92,6 +93,7 @@ def create_app(settings: Settings | None = None, static_dir: Path | None = None)
     app.state.throttle = LoginThrottle()
     app.state.events = EventHub()
     app.state.oidc = OidcClient(settings) if settings.oidc_enabled else None
+    app.state.captcha = CaptchaVerifier(settings)
     install_error_handlers(app)
     install_log_redaction()
     app.add_middleware(SecurityMiddleware, base_url=settings.base_url, docs_path=f"{API_PREFIX}/docs")

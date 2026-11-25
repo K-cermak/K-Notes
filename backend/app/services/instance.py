@@ -6,7 +6,7 @@ from app.config import Settings
 from app.models import Setting
 from app.schemas.admin import InstanceSettings, InstanceSettingsUpdate, InstanceStatus
 from app.schemas.public import PublicConfig
-from app.services import accounts, limits, storage
+from app.services import accounts, captcha, limits, storage
 from app.version import VERSION
 
 _REGISTRATION = "registration_enabled"
@@ -32,6 +32,7 @@ def public_config(settings: Settings, db: Session) -> PublicConfig:
         oidc_provider_name=settings.oidc_provider_name,
         trash_retention_days=limits.trash_retention_days(db),
         max_image_mb=limits.max_image_mb(db),
+        captcha=captcha.public(db),
     )
 
 

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Response, status
 
 from app.api.deps import (
     AppSettings,
+    Captcha,
     CurrentAuth,
     Throttle,
     clear_session_cookie,
@@ -10,7 +11,13 @@ from app.api.deps import (
 )
 from app.config import Settings
 from app.db import DbSession
-from app.errors import AppError, ForbiddenError, TooManyRequestsError, UnauthorizedError
+from app.errors import (
+    AppError,
+    ForbiddenError,
+    NotFoundError,
+    TooManyRequestsError,
+    UnauthorizedError,
+)
 from app.models import User
 from app.schemas.account import (
     InviteAccept,
@@ -24,7 +31,8 @@ from app.schemas.account import (
     TotpChallenge,
     TotpLogin,
 )
-from app.services import accounts, invites, sessions, totp
+from app.schemas.public import AltchaChallenge
+from app.services import accounts, captcha, invites, sessions, totp
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -72,9 +80,11 @@ def login(
     db: DbSession,
     settings: AppSettings,
     throttle: Throttle,
+    verifier: Captcha,
 ) -> Me | TotpChallenge:
     """Signs in, or with two-factor on returns a pending token for /auth/login/totp."""
     _require_password_login(settings)
+    captcha.require(db, verifier, "login", body.captcha_token, client_ip(request))
     user = accounts.authenticate(
         db, throttle, email=body.email, password=body.password, ip=client_ip(request)
     )
@@ -118,9 +128,15 @@ def logout(auth: CurrentAuth, response: Response, db: DbSession, settings: AppSe
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(
-    body: RegisterRequest, request: Request, response: Response, db: DbSession, settings: AppSettings
+    body: RegisterRequest,
+    request: Request,
+    response: Response,
+    db: DbSession,
+    settings: AppSettings,
+    verifier: Captcha,
 ) -> Me:
     _require_password_login(settings)
+    captcha.require(db, verifier, "registration", body.captcha_token, client_ip(request))
     user = invites.register(db, email=body.email, display_name=body.display_name, password=body.password)
     return _sign_in(db, settings, request, response, user)
 
@@ -133,8 +149,14 @@ def check_invite(body: TokenRequest, db: DbSession) -> LinkInfo:
 
 @router.post("/invite/accept", status_code=status.HTTP_201_CREATED)
 def accept_invite(
-    body: InviteAccept, request: Request, response: Response, db: DbSession, settings: AppSettings
+    body: InviteAccept,
+    request: Request,
+    response: Response,
+    db: DbSession,
+    settings: AppSettings,
+    verifier: Captcha,
 ) -> Me:
+    captcha.require(db, verifier, "registration", body.captcha_token, client_ip(request))
     user = invites.accept_invite(
         db, body.token, email=body.email, display_name=body.display_name, password=body.password
     )
@@ -152,3 +174,11 @@ def complete_reset(
 ) -> Me:
     user = invites.reset_password(db, body.token, body.password)
     return _sign_in(db, settings, request, response, user)
+
+
+@router.get("/captcha/challenge")
+def altcha_challenge(db: DbSession, verifier: Captcha) -> AltchaChallenge:
+    """A proof-of-work challenge for the ALTCHA widget; 404 unless ALTCHA is the configured captcha."""
+    if captcha.load(db).provider != "altcha":
+        raise NotFoundError()
+    return verifier.altcha_challenge()

@@ -1,4 +1,4 @@
-"""Admin commands, run inside the container: python -m app.cli <command> <email>."""
+"""Admin commands, run inside the container: python -m app.cli <command> [email]."""
 
 import argparse
 import sys
@@ -12,7 +12,7 @@ from app.errors import AppError
 from app.migrations import run_migrations
 from app.models import User
 from app.schemas.admin import AdminUserUpdate
-from app.services import accounts, admin, invites, totp
+from app.services import accounts, admin, captcha, invites, totp
 
 
 def _user(db: Session, email: str) -> User:
@@ -42,18 +42,30 @@ def make_admin(db: Session, _settings: Settings, email: str) -> str:
     return f"{email} is now an admin.{note}"
 
 
-COMMANDS: dict[str, tuple[Callable[[Session, Settings, str], str], str]] = {
+def disable_captcha(db: Session, _settings: Settings) -> str:
+    captcha.disable(db)
+    db.commit()
+    return "The captcha is now off for sign-in and registration."
+
+
+USER_COMMANDS: dict[str, tuple[Callable[[Session, Settings, str], str], str]] = {
     "reset-password": (reset_password, "print a one-time password reset link"),
     "disable-totp": (disable_totp, "turn off two-factor authentication"),
     "make-admin": (make_admin, "grant admin rights"),
+}
+INSTANCE_COMMANDS: dict[str, tuple[Callable[[Session, Settings], str], str]] = {
+    # For an admin locked out by captcha keys that stopped working.
+    "disable-captcha": (disable_captcha, "turn off the captcha"),
 }
 
 
 def main(argv: list[str] | None = None, settings: Settings | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli")
     commands = parser.add_subparsers(dest="command", required=True)
-    for name, (_, help_text) in COMMANDS.items():
+    for name, (_, help_text) in USER_COMMANDS.items():
         commands.add_parser(name, help=help_text).add_argument("email")
+    for name, (_, help_text) in INSTANCE_COMMANDS.items():
+        commands.add_parser(name, help=help_text)
     args = parser.parse_args(argv)
     try:
         settings = settings or load_settings()
@@ -64,7 +76,10 @@ def main(argv: list[str] | None = None, settings: Settings | None = None) -> int
     try:
         run_migrations(db.write_engine)
         with db.writer() as session:
-            print(COMMANDS[args.command][0](session, settings, args.email))
+            if args.command in USER_COMMANDS:
+                print(USER_COMMANDS[args.command][0](session, settings, args.email))
+            else:
+                print(INSTANCE_COMMANDS[args.command][0](session, settings))
     except AppError as exc:
         print(exc.message, file=sys.stderr)
         return 1

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 
-from app.api.deps import AdminAuth, AppSettings
+from app.api.deps import AdminAuth, AppSettings, Captcha, client_ip
 from app.db import DbSession
 from app.schemas.admin import (
     AdminUser,
     AdminUserUpdate,
+    CaptchaSettings,
+    CaptchaUpdate,
     CreatedLink,
     InstanceSettings,
     InstanceSettingsUpdate,
@@ -12,7 +14,7 @@ from app.schemas.admin import (
     InviteCreate,
     PendingInvite,
 )
-from app.services import admin, instance, invites
+from app.services import admin, captcha, instance, invites
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -66,6 +68,19 @@ def get_settings(_auth: AdminAuth, db: DbSession) -> InstanceSettings:
 @router.patch("/settings")
 def update_settings(body: InstanceSettingsUpdate, _auth: AdminAuth, db: DbSession) -> InstanceSettings:
     return instance.update_settings(db, body)
+
+
+@router.get("/captcha")
+def get_captcha(_auth: AdminAuth, db: DbSession) -> CaptchaSettings:
+    return captcha.admin_view(db)
+
+
+@router.put("/captcha")
+def update_captcha(
+    body: CaptchaUpdate, request: Request, _auth: AdminAuth, db: DbSession, verifier: Captcha
+) -> CaptchaSettings:
+    """New keys need a token solved with them, so a mistake cannot lock everyone out."""
+    return captcha.update(db, verifier, body, client_ip(request))
 
 
 @router.get("/status")

@@ -2,27 +2,68 @@ import json
 import logging
 import re
 from typing import Any
+from urllib.parse import parse_qs
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
-CSP = "; ".join(
-    [
-        "default-src 'self'",
-        "script-src 'self'",
-        "style-src 'self'",
-        "img-src 'self' blob: data:",
-        "font-src 'self'",
-        "connect-src 'self'",
-        "manifest-src 'self'",
-        "worker-src 'self'",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-    ]
-)
+_DIRECTIVES = {
+    "default-src": "'self'",
+    "script-src": "'self'",
+    "style-src": "'self'",
+    "img-src": "'self' blob: data:",
+    "font-src": "'self'",
+    "connect-src": "'self'",
+    "manifest-src": "'self'",
+    "worker-src": "'self'",
+    "object-src": "'none'",
+    "base-uri": "'self'",
+    "form-action": "'self'",
+    "frame-ancestors": "'none'",
+}
+
+
+def _render(directives: dict[str, str]) -> str:
+    return "; ".join(f"{name} {value}" for name, value in directives.items())
+
+
+CSP = _render(_DIRECTIVES)
+
+# The captcha widget runs in this same-origin frame, so the app itself never loosens its policy.
+# The policy cannot follow the admin's setting: the service worker keeps index.html with the
+# headers it was first fetched with.
+CAPTCHA_FRAME_PATH = "/captcha.html"
+# From each provider's CSP documentation.
+_CAPTCHA_SOURCES = {
+    "recaptcha": {
+        "script-src": "https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+        "frame-src": "https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
+        # Not in Google's list, but api.js also reports to /recaptcha/api2/clr.
+        "connect-src": "https://www.google.com/recaptcha/",
+    },
+    "turnstile": {
+        "script-src": "https://challenges.cloudflare.com",
+        "frame-src": "https://challenges.cloudflare.com",
+    },
+    "hcaptcha": {
+        "script-src": "https://hcaptcha.com https://*.hcaptcha.com",
+        "frame-src": "https://hcaptcha.com https://*.hcaptcha.com",
+        "style-src": "https://hcaptcha.com https://*.hcaptcha.com",
+        "connect-src": "https://hcaptcha.com https://*.hcaptcha.com",
+    },
+}
+
+
+def _captcha_frame_csp(provider: str) -> str:
+    directives = {**_DIRECTIVES, "frame-src": "'self'", "frame-ancestors": "'self'"}
+    for name, sources in _CAPTCHA_SOURCES.get(provider, {}).items():
+        directives[name] = f"{directives[name]} {sources}"
+    return _render(directives)
+
+
+CAPTCHA_FRAME_CSP = {provider: _captcha_frame_csp(provider) for provider in (*_CAPTCHA_SOURCES, "altcha")}
+
 # FastAPI's API docs page loads Swagger UI from a CDN; it is a developer page outside the app itself.
 DOCS_CSP = (
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
@@ -59,6 +100,15 @@ class SecurityMiddleware:
             return origin.decode("latin-1") != self.origin
         return headers.get(b"sec-fetch-site", b"same-origin") not in (b"same-origin", b"none")
 
+    def _csp(self, path: str, query: bytes) -> str:
+        if path == self.docs_path:
+            return DOCS_CSP
+        if path == CAPTCHA_FRAME_PATH:
+            # Only the fixed sources of a known provider; the query cannot name others.
+            provider = parse_qs(query.decode("latin-1")).get("provider", [""])[0]
+            return CAPTCHA_FRAME_CSP.get(provider, CSP)
+        return CSP
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
@@ -68,7 +118,7 @@ class SecurityMiddleware:
         if scope["method"] not in _SAFE_METHODS and path.startswith("/api/") and self._cross_site(headers):
             await _reject(send, headers.get(b"origin", b"another site").decode("latin-1"), self.origin)
             return
-        csp = (DOCS_CSP if path == self.docs_path else CSP).encode()
+        csp = self._csp(path, scope.get("query_string", b"")).encode()
 
         async def send_with_headers(message: Message) -> None:
             if message["type"] == "http.response.start":

@@ -10,6 +10,7 @@ from app.db import READ_METHODS, Database, DbSession
 from app.errors import ForbiddenError, UnauthorizedError
 from app.models import ApiToken, AuthSession, User
 from app.services import limits, sessions, tokens
+from app.services.captcha import CaptchaVerifier
 from app.services.clock import DAY_MS
 from app.services.throttle import LoginThrottle
 
@@ -24,8 +25,13 @@ def get_throttle(request: Request) -> LoginThrottle:
     return request.app.state.throttle
 
 
+def get_captcha(request: Request) -> CaptchaVerifier:
+    return request.app.state.captcha
+
+
 AppSettings = Annotated[Settings, Depends(get_settings)]
 Throttle = Annotated[LoginThrottle, Depends(get_throttle)]
+Captcha = Annotated[CaptchaVerifier, Depends(get_captcha)]
 
 
 def client_ip(request: Request) -> str:

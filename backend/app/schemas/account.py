@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.admin import CAPTCHA_TOKEN_MAX
+
 Theme = Literal["system", "light", "dark"]
 View = Literal["grid", "list"]
 
@@ -12,13 +14,17 @@ class SetupRequest(BaseModel):
     password: str = Field(max_length=1024)
 
 
+CaptchaToken = Field(default=None, max_length=CAPTCHA_TOKEN_MAX)
+
+
 class RegisterRequest(SetupRequest):
-    pass
+    captcha_token: str | None = CaptchaToken
 
 
 class LoginRequest(BaseModel):
     email: str = Field(max_length=320)
     password: str = Field(max_length=1024)
+    captcha_token: str | None = CaptchaToken
 
 
 class Me(BaseModel):
@@ -69,6 +75,7 @@ class InviteAccept(TokenRequest):
     email: str | None = Field(default=None, max_length=320)
     display_name: str = Field(max_length=100)
     password: str = Field(max_length=1024)
+    captcha_token: str | None = CaptchaToken
 
 
 class PasswordReset(TokenRequest):
