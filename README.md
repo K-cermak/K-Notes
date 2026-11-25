@@ -1,12 +1,29 @@
-# K-Notes
+<p align="center">
+  <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.karlosoft.com/cdn-data/ks/img/knotes/logo-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://cdn.karlosoft.com/cdn-data/ks/img/knotes/logo-light.svg">
+      <img alt="K-Notes" src="https://cdn.karlosoft.com/cdn-data/ks/img/knotes/logo-light.svg" width="500">
+  </picture>
+  <p align="center">
+    <a href="https://k-notes.karlosoft.com/"><strong>Website</strong></a>
+    &nbsp;·&nbsp;
+    <a href="#quick-start"><strong>Quick start</strong></a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/K-cermak/K-Notes/issues"><strong>Report a problem</strong></a>
+  </p>
+</p>
+
+<br>
 
 Self-hosted notes with the layout and habits of Google Keep: quick notes, checklists, labels, colours and images. It installs on phones as a web app (PWA), works fully offline and syncs between devices within moments when online. One small server keeps everything in one directory, so a backup is a copy of that directory.
 
-![Notes in the light theme](docs/screenshots/notes-light.png)
+> **Note:** K-Notes is heavily vibe-coded: most of its code was written with an AI assistant and only partly reviewed by a human. It is fine for everyday notes, but it is not recommended for critical systems or anywhere lost or wrong data could cause harm. Keep backups.
+
+![Notes in the light theme](https://cdn.karlosoft.com/cdn-data/ks/img/knotes/github-notes-light.png)
 
 | Dark theme | Editing a note | On a phone |
 | --- | --- | --- |
-| ![Notes in the dark theme](docs/screenshots/notes-dark.png) | ![A note open in the editor](docs/screenshots/editor.png) | ![The notes on a phone](docs/screenshots/phone.png) |
+| ![Notes in the dark theme](https://cdn.karlosoft.com/cdn-data/ks/img/knotes/github-notes-dark.png) | ![A note open in the editor](https://cdn.karlosoft.com/cdn-data/ks/img/knotes/github-editor.png) | ![The notes on a phone](https://cdn.karlosoft.com/cdn-data/ks/img/knotes/github-phone.png) |
 
 ## Features
 
