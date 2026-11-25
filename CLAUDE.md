@@ -32,18 +32,20 @@ backend/
     schemas/         Pydantic request and response models
     api/             routers (auth, sync, blobs, admin, tokens, notes)
     services/        business logic (merge.py is the single write path)
-    cli.py           admin commands (reset-password, disable-totp, make-admin)
+    cli.py           admin commands (reset-password, disable-totp, make-admin, disable-captcha)
   tests/
 frontend/
   src/
     api/             generated schema and typed client
     db/              Dexie schema and repositories
     sync/            outbox, sync engine, blob transfer
+    captcha/         script of captcha.html and its messages to the form
     stores/          Pinia stores
     components/
     views/
     locales/         en.json
     styles/          tokens.css, base.css, ui.css (plain, reusable CSS); main.css (Tailwind, app-only)
+  captcha.html       the page the captcha widget runs in, framed by the sign-in forms
   e2e/               Playwright tests
 docs/                SPEC.md
 Images/              logo artwork and README screenshots, published on the CDN; ignored by git

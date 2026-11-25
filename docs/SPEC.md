@@ -16,6 +16,7 @@ The app is a web app. On phones it is used as a PWA added to the home screen, wi
 - Light and dark theme.
 - Multiple user accounts: first-run setup creates the admin; admins invite further users by link; optional open registration.
 - Login by password, optional TOTP second factor, optional OIDC single sign-on.
+- An optional captcha on sign-in and registration (section 7, added after 0.1.0).
 - Personal API tokens and a small REST API for scripts.
 - Offline-first sync across devices, near-instant when online.
 
@@ -76,12 +77,12 @@ The main resources, as a guide to the shape rather than a complete list:
 | Area | Endpoints |
 | --- | --- |
 | Public | `GET /config`, `GET /health` |
-| Auth | `POST /auth/setup`, `/auth/login`, `/auth/login/totp`, `/auth/logout`, `/auth/register`, `/auth/password-reset/*`, `GET /auth/oidc/login`, `GET /auth/oidc/callback` |
+| Auth | `POST /auth/setup`, `/auth/login`, `/auth/login/totp`, `/auth/logout`, `/auth/register`, `/auth/invite/*`, `/auth/password-reset/*`, `GET /auth/oidc/login`, `GET /auth/oidc/callback`, `GET /auth/captcha/challenge` |
 | Account | `GET` and `PATCH /me`, `/me/password`, `/me/totp/*`, `/me/sessions`, `/me/tokens`, `/me/oidc` |
 | Sync | `POST /sync/push`, `GET /sync/pull`, `GET /sync/events` (section 5.3) |
 | Blobs | `HEAD`, `PUT` and `GET /blobs/{hash}` (section 6) |
 | Notes for tokens | `/notes`, `/labels` (section 8) |
-| Admin | `/admin/users`, `/admin/invites`, `/admin/settings`, `/admin/status` |
+| Admin | `/admin/users`, `/admin/invites`, `/admin/settings`, `/admin/captcha`, `/admin/status` |
 
 ## 3. Configuration
 
@@ -111,7 +112,7 @@ Three limits are not environment variables but instance settings an admin change
 
 The app must start and be usable with nothing set except `APP_BASE_URL`. Validate configuration at startup and fail with a message that names the variable and the problem.
 
-`GET /api/v1/config` is public and returns what the client needs before login: app name, version, whether first-run setup is still needed, whether registration is open, whether password login and OIDC are enabled, the OIDC button label, trash retention days and the image size limit.
+`GET /api/v1/config` is public and returns what the client needs before login: app name, version, whether first-run setup is still needed, whether registration is open, whether password login and OIDC are enabled, the OIDC button label, trash retention days, the image size limit, and the captcha: its provider, site key and whether sign-in and registration ask for it, or `null` when it is off.
 
 ## 4. Data model
 
@@ -159,7 +160,7 @@ Every synced row has these bookkeeping columns in addition to its own fields:
 - **recovery_codes**: `user_id`, `code_hash`, `used_at`.
 - **blobs**: (`user_id`, `hash`) primary key, `size`, `mime`, `created_at`.
 - **applied_ops**: (`user_id`, `op_id`) primary key, `result`, `created_at`. Makes pushes idempotent. Rows older than 30 days are pruned.
-- **settings**: key and value. Holds `registration_enabled`, `default_storage_limit_bytes` and the instance limits `trash_retention_days`, `max_image_mb` and `session_days`; a missing key means the default.
+- **settings**: key and value. Holds `registration_enabled`, `default_storage_limit_bytes`, the instance limits `trash_retention_days`, `max_image_mb` and `session_days`, and `captcha` (JSON with the provider, where it applies, the site key and the secret key); a missing key means the default.
 
 ### 4.1 Rich text
 
@@ -331,12 +332,12 @@ After purging, delete blob files that no live attachment of that user references
 
   Never link on an unverified e-mail: that would let anyone who can set an arbitrary e-mail at the provider take over an account. A signed-in user can also link and unlink their OIDC identity in settings. Unlinking is refused if it would leave the account with no way to log in. `APP_PASSWORD_LOGIN_ENABLED=false` hides the password form for instances that want OIDC only, and is refused at startup unless OIDC is configured.
 - **API tokens.** A user creates named tokens in settings, choosing a scope and an optional expiry. The token is shown once and has a short fixed prefix followed by random characters, so leaked tokens are recognisable. Store its SHA-256 hash and the first few characters for display. Clients send it as `Authorization: Bearer`. `read` allows GET requests on note data; `write` additionally allows creating, changing and deleting it. No token can reach account, security or admin endpoints: password, TOTP, sessions, tokens, OIDC linking, user management. Settings shows each token's scope, expiry and last use, and can revoke it.
-- **Admin.** List users, invite by link, produce a password reset link, reset a user's TOTP, deactivate or reactivate, delete (removes all the user's data and blobs), grant or revoke admin rights, toggle registration. The admin area also shows instance status: version and whether OIDC is configured. An admin cannot see other users' notes. There can be several admins. Two guards, enforced on the server and reflected in the UI by disabled controls:
+- **Admin.** List users, invite by link, produce a password reset link, reset a user's TOTP, deactivate or reactivate, delete (removes all the user's data and blobs), grant or revoke admin rights, toggle registration, configure the captcha. The admin area also shows instance status: version and whether OIDC is configured. An admin cannot see other users' notes. There can be several admins. Two guards, enforced on the server and reflected in the UI by disabled controls:
   - The instance always keeps at least one active admin: the last one cannot be demoted, deactivated or deleted.
   - Admins cannot revoke their own admin rights or deactivate or delete their own account from the admin screen, so nobody locks themselves out by accident.
   
   Deactivating a user or revoking admin rights takes effect immediately: deactivating deletes the user's sessions and their API tokens stop working, and admin checks read the current flag on every request. A deactivated account cannot log in by password or through OIDC, and its API tokens are refused.
-- **Lost passwords.** The app sends no e-mail. The login page says to ask the administrator, who generates a single-use reset link and passes it on; the user sets the new password themselves. For a locked-out admin: `docker exec <container> python -m app.cli reset-password <email>`. The CLI can also disable TOTP for a user (`disable-totp`) and promote a user to admin (`make-admin`).
+- **Lost passwords.** The app sends no e-mail. The login page says to ask the administrator, who generates a single-use reset link and passes it on; the user sets the new password themselves. For a locked-out admin: `docker exec <container> python -m app.cli reset-password <email>`. The CLI can also disable TOTP for a user (`disable-totp`), promote a user to admin (`make-admin`) and turn off the captcha (`disable-captcha`).
 - **Secrets.** Session tokens, API tokens, invite and reset tokens and recovery codes are stored only as hashes and compared in constant time. Never log secrets, tokens or passwords.
 
 ### Storage quotas
@@ -349,9 +350,19 @@ Added during development at the owner's request.
 - **Enforcement.** The app knows the usage and the limit from `GET /me/storage`, refreshed after every sync cycle, and disables the actions above while the user is over. The server does not refuse sync pushes or image uploads because of the quota: a device that was offline could not have known, and its changes must not be lost, so they may take the user over the limit. The REST API for tokens, which is always online, refuses to create notes over the limit (`storage_full`). A modified client could therefore exceed the quota; it protects against accidents on a trusted instance, not against a hostile user.
 - **Shown** at the bottom of the navigation drawer and in the Storage section of settings, as "X of Y used" with a usage bar, or as "X used" without a bar when the user has no limit; and in the admin user list with each user's usage and limit. (The drawer and the settings section were added by the owner before 0.1.0.)
 
+### Captcha
+
+Added after 0.1.0 at the owner's request.
+
+- **Providers.** Google reCAPTCHA v2 (the "I'm not a robot" checkbox), Cloudflare Turnstile, hCaptcha, or ALTCHA. The first three are hosted: the browser loads their widget, and the server checks the token at their verification endpoint. ALTCHA is a proof of work that the server issues (`GET /auth/captcha/challenge`, 404 unless ALTCHA is chosen) and checks itself, with keys derived from the secret key; it needs no keys and contacts no third party. Each solved ALTCHA challenge is accepted once, remembered in memory until it expires, which is enough for one process.
+- **Where.** The admin chooses sign-in, registration or both. Registration covers open registration and invite links. Only the password step of sign-in asks; the TOTP step, first-run setup, password reset links and OIDC do not.
+- **Failures.** A missing or rejected token is refused with 400 `captcha_failed` before the password is checked, and does not count as a failed login. A provider that cannot be reached refuses the request with 502 `captcha_unavailable` rather than letting it through. Tokens work once, so the form shows a fresh widget after every failed attempt.
+- **Keys.** The site key and the secret key are kept in `settings`; the secret key is never sent back to a browser. New keys, or a new hosted provider, take effect only with a token solved against them, which the admin page collects with a test widget, so a mistyped key cannot lock everyone out. When the provider rejects the secret key itself, the admin sees `captcha_secret_invalid`. If the keys stop working later, `python -m app.cli disable-captcha` turns the captcha off.
+- **The frame.** The widget runs in a same-origin frame, `/captcha.html?provider=…&sitekey=…`, which passes the token to the form with `postMessage` and reports its height, so challenge pop-ups are not cut off. Only this page's Content-Security-Policy admits the provider's origins, from a fixed list per provider chosen by the `provider` parameter, and it allows `frame-ancestors 'self'`. The app's own policy never changes: the service worker keeps `index.html` with the headers it was first fetched with, so a policy that followed the admin's setting would not reach installed apps. For the same reason the service worker does not cache `/captcha.html`.
+
 ### Security headers
 
-Send a Content-Security-Policy that allows scripts and styles only from the app's own origin, images from `self`, `blob:` and `data:`, and connections only to `self`. Also send `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and `frame-ancestors 'none'`. All fonts and icons are bundled; the app loads nothing from third-party origins.
+Send a Content-Security-Policy that allows scripts and styles only from the app's own origin, images from `self`, `blob:` and `data:`, and connections only to `self`. Also send `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and `frame-ancestors 'none'`. All fonts and icons are bundled; the app loads nothing from third-party origins. The one exception is the captcha frame, when an admin chooses a hosted captcha (see Captcha above).
 
 ## 8. REST API for tokens
 
@@ -478,14 +489,14 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - **Make a copy** duplicates a note with its items, labels and image references.
 - **Keyboard**: `c` new note, `l` new checklist, `/` focus search, `Esc` close editor or clear selection, `Ctrl/Cmd+Enter` close editor.
 - **Trash view**: a notice saying notes are deleted after N days (from `/config`; hidden when purging is off) and an "Empty trash" button. Cards offer restore and delete forever.
-- **Settings**: theme, language, default view, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota, the instance limits from section 3 and instance status.
+- **Settings**: theme, language, default view, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the captcha, the default storage quota, the instance limits from section 3 and instance status.
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
 - **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal. Known limitation, accepted by the owner: reordering notes and checklist items works only by dragging with a pointer or touch, as in Keep; there is no keyboard equivalent.
 
 ## 10. PWA
 
-- `vite-plugin-pwa` in `generateSW` mode. Precache the app shell and all bundled assets. Navigation requests fall back to `index.html`. Never cache `/api/`.
+- `vite-plugin-pwa` in `generateSW` mode. Precache the app shell and all bundled assets. Navigation requests fall back to `index.html`. Never cache `/api/` or the captcha frame `/captcha.html`.
 - Web manifest with its name, short name and theme colour taken from `branding.json`, the app's icons, `display: standalone`, theme colors for both themes, and maskable icons. Add `apple-touch-icon` and the iOS meta tags.
 - When a new version is available, show a snackbar "Update available" with a Reload action. Do not reload by itself; the user may be typing.
 - On iOS Safari outside standalone mode, show a dismissible hint explaining Share → Add to Home Screen. This matters beyond convenience: Safari may delete a site's data after seven days without use, and home screen apps are exempt.
@@ -507,6 +518,6 @@ Themes follow the system by default, with light and dark as explicit choices in 
 
 ## 12. Testing
 
-- **pytest**: every merge rule in 5.4 and 5.5 as separate cases (clean apply, concurrent content edit with each side winning, same-device follow-up op, non-content field, tombstones, idempotent replay, one copy per note per batch, label name collision); pull windowing; trash purge and blob cleanup; auth flows including first-run setup, invites, reset links, the admin guards, TOTP, OIDC against a fake provider, and token scopes; user isolation (one user can never read or write another's rows or blobs, and gets 404 for them).
+- **pytest**: every merge rule in 5.4 and 5.5 as separate cases (clean apply, concurrent content edit with each side winning, same-device follow-up op, non-content field, tombstones, idempotent replay, one copy per note per batch, label name collision); pull windowing; trash purge and blob cleanup; auth flows including first-run setup, invites, reset links, the admin guards, TOTP, OIDC against a fake provider, the captcha against fake verification endpoints and with real ALTCHA solutions, and token scopes; user isolation (one user can never read or write another's rows or blobs, and gets 404 for them).
 - **Vitest** with `fake-indexeddb`: outbox coalescing, applying pulled rows under pending ops, the sync cycle order, retry and `401` handling, image processing decisions, search normalisation.
-- **Playwright**: first-run setup and first note; two browser contexts where a change in one appears in the other; an offline edit that syncs after reconnecting (`context.setOffline`); a concurrent offline edit of the same note that produces a conflict copy; attaching an image offline; reload while offline.
+- **Playwright**: first-run setup and first note; two browser contexts where a change in one appears in the other; an offline edit that syncs after reconnecting (`context.setOffline`); a concurrent offline edit of the same note that produces a conflict copy; attaching an image offline; reload while offline; signing in with ALTCHA turned on.

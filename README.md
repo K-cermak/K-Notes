@@ -34,6 +34,7 @@ Self-hosted notes with the layout and habits of Google Keep: quick notes, checkl
 - Works offline: create, edit, reorder and delete without a connection; changes sync when it comes back. Edits of the same note on two offline devices never overwrite each other silently: the losing version is kept as a conflict copy.
 - Several accounts, each with private notes: invite people by link, or open registration.
 - Password login with optional two-step verification (TOTP), optional single sign-on through any OIDC provider.
+- An optional captcha on sign-in, registration or both: Google reCAPTCHA v2, Cloudflare Turnstile, hCaptcha, or ALTCHA, which runs on your own server.
 - Personal API tokens and a small REST API for scripts.
 - Light and dark theme.
 
@@ -91,13 +92,28 @@ All settings are environment variables. Only `APP_BASE_URL` is required. The ser
 | `APP_TRUSTED_PROXIES` | | Comma-separated addresses or networks of reverse proxies whose `X-Forwarded-For` is believed, for the client address in logs and sign-in throttling |
 | `APP_LOG_LEVEL` | `info` | `debug`, `info`, `warning`, `error` or `critical` |
 
-Open registration, storage limits per user, how long notes stay in the trash (7 days at first), the largest image (10 MB) and how long a sign-in lasts without use (180 days) are set by an administrator in the app, not here.
+Open registration, the captcha, storage limits per user, how long notes stay in the trash (7 days at first), the largest image (10 MB) and how long a sign-in lasts without use (180 days) are set by an administrator in the app, not here.
 
 ### Single sign-on (OIDC)
 
 Register the app with your provider (Authentik, Keycloak, Authelia, Google, …) as a confidential client using the authorization code flow, with the redirect URI `https://notes.example.com/api/v1/auth/oidc/callback` (your `APP_BASE_URL` followed by `/api/v1/auth/oidc/callback`) and the scopes `openid email profile`. Then set the three OIDC variables.
 
 Someone signing in through the provider is matched to an account in this order: an account already linked to them; an account with the same e-mail address, if the provider says the address is verified; a new account, if `APP_OIDC_AUTO_PROVISION` is on. Otherwise they are told to ask an administrator. Signed-in users can link and unlink the provider in their security settings.
+
+### Captcha
+
+An administrator can ask for a captcha under Administration → Captcha, on sign-in, on registration (open registration and invite links) or on both. Single sign-on, two-step verification codes and password reset links never ask for one.
+
+| Provider | Keys | Privacy |
+| --- | --- | --- |
+| ALTCHA | none | The browser solves a short calculation (about a second) that this server issues and checks. Nothing goes to a third party, and it works without internet access. |
+| Cloudflare Turnstile | site key and secret key from the Cloudflare dashboard | Cloudflare sees the address and browser of everyone who opens the form. |
+| Google reCAPTCHA v2 | a v2 "I'm not a robot" checkbox key pair from the reCAPTCHA admin console | Google sees the address and browser of everyone who opens the form. |
+| hCaptcha | site key and secret key from the hCaptcha dashboard | hCaptcha sees the address and browser of everyone who opens the form. |
+
+Register your domain with the provider. New keys take effect only after you solve the captcha once on the administration page, so a mistyped key cannot lock anyone out. If keys stop working later, for example because they were deleted at the provider, turn the captcha off from the command line with `disable-captcha` (see below). With a hosted provider, the server must be able to reach its verification endpoint; if it cannot, sign-in is refused rather than let through.
+
+The widget runs in a small page of its own, `/captcha.html`, embedded in the form. Only that page's Content-Security-Policy allows the provider's scripts; the rest of the app keeps its strict policy.
 
 ## HTTPS and the reverse proxy
 
@@ -174,6 +190,7 @@ For a locked-out administrator, or when no one else can help:
 docker compose exec notes python -m app.cli reset-password someone@example.com   # prints a one-time reset link
 docker compose exec notes python -m app.cli disable-totp someone@example.com     # turns off two-step verification
 docker compose exec notes python -m app.cli make-admin someone@example.com       # grants admin rights
+docker compose exec notes python -m app.cli disable-captcha                       # turns off the captcha
 ```
 
 ## REST API
