@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { Archive, Lightbulb, NotebookPen, Pencil, Tag, Trash2 } from '@lucide/vue'
+import { Archive, Lightbulb, Pencil, Tag, Trash2 } from '@lucide/vue'
 import { byName } from '@/db/labels'
 import { db } from '@/db/schema'
 import { useLiveQuery } from '@/composables/useLiveQuery'
 import { useSyncStore } from '@/stores/sync'
+import AppLogo from '@/components/AppLogo.vue'
 import StorageUsage from '@/components/StorageUsage.vue'
 import branding from '@branding'
 import type { NotesView } from '@/notes'
@@ -78,9 +79,7 @@ function navigated(): void {
     @pointerleave="!compact && leave()"
   >
     <div v-if="compact" class="mb-2 flex h-14 items-center gap-3 px-5">
-      <span class="grid size-8 place-items-center bg-ink text-bg" aria-hidden="true">
-        <NotebookPen :size="18" />
-      </span>
+      <AppLogo />
       <span class="text-[17px] font-semibold tracking-[-0.02em]">{{ branding.name }}</span>
     </div>
     <template v-for="item in items" :key="item.view">
