@@ -1,20 +1,17 @@
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.config import Settings
 from app.errors import NotFoundError
 from app.models import AuthSession, User
 from app.schemas.account import SessionInfo
-from app.services import clock, credentials
+from app.services import clock, credentials, limits
 from app.services.clock import DAY_MS
 
 # Sliding the expiry on every request would turn every read into a write.
 TOUCH_INTERVAL_MS = 60 * 60 * 1000
 
 
-def create(
-    db: Session, settings: Settings, user: User, *, method: str, user_agent: str | None, ip: str | None
-) -> str:
+def create(db: Session, user: User, *, method: str, user_agent: str | None, ip: str | None) -> str:
     """Start a session and return its token, which is only ever stored as a hash."""
     token = credentials.new_token()
     now = clock.now_ms()
@@ -25,7 +22,7 @@ def create(
             auth_method=method,
             created_at=now,
             last_used_at=now,
-            expires_at=now + settings.session_days * DAY_MS,
+            expires_at=now + limits.session_days(db) * DAY_MS,
             user_agent=(user_agent or "")[:300] or None,
             ip=ip,
         )
@@ -51,13 +48,13 @@ def touch_due(session: AuthSession) -> bool:
     return clock.now_ms() - session.last_used_at >= TOUCH_INTERVAL_MS
 
 
-def touch(db: Session, settings: Settings, session_id: str) -> None:
+def touch(db: Session, session_id: str) -> None:
     session = db.get(AuthSession, session_id)
     if session is None:
         return
     now = clock.now_ms()
     session.last_used_at = now
-    session.expires_at = now + settings.session_days * DAY_MS
+    session.expires_at = now + limits.session_days(db) * DAY_MS
     db.commit()
 
 

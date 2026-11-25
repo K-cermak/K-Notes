@@ -9,7 +9,7 @@ from app.api.deps import SESSION_COOKIE, CurrentAuth, session_user
 from app.config import Settings
 from app.db import Database, DbSession
 from app.errors import ErrorResponse, NotFoundError, UnauthorizedError
-from app.services import blobs
+from app.services import blobs, limits
 
 router = APIRouter(prefix="/blobs", tags=["blobs"])
 
@@ -25,6 +25,11 @@ def head_blob(blob_hash: BlobHash, auth: CurrentAuth, db: DbSession) -> Response
     if blobs.find(db, auth.user.id, blob_hash) is None:
         raise NotFoundError()
     return Response(status_code=status.HTTP_200_OK)
+
+
+def _max_image_mb(database: Database) -> int:
+    with database.reader() as db:
+        return limits.max_image_mb(db)
 
 
 def _store(database: Database, settings: Settings, user_id: str, blob_hash: str, upload: FilePath) -> None:
@@ -43,7 +48,7 @@ def _store(database: Database, settings: Settings, user_id: str, blob_hash: str,
     },
     responses={
         400: {"model": ErrorResponse, "description": "The bytes do not match the hash"},
-        413: {"model": ErrorResponse, "description": "Larger than APP_MAX_IMAGE_MB"},
+        413: {"model": ErrorResponse, "description": "Larger than the limit set by an admin"},
         415: {"model": ErrorResponse, "description": "Not a JPEG, PNG, WebP or GIF image"},
     },
 )
@@ -56,10 +61,11 @@ async def upload_blob(blob_hash: BlobHash, request: Request) -> None:
     found = await run_in_threadpool(session_user, database, request.cookies.get(SESSION_COOKIE))
     if found is None:
         raise UnauthorizedError()
+    limit_mb = await run_in_threadpool(_max_image_mb, database)
     length = request.headers.get("content-length", "")
-    if length.isdigit() and int(length) > settings.max_image_mb * 1024 * 1024:
-        raise blobs.BlobTooLargeError(settings.max_image_mb)
-    upload = await blobs.receive(request.stream(), settings, blob_hash)
+    if length.isdigit() and int(length) > limit_mb * 1024 * 1024:
+        raise blobs.BlobTooLargeError(limit_mb)
+    upload = await blobs.receive(request.stream(), settings, blob_hash, limit_mb)
     await run_in_threadpool(_store, database, settings, found[0], blob_hash, upload)
 
 

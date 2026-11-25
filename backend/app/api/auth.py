@@ -39,14 +39,13 @@ def _sign_in(
 ) -> Me:
     token = sessions.create(
         db,
-        settings,
         user,
         method=method,
         user_agent=request.headers.get("user-agent"),
         ip=client_ip(request),
     )
     db.commit()
-    set_session_cookie(response, settings, token)
+    set_session_cookie(response, settings, db, token)
     return accounts.to_me(user)
 
 

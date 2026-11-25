@@ -1,17 +1,5 @@
-import { expect, test, type Browser } from '@playwright/test'
-import { addNote, admin, card, newUser, openNote, signedIn } from './helpers'
-
-async function adminPage(browser: Browser) {
-  const context = await browser.newContext()
-  const page = await context.newPage()
-  await page.goto('/login')
-  await page.getByLabel('E-mail').fill(admin.email)
-  await page.getByLabel('Password').fill(admin.password)
-  await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByTestId('sync-status')).toBeVisible()
-  await page.goto('/admin')
-  return { context, page }
-}
+import { expect, test } from '@playwright/test'
+import { addNote, adminPage, card, newUser, openNote, signedIn } from './helpers'
 
 test('over the quota a user cannot create notes until they delete enough', async ({ browser }) => {
   const user = await newUser(browser)

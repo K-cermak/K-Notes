@@ -97,7 +97,6 @@ def oidc_callback(
     # Second factors are the identity provider's job, so TOTP is not asked for here (SPEC 7).
     token = sessions.create(
         db,
-        settings,
         user,
         method="oidc",
         user_agent=request.headers.get("user-agent"),
@@ -105,5 +104,5 @@ def oidc_callback(
     )
     db.commit()
     response = _redirect(flow.next)
-    set_session_cookie(response, settings, token)
+    set_session_cookie(response, settings, db, token)
     return response

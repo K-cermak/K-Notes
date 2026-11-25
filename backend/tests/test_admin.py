@@ -1,5 +1,6 @@
 import re
 from collections.abc import Callable
+from typing import Any
 
 import pytest
 from fastapi import FastAPI
@@ -260,3 +261,32 @@ def test_user_list_and_status(admin: TestClient, make_user: Callable[..., TestCl
 def test_unknown_user_returns_404(admin: TestClient) -> None:
     assert admin.patch("/api/v1/admin/users/nope", json={"is_active": False}).status_code == 404
     assert admin.post("/api/v1/admin/users/nope/reset-link").status_code == 404
+
+
+def test_instance_limits_default_update_and_validation(admin: TestClient) -> None:
+    def limits(settings: dict[str, Any]) -> dict[str, Any]:
+        return {key: settings[key] for key in ("trash_retention_days", "max_image_mb", "session_days")}
+
+    assert limits(admin.get("/api/v1/admin/settings").json()) == {
+        "trash_retention_days": 7,
+        "max_image_mb": 10,
+        "session_days": 180,
+    }
+    changed = {"trash_retention_days": 0, "max_image_mb": 25, "session_days": 30}
+    assert limits(admin.patch("/api/v1/admin/settings", json=changed).json()) == changed
+    # A partial update leaves the others as they are.
+    after = admin.patch("/api/v1/admin/settings", json={"registration_enabled": True}).json()
+    assert limits(after) == changed
+
+    config = admin.get("/api/v1/config").json()
+    assert (config["trash_retention_days"], config["max_image_mb"]) == (0, 25)
+
+    for invalid in (
+        {"trash_retention_days": -1},
+        {"trash_retention_days": 3651},
+        {"max_image_mb": 0},
+        {"max_image_mb": 101},
+        {"session_days": 0},
+        {"session_days": 3651},
+    ):
+        assert admin.patch("/api/v1/admin/settings", json=invalid).status_code == 422, invalid

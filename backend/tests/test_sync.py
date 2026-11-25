@@ -182,16 +182,32 @@ def test_trash_purge(app: FastAPI, device: Device, settings: Settings, fake_cloc
     assert device.push(device.op("note", old, {"title": "late"})) == ["gone"]
 
 
-def test_trash_purge_can_be_switched_off(
-    app: FastAPI, device: Device, settings: Settings, fake_clock: FakeClock
+def test_trash_retention_is_set_by_an_admin(
+    app: FastAPI, admin: TestClient, device: Device, fake_clock: FakeClock
 ) -> None:
+    note_id = new_id()
+    device.push(device.op("note", note_id, note_fields(), base_seq=0))
+    _trash(device, note_id, fake_clock.now - 4 * DAY_MS)
+    run_maintenance(app, clean_up=False)
+    device.pull()
+    assert device.note(note_id)["deleted"] is False
+
+    assert admin.patch("/api/v1/admin/settings", json={"trash_retention_days": 3}).status_code == 200
+    run_maintenance(app, clean_up=False)
+    device.pull()
+    assert device.note(note_id)["deleted"] is True
+
+
+def test_trash_purge_can_be_switched_off(
+    app: FastAPI, admin: TestClient, device: Device, fake_clock: FakeClock
+) -> None:
+    assert admin.patch("/api/v1/admin/settings", json={"trash_retention_days": 0}).status_code == 200
     note_id = new_id()
     device.push(device.op("note", note_id, note_fields(), base_seq=0))
     _trash(device, note_id, 0)
     db: Database = app.state.db
     with db.writer() as session:
-        off = settings.model_copy(update={"trash_retention_days": 0})
-        assert maintenance.purge_expired_trash(session, off) == {}
+        assert maintenance.purge_expired_trash(session) == {}
     device.pull()
     assert device.note(note_id)["deleted"] is False
 

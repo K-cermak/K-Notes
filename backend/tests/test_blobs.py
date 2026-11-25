@@ -123,8 +123,8 @@ def test_uploads_are_verified(device: Device, settings: Settings) -> None:
     assert list((blobs.blobs_dir(settings) / "tmp").glob("*")) == []
 
 
-def test_uploads_over_the_limit_are_refused(app: FastAPI, device: Device, settings: Settings) -> None:
-    app.state.settings = settings.model_copy(update={"max_image_mb": 1})
+def test_uploads_over_the_limit_are_refused(admin: TestClient, device: Device) -> None:
+    assert admin.patch("/api/v1/admin/settings", json={"max_image_mb": 1}).status_code == 200
     data = image_bytes("PNG") + b"\0" * (1024 * 1024)
     response = upload(device.client, data)
     assert (response.status_code, response.json()["code"]) == (413, "too_large")

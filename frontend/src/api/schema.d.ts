@@ -1109,6 +1109,15 @@ export interface components {
              * @description None when unlimited
              */
             default_storage_limit_bytes: number | null;
+            /**
+             * Trash Retention Days
+             * @description 0 when notes stay in the trash until deleted by hand
+             */
+            trash_retention_days: number;
+            /** Max Image Mb */
+            max_image_mb: number;
+            /** Session Days */
+            session_days: number;
         };
         /** InstanceSettingsUpdate */
         InstanceSettingsUpdate: {
@@ -1116,6 +1125,12 @@ export interface components {
             registration_enabled?: boolean | null;
             /** Default Storage Limit Bytes */
             default_storage_limit_bytes?: number | null;
+            /** Trash Retention Days */
+            trash_retention_days?: number | null;
+            /** Max Image Mb */
+            max_image_mb?: number | null;
+            /** Session Days */
+            session_days?: number | null;
         };
         /** InstanceStatus */
         InstanceStatus: {
@@ -2854,7 +2869,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Larger than APP_MAX_IMAGE_MB */
+            /** @description Larger than the limit set by an admin */
             413: {
                 headers: {
                     [name: string]: unknown;

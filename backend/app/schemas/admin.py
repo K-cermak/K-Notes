@@ -51,12 +51,18 @@ class PendingInvite(BaseModel):
 class InstanceSettings(BaseModel):
     registration_enabled: bool
     default_storage_limit_bytes: int | None = Field(description="None when unlimited")
+    trash_retention_days: int = Field(description="0 when notes stay in the trash until deleted by hand")
+    max_image_mb: int
+    session_days: int
 
 
 class InstanceSettingsUpdate(BaseModel):
     registration_enabled: bool | None = None
     # Sent as null, it makes the default unlimited; left out, it stays as it is.
     default_storage_limit_bytes: Annotated[int, Field(ge=0)] | None = None
+    trash_retention_days: Annotated[int, Field(ge=0, le=3650)] | None = None
+    max_image_mb: Annotated[int, Field(ge=1, le=100)] | None = None
+    session_days: Annotated[int, Field(ge=1, le=3650)] | None = None
 
 
 class InstanceStatus(BaseModel):

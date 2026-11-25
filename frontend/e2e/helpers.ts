@@ -83,3 +83,16 @@ export async function accountMenu(page: Page, item: string): Promise<void> {
   await page.getByTestId('account-menu').click()
   await page.getByRole('menuitem', { name: item }).click()
 }
+
+/** The admin signed in on a context of their own, on the administration page. */
+export async function adminPage(browser: Browser) {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  await page.goto('/login')
+  await page.getByLabel('E-mail').fill(admin.email)
+  await page.getByLabel('Password').fill(admin.password)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page.getByTestId('sync-status')).toBeVisible()
+  await page.goto('/admin')
+  return { context, page }
+}

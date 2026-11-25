@@ -40,7 +40,7 @@ def run_maintenance(app: FastAPI, *, clean_up: bool) -> None:
     db: Database = app.state.db
     settings: Settings = app.state.settings
     with db.writer() as session:
-        changed = maintenance.purge_expired_trash(session, settings)
+        changed = maintenance.purge_expired_trash(session)
         blob_store.clean_up(session, settings)
         if clean_up:
             maintenance.clean_up(session)

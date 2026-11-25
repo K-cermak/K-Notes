@@ -3,9 +3,8 @@ import logging
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
-from app.config import Settings
 from app.models import AppliedOp, AuthSession, Invite, Note, User
-from app.services import clock, merge
+from app.services import clock, limits, merge
 from app.services.clock import DAY_MS
 
 logger = logging.getLogger(__name__)
@@ -13,14 +12,15 @@ logger = logging.getLogger(__name__)
 APPLIED_OPS_RETENTION_MS = 30 * DAY_MS
 
 
-def purge_expired_trash(db: Session, settings: Settings) -> dict[str, int]:
+def purge_expired_trash(db: Session) -> dict[str, int]:
     """Purge notes that sat in the trash longer than the retention period (SPEC 5.7).
 
     Returns the new change counter of every user whose notes were purged, for the event stream.
     """
-    if settings.trash_retention_days == 0:
+    retention_days = limits.trash_retention_days(db)
+    if retention_days == 0:
         return {}
-    cutoff = clock.now_ms() - settings.trash_retention_days * DAY_MS
+    cutoff = clock.now_ms() - retention_days * DAY_MS
     expired = list(
         db.scalars(
             select(Note).where(

@@ -46,26 +46,11 @@ def test_trusted_proxies_are_comma_separated(monkeypatch: pytest.MonkeyPatch) ->
     assert load_settings().trusted_proxies == ["10.0.0.1", "172.16.0.0/12"]
 
 
-def test_negative_numbers_name_the_variable(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("APP_BASE_URL", "https://notes.example.com")
-    monkeypatch.setenv("APP_TRASH_RETENTION_DAYS", "-1")
-    with pytest.raises(ConfigError, match="APP_TRASH_RETENTION_DAYS: must not be negative"):
-        load_settings()
-
-
-@pytest.mark.parametrize("name", ["APP_MAX_IMAGE_MB", "APP_SESSION_DAYS"])
-def test_limits_must_be_positive(monkeypatch: pytest.MonkeyPatch, name: str) -> None:
-    monkeypatch.setenv("APP_BASE_URL", "https://notes.example.com")
-    monkeypatch.setenv(name, "0")
-    with pytest.raises(ConfigError, match=f"{name}: must be at least 1"):
-        load_settings()
-
-
 def test_every_problem_is_listed(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("APP_BASE_URL", "https://notes.example.com")
-    monkeypatch.setenv("APP_MAX_IMAGE_MB", "ten")
+    monkeypatch.setenv("APP_PASSWORD_LOGIN_ENABLED", "maybe")
     monkeypatch.setenv("APP_LOG_LEVEL", "loud")
-    with pytest.raises(ConfigError, match=r"(?s)APP_MAX_IMAGE_MB: .*integer.*APP_LOG_LEVEL: "):
+    with pytest.raises(ConfigError, match=r"(?s)APP_PASSWORD_LOGIN_ENABLED: .*boolean.*APP_LOG_LEVEL: "):
         load_settings()
 
 

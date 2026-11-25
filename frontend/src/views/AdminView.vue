@@ -15,6 +15,7 @@ import type { components } from '@/api/schema'
 import { useSubmit } from '@/composables/useSubmit'
 import { formatBytes } from '@/format'
 import { useConfirmStore } from '@/stores/confirm'
+import { useInstanceStore } from '@/stores/instance'
 import { useSessionStore } from '@/stores/session'
 import { useSnackbarStore } from '@/stores/snackbar'
 import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
@@ -28,6 +29,7 @@ const i18n = useI18n()
 const session = useSessionStore()
 const confirm = useConfirmStore()
 const snackbar = useSnackbarStore()
+const instance = useInstanceStore()
 const users = ref<AdminUser[]>([])
 const status = ref<components['schemas']['InstanceStatus'] | null>(null)
 const resetLink = ref<{ user: AdminUser; link: CreatedLink } | null>(null)
@@ -52,6 +54,32 @@ const load = useSubmit()
 const create = useSubmit()
 const toggle = useSubmit()
 
+type InstanceSettings = components['schemas']['InstanceSettings']
+const LIMITS = {
+  trash_retention_days: { min: 0, max: 3650 },
+  max_image_mb: { min: 1, max: 100 },
+  session_days: { min: 1, max: 3650 },
+} as const
+type LimitKey = keyof typeof LIMITS
+const limitKeys = Object.keys(LIMITS) as LimitKey[]
+const limits = ref<Record<LimitKey, string>>({
+  trash_retention_days: '',
+  max_image_mb: '',
+  session_days: '',
+})
+const savedRetention = ref(0)
+const limitErrors = ref<Partial<Record<LimitKey, string>>>({})
+const limitsSave = useSubmit()
+
+function showLimits(s: InstanceSettings): void {
+  limits.value = {
+    trash_retention_days: String(s.trash_retention_days),
+    max_image_mb: String(s.max_image_mb),
+    session_days: String(s.session_days),
+  }
+  savedRetention.value = s.trash_retention_days
+}
+
 async function refresh(): Promise<void> {
   await load.run(async () => {
     const [u, i, s, st] = await Promise.all([
@@ -64,6 +92,7 @@ async function refresh(): Promise<void> {
     invites.value = i
     registration.value = s.registration_enabled
     defaultLimitMb.value = mbText(s.default_storage_limit_bytes)
+    showLimits(s)
     status.value = st
   })
 }
@@ -162,6 +191,35 @@ async function saveDefaultLimit(): Promise<void> {
     users.value = await call(() => api.GET('/api/v1/admin/users'))
   })
   if (!toggle.error.value) snackbar.show(i18n.t('common.saved'))
+}
+
+async function saveLimits(): Promise<void> {
+  const body = {} as Record<LimitKey, number>
+  limitErrors.value = {}
+  for (const key of limitKeys) {
+    const value = Number(limits.value[key].trim())
+    const { min, max } = LIMITS[key]
+    if (!limits.value[key].trim() || !Number.isInteger(value) || value < min || value > max)
+      limitErrors.value[key] = i18n.t('admin.limits.range', { min, max })
+    body[key] = value
+  }
+  if (Object.keys(limitErrors.value).length) return
+  const retention = body.trash_retention_days
+  // Notes past the new period are purged within the hour, with no way back.
+  if (retention > 0 && (savedRetention.value === 0 || retention < savedRetention.value)) {
+    const sure = await confirm.ask({
+      title: i18n.t('admin.limits.shortenTitle'),
+      message: i18n.t('admin.limits.shortenMessage', { days: retention }, retention),
+      confirmLabel: i18n.t('admin.limits.shortenConfirm'),
+      danger: true,
+    })
+    if (!sure) return
+  }
+  await limitsSave.run(async () => {
+    showLimits(await call(() => api.PATCH('/api/v1/admin/settings', { body })))
+    await instance.load()
+  })
+  if (!limitsSave.error.value) snackbar.show(i18n.t('common.saved'))
 }
 
 async function createResetLink(user: AdminUser): Promise<void> {
@@ -441,6 +499,31 @@ onMounted(refresh)
             <UiButton type="submit">{{ $t('common.save') }}</UiButton>
           </div>
         </UiField>
+      </form>
+    </section>
+
+    <section class="flex flex-col gap-3">
+      <h2 class="ui-section-title">{{ $t('admin.limits.title') }}</h2>
+      <form class="flex flex-col gap-4 sm:w-80" novalidate @submit.prevent="saveLimits">
+        <UiField
+          v-for="key in limitKeys"
+          :key="key"
+          :label="$t(`admin.limits.${key}.label`)"
+          :for="`limit-${key}`"
+          :hint="$t(`admin.limits.${key}.hint`)"
+          :error="limitErrors[key]"
+        >
+          <UiInput
+            :id="`limit-${key}`"
+            v-model="limits[key]"
+            inputmode="numeric"
+            :invalid="!!limitErrors[key]"
+          />
+        </UiField>
+        <UiNotice v-if="limitsSave.error.value" tone="error">{{ limitsSave.error.value }}</UiNotice>
+        <UiButton type="submit" class="self-start" :disabled="limitsSave.pending.value">
+          {{ $t('common.save') }}
+        </UiButton>
       </form>
     </section>
 

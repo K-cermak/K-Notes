@@ -52,9 +52,9 @@ def find(db: Session, user_id: str, blob_hash: str) -> Blob | None:
     return db.get(Blob, (user_id, blob_hash))
 
 
-async def receive(chunks: AsyncIterator[bytes], settings: Settings, blob_hash: str) -> Path:
+async def receive(chunks: AsyncIterator[bytes], settings: Settings, blob_hash: str, limit_mb: int) -> Path:
     """Streams an upload to a temporary file, checking its size and hash on the way."""
-    limit = settings.max_image_mb * 1024 * 1024
+    limit = limit_mb * 1024 * 1024
     digest = hashlib.sha256()
     size = 0
     tmp_dir = blobs_dir(settings) / "tmp"
@@ -66,7 +66,7 @@ async def receive(chunks: AsyncIterator[bytes], settings: Settings, blob_hash: s
             async for chunk in chunks:
                 size += len(chunk)
                 if size > limit:
-                    raise BlobTooLargeError(settings.max_image_mb)
+                    raise BlobTooLargeError(limit_mb)
                 digest.update(chunk)
                 out.write(chunk)
         if digest.hexdigest() != blob_hash:

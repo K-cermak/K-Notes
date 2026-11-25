@@ -143,6 +143,25 @@
       "label": "Allow anyone to create an account",
       "hint": "When off, people can only join through an invite link."
     },
+    "limits": {
+      "title": "Limits",
+      "range": "Enter a whole number from {min} to {max}.",
+      "trash_retention_days": {
+        "label": "Delete notes from the trash after (days)",
+        "hint": "Counted from when a note is moved to the trash. 0 keeps notes until the trash is emptied manually."
+      },
+      "max_image_mb": {
+        "label": "Maximum image size (MB)",
+        "hint": "Images are resized on the device before upload; this applies to the result."
+      },
+      "session_days": {
+        "label": "Sign people out after inactivity (days)",
+        "hint": "How long people stay signed in without opening the app. Each visit resets it."
+      },
+      "shortenTitle": "Delete older notes in the trash?",
+      "shortenConfirm": "Save and delete",
+      "shortenMessage": "Notes that have been in the trash longer than {days} day will be deleted forever within the hour. | Notes that have been in the trash longer than {days} days will be deleted forever within the hour."
+    },
     "status": {
       "title": "Instance",
       "version": "Version",

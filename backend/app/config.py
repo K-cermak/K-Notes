@@ -32,9 +32,6 @@ class Settings(BaseSettings):
     data_dir: Path = Path("/data")
     base_url: str
     secret_key: str | None = None
-    trash_retention_days: int = 7
-    max_image_mb: int = 10
-    session_days: int = 180
     password_login_enabled: bool = True
     oidc_discovery_url: str | None = None
     oidc_client_id: str | None = None
@@ -94,20 +91,6 @@ class Settings(BaseSettings):
     @classmethod
     def _lower_log_level(cls, value: object) -> object:
         return value.lower() if isinstance(value, str) else value
-
-    @field_validator("trash_retention_days")
-    @classmethod
-    def _non_negative(cls, value: int) -> int:
-        if value < 0:
-            raise ValueError("must not be negative (0 turns purging off)")
-        return value
-
-    @field_validator("max_image_mb", "session_days")
-    @classmethod
-    def _positive(cls, value: int) -> int:
-        if value < 1:
-            raise ValueError("must be at least 1")
-        return value
 
     @model_validator(mode="after")
     def _check_oidc_complete(self) -> Settings:

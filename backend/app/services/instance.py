@@ -6,7 +6,7 @@ from app.config import Settings
 from app.models import Setting
 from app.schemas.admin import InstanceSettings, InstanceSettingsUpdate, InstanceStatus
 from app.schemas.public import PublicConfig
-from app.services import accounts, storage
+from app.services import accounts, limits, storage
 from app.version import VERSION
 
 _REGISTRATION = "registration_enabled"
@@ -30,8 +30,8 @@ def public_config(settings: Settings, db: Session) -> PublicConfig:
         password_login_enabled=settings.password_login_enabled,
         oidc_enabled=settings.oidc_enabled,
         oidc_provider_name=settings.oidc_provider_name,
-        trash_retention_days=settings.trash_retention_days,
-        max_image_mb=settings.max_image_mb,
+        trash_retention_days=limits.trash_retention_days(db),
+        max_image_mb=limits.max_image_mb(db),
     )
 
 
@@ -39,6 +39,9 @@ def get_settings(db: Session) -> InstanceSettings:
     return InstanceSettings(
         registration_enabled=registration_enabled(db),
         default_storage_limit_bytes=storage.default_limit(db),
+        trash_retention_days=limits.trash_retention_days(db),
+        max_image_mb=limits.max_image_mb(db),
+        session_days=limits.session_days(db),
     )
 
 
@@ -47,6 +50,10 @@ def update_settings(db: Session, update: InstanceSettingsUpdate) -> InstanceSett
         db.merge(Setting(key=_REGISTRATION, value="true" if update.registration_enabled else "false"))
     if "default_storage_limit_bytes" in update.model_fields_set:
         storage.set_default_limit(db, update.default_storage_limit_bytes)
+    for key in (limits.TRASH_RETENTION_DAYS, limits.MAX_IMAGE_MB, limits.SESSION_DAYS):
+        value = getattr(update, key)
+        if value is not None:
+            limits.set_value(db, key, value)
     db.commit()
     return get_settings(db)
 
