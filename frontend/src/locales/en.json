@@ -136,7 +136,7 @@
       "reactivate": "Reactivate",
       "delete": "Delete account",
       "deleteTitle": "Delete {name}?",
-      "deleteMessage": "Their account, notes and images are deleted for good."
+      "deleteMessage": "Their account, notes and images are deleted forever."
     },
     "registration": {
       "title": "Registration",
