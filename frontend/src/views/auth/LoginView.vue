@@ -3,11 +3,13 @@ import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, call, type Me } from '@/api/client'
+import { useCaptcha } from '@/composables/useCaptcha'
 import { useSubmit } from '@/composables/useSubmit'
 import { afterSignIn } from '@/router'
 import { useInstanceStore } from '@/stores/instance'
 import { useSessionStore } from '@/stores/session'
 import AuthLayout from '@/components/AuthLayout.vue'
+import CaptchaFrame from '@/components/CaptchaFrame.vue'
 import OidcButton from '@/components/OidcButton.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiField from '@/components/ui/UiField.vue'
@@ -19,8 +21,9 @@ const router = useRouter()
 const i18n = useI18n()
 const instance = useInstanceStore()
 const session = useSessionStore()
-const { pending, error, attempt } = useSubmit({ unauthorized: 'login.invalid' })
+const { pending, error, failure, attempt } = useSubmit({ unauthorized: 'login.invalid' })
 const second = useSubmit({ unauthorized: 'login.invalidCode' })
+const { config: captcha, token: captchaToken, afterFailure } = useCaptcha('login')
 
 const email = ref('')
 const password = ref('')
@@ -44,11 +47,18 @@ async function finish(me: Me): Promise<void> {
 async function submit(): Promise<void> {
   const result = await attempt(() =>
     call(() =>
-      api.POST('/api/v1/auth/login', { body: { email: email.value, password: password.value } }),
+      api.POST('/api/v1/auth/login', {
+        body: { email: email.value, password: password.value, captcha_token: captchaToken.value },
+      }),
     ),
   )
-  if (!result) return
+  if (!result) {
+    await afterFailure(failure.value)
+    return
+  }
   if ('pending_token' in result) {
+    // The token is spent; going back to the password step shows a fresh captcha.
+    captchaToken.value = null
     pendingToken.value = result.pending_token
     await nextTick()
     codeField.value?.focus()
@@ -125,6 +135,13 @@ async function submitCode(): Promise<void> {
             required
           />
         </UiField>
+        <CaptchaFrame
+          v-if="captcha"
+          ref="captchaFrame"
+          v-model="captchaToken"
+          :provider="captcha.provider"
+          :site-key="captcha.site_key"
+        />
         <UiNotice v-if="error" tone="error">{{ error }}</UiNotice>
         <UiButton type="submit" variant="primary" :loading="pending">
           {{ $t('login.submit') }}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   DropdownMenuContent,
@@ -19,11 +19,13 @@ import { useInstanceStore } from '@/stores/instance'
 import { useSessionStore } from '@/stores/session'
 import { useSnackbarStore } from '@/stores/snackbar'
 import { iconButton, menuItem, menuPanel } from '@/components/ui/menu'
+import CaptchaFrame from '@/components/CaptchaFrame.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiCheckbox from '@/components/ui/UiCheckbox.vue'
 import UiField from '@/components/ui/UiField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiNotice from '@/components/ui/UiNotice.vue'
+import UiSegmented from '@/components/ui/UiSegmented.vue'
 
 const i18n = useI18n()
 const session = useSessionStore()
@@ -80,14 +82,95 @@ function showLimits(s: InstanceSettings): void {
   savedRetention.value = s.trash_retention_days
 }
 
+type CaptchaSettings = components['schemas']['CaptchaSettings']
+type CaptchaPlacement = CaptchaSettings['placement']
+const CAPTCHA_PROVIDERS = ['none', 'recaptcha', 'turnstile', 'hcaptcha', 'altcha'] as const
+const HOSTED_CAPTCHAS = ['recaptcha', 'turnstile', 'hcaptcha'] as const
+type HostedCaptcha = (typeof HOSTED_CAPTCHAS)[number]
+const savedCaptcha = ref<CaptchaSettings | null>(null)
+const captchaForm = ref<{
+  provider: CaptchaSettings['provider']
+  placement: CaptchaPlacement
+  siteKey: string
+  secretKey: string
+}>({ provider: 'none', placement: 'both', siteKey: '', secretKey: '' })
+const captchaTestToken = ref<string | null>(null)
+const captchaTestFrame = useTemplateRef<{ reset: () => void }>('captchaTestFrame')
+const captchaSave = useSubmit()
+const placements = computed(() =>
+  (['login', 'registration', 'both'] as const).map((value) => ({
+    value,
+    label: i18n.t(`admin.captcha.placements.${value}`),
+  })),
+)
+const hostedCaptcha = computed(() =>
+  HOSTED_CAPTCHAS.find(
+    (provider): provider is HostedCaptcha => provider === captchaForm.value.provider,
+  ),
+)
+const captchaHosted = computed(() => hostedCaptcha.value !== undefined)
+// New keys must prove themselves before they apply, or a typo would lock everyone out.
+const captchaNeedsTest = computed(() => {
+  const saved = savedCaptcha.value
+  const form = captchaForm.value
+  return (
+    captchaHosted.value &&
+    (form.provider !== saved?.provider ||
+      form.siteKey.trim() !== saved.site_key ||
+      form.secretKey.trim() !== '')
+  )
+})
+// The test widget reloads with every change, so it waits until typing pauses. Provider and key
+// change together, or a new provider would briefly get the old provider's key.
+const testWidget = ref<{ provider: HostedCaptcha; siteKey: string } | null>(null)
+let testWidgetTimer: ReturnType<typeof setTimeout> | undefined
+watch([hostedCaptcha, () => captchaForm.value.siteKey.trim()], ([provider, siteKey]) => {
+  clearTimeout(testWidgetTimer)
+  testWidget.value = null
+  captchaTestToken.value = null
+  if (provider && siteKey) {
+    testWidgetTimer = setTimeout(() => (testWidget.value = { provider, siteKey }), 600)
+  }
+})
+
+function showCaptcha(settings: CaptchaSettings): void {
+  savedCaptcha.value = settings
+  captchaForm.value = {
+    provider: settings.provider,
+    placement: settings.placement,
+    siteKey: settings.site_key,
+    secretKey: '',
+  }
+  captchaTestToken.value = null
+}
+
+async function saveCaptcha(): Promise<void> {
+  const form = captchaForm.value
+  const body = {
+    provider: form.provider,
+    placement: form.placement,
+    site_key: form.siteKey,
+    secret_key: form.secretKey,
+    token: captchaNeedsTest.value ? captchaTestToken.value : null,
+  }
+  const ok = await captchaSave.run(async () => {
+    showCaptcha(await call(() => api.PUT('/api/v1/admin/captcha', { body })))
+    await instance.load()
+  })
+  if (ok) snackbar.show(i18n.t('common.saved'))
+  else captchaTestFrame.value?.reset()
+}
+
 async function refresh(): Promise<void> {
   await load.run(async () => {
-    const [u, i, s, st] = await Promise.all([
+    const [u, i, s, st, c] = await Promise.all([
       call(() => api.GET('/api/v1/admin/users')),
       call(() => api.GET('/api/v1/admin/invites')),
       call(() => api.GET('/api/v1/admin/settings')),
       call(() => api.GET('/api/v1/admin/status')),
+      call(() => api.GET('/api/v1/admin/captcha')),
     ])
+    showCaptcha(c)
     users.value = u
     invites.value = i
     registration.value = s.registration_enabled
@@ -483,6 +566,81 @@ onMounted(refresh)
         </span>
       </label>
       <UiNotice v-if="toggle.error.value" tone="error">{{ toggle.error.value }}</UiNotice>
+    </section>
+
+    <section class="flex flex-col gap-3" data-testid="captcha-settings">
+      <h2 class="ui-section-title">{{ $t('admin.captcha.title') }}</h2>
+      <p class="text-muted">{{ $t('admin.captcha.description') }}</p>
+      <form
+        v-if="savedCaptcha"
+        class="flex flex-col gap-4"
+        novalidate
+        @submit.prevent="saveCaptcha"
+      >
+        <UiField
+          :label="$t('admin.captcha.provider')"
+          for="captcha-provider"
+          :hint="$t(`admin.captcha.hints.${captchaForm.provider}`)"
+        >
+          <select id="captcha-provider" v-model="captchaForm.provider" class="ui-select">
+            <option v-for="provider in CAPTCHA_PROVIDERS" :key="provider" :value="provider">
+              {{ $t(`admin.captcha.providers.${provider}`) }}
+            </option>
+          </select>
+        </UiField>
+        <template v-if="captchaForm.provider !== 'none'">
+          <div class="flex flex-col gap-2">
+            <span class="ui-label">{{ $t('admin.captcha.placement') }}</span>
+            <UiSegmented
+              v-model="captchaForm.placement"
+              :options="placements"
+              :label="$t('admin.captcha.placement')"
+              class="self-start"
+            />
+          </div>
+          <template v-if="captchaHosted">
+            <UiField :label="$t('admin.captcha.siteKey')" for="captcha-site-key">
+              <UiInput
+                id="captcha-site-key"
+                v-model="captchaForm.siteKey"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </UiField>
+            <UiField
+              :label="$t('admin.captcha.secretKey')"
+              for="captcha-secret-key"
+              :hint="
+                savedCaptcha?.secret_key_set && captchaForm.provider === savedCaptcha.provider
+                  ? $t('admin.captcha.secretKeyKept')
+                  : undefined
+              "
+            >
+              <UiInput
+                id="captcha-secret-key"
+                v-model="captchaForm.secretKey"
+                type="password"
+                autocomplete="off"
+              />
+            </UiField>
+            <div v-if="captchaNeedsTest && testWidget" class="flex flex-col gap-2">
+              <span class="ui-label">{{ $t('admin.captcha.test') }}</span>
+              <CaptchaFrame
+                ref="captchaTestFrame"
+                v-model="captchaTestToken"
+                :provider="testWidget.provider"
+                :site-key="testWidget.siteKey"
+              />
+            </div>
+          </template>
+        </template>
+        <UiNotice v-if="captchaSave.error.value" tone="error">
+          {{ captchaSave.error.value }}
+        </UiNotice>
+        <UiButton type="submit" class="self-start" :loading="captchaSave.pending.value">
+          {{ $t('common.save') }}
+        </UiButton>
+      </form>
     </section>
 
     <section class="flex flex-col gap-3">

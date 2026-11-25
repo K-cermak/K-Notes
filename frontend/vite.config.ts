@@ -58,13 +58,24 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        // The captcha frame's Content-Security-Policy depends on its query, so it always comes from
+        // the server rather than from a cached copy.
+        globIgnores: ['captcha.html'],
         navigateFallback: '/index.html',
         // The API is never cached: notes live in IndexedDB, and responses are per user.
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/captcha\.html/],
         cleanupOutdatedCaches: true,
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        captcha: fileURLToPath(new URL('./captcha.html', import.meta.url)),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -143,6 +143,35 @@
       "label": "Allow anyone to create an account",
       "hint": "When off, people can only join through an invite link."
     },
+    "captcha": {
+      "title": "Captcha",
+      "description": "Ask people who sign in or create an account to prove they are not a bot. Single sign-on is not affected.",
+      "provider": "Captcha",
+      "providers": {
+        "none": "Off",
+        "recaptcha": "Google reCAPTCHA v2",
+        "turnstile": "Cloudflare Turnstile",
+        "hcaptcha": "hCaptcha",
+        "altcha": "ALTCHA (runs on this server)"
+      },
+      "hints": {
+        "none": "Anyone can try to sign in or register without a check.",
+        "recaptcha": "Use a v2 “I’m not a robot” checkbox key. Google sees the address and browser of everyone who opens the form.",
+        "turnstile": "Cloudflare sees the address and browser of everyone who opens the form.",
+        "hcaptcha": "hCaptcha sees the address and browser of everyone who opens the form.",
+        "altcha": "A short calculation in the browser, checked by this server. Needs no keys and tells no third party."
+      },
+      "placement": "Ask on",
+      "placements": {
+        "login": "Sign-in",
+        "registration": "Registration",
+        "both": "Both"
+      },
+      "siteKey": "Site key",
+      "secretKey": "Secret key",
+      "secretKeyKept": "A secret key is saved. Leave this empty to keep it.",
+      "test": "Solve the captcha to confirm the keys work"
+    },
     "limits": {
       "title": "Limits",
       "range": "Enter a whole number from {min} to {max}.",
@@ -213,7 +242,12 @@
     "totp_enabled": "Two-step verification is already on.",
     "no_password": "Accounts that use single sign-on get two-step verification from it.",
     "insufficient_scope": "This token can only read.",
-    "storage_full": "Your storage is full. Delete notes or images to make room."
+    "storage_full": "Your storage is full. Delete notes or images to make room.",
+    "captcha_failed": "Complete the captcha check.",
+    "captcha_unavailable": "The captcha service could not be reached. Try again.",
+    "captcha_secret_invalid": "The captcha provider does not accept this secret key.",
+    "captcha_site_key_required": "Enter the site key.",
+    "captcha_secret_key_required": "Enter the secret key."
   },
   "sync": {
     "idle": "Starting",
@@ -467,5 +501,10 @@
     "full": "Your storage is full. Delete notes or images to make room.",
     "fullNotice": "Your storage is full: you can edit and delete notes, but not create notes or add images until you free up space.",
     "details": "Details"
+  },
+  "captcha": {
+    "title": "Captcha",
+    "failed": "The captcha could not be loaded.",
+    "retry": "Try again"
   }
 }

@@ -15,6 +15,7 @@ const config: PublicConfig = {
   oidc_provider_name: 'SSO',
   trash_retention_days: 7,
   max_image_mb: 10,
+  captcha: null,
 }
 
 describe('instance store', () => {

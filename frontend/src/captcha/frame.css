@@ -1,0 +1,30 @@
+@import '@fontsource-variable/geist';
+@import '../styles/tokens.css';
+
+html,
+body {
+  margin: 0;
+  /* Transparent, so the form shows through: the frame matches its color-scheme for that. */
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: var(--size-body);
+}
+
+/* ALTCHA in the app's look: square corners, a hairline, the app's colours. */
+altcha-widget {
+  --altcha-border-radius: 0;
+  --altcha-checkbox-border-radius: 0;
+  --altcha-input-border-radius: 0;
+  --altcha-border-color: var(--line);
+  --altcha-color-base: var(--bg);
+  --altcha-color-base-content: var(--ink);
+  --altcha-color-neutral: var(--line-hover);
+  --altcha-color-neutral-content: var(--muted);
+  --altcha-color-primary: var(--accent);
+  --altcha-color-success: var(--success);
+  --altcha-color-error: var(--danger);
+  --altcha-checkbox-outline-color: var(--ring);
+  --altcha-shadow: none;
+  --altcha-max-width: 100%;
+}

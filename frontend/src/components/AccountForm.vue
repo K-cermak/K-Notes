@@ -72,6 +72,8 @@ function submit(): void {
         required
       />
     </UiField>
+    <!-- Room for a captcha, between the fields and the result of submitting them. -->
+    <slot />
     <UiNotice v-if="error" tone="error">{{ error }}</UiNotice>
     <UiButton type="submit" variant="primary" :loading="pending">{{ submitLabel }}</UiButton>
   </form>

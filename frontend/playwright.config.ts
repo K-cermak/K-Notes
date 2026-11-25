@@ -15,8 +15,15 @@ export default defineConfig({
     { name: 'accounts', testMatch: /accounts\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
     {
       name: 'chromium',
-      testIgnore: /accounts\.spec\.ts/,
+      testIgnore: /(accounts|captcha)\.spec\.ts/,
       dependencies: ['accounts'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Turns on a captcha for the whole instance, so it waits until the other tests are done.
+    {
+      name: 'captcha',
+      testMatch: /captcha\.spec\.ts/,
+      dependencies: ['chromium'],
       use: { ...devices['Desktop Chrome'] },
     },
   ],

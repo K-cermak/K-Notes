@@ -197,6 +197,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/captcha/challenge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Altcha Challenge
+         * @description A proof-of-work challenge for the ALTCHA widget; 404 unless ALTCHA is the configured captcha.
+         */
+        get: operations["altcha_challenge"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -564,6 +584,27 @@ export interface paths {
         patch: operations["update_settings"];
         trace?: never;
     };
+    "/api/v1/admin/captcha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Captcha */
+        get: operations["get_captcha"];
+        /**
+         * Update Captcha
+         * @description New keys need a token solved with them, so a mistake cannot lock everyone out.
+         */
+        put: operations["update_captcha"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/status": {
         parameters: {
             query?: never;
@@ -812,6 +853,15 @@ export interface components {
             /** Storage Limit */
             storage_limit?: ("default" | "unlimited") | number | null;
         };
+        /** AltchaChallenge */
+        AltchaChallenge: {
+            /** Parameters */
+            parameters: {
+                [key: string]: unknown;
+            };
+            /** Signature */
+            signature: string;
+        };
         /** ApiItem */
         ApiItem: {
             /** Id */
@@ -975,6 +1025,55 @@ export interface components {
             size: number;
             /** Position */
             position: string;
+        };
+        /** CaptchaSettings */
+        CaptchaSettings: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "none" | "recaptcha" | "turnstile" | "hcaptcha" | "altcha";
+            /**
+             * Placement
+             * @enum {string}
+             */
+            placement: "login" | "registration" | "both";
+            /** Site Key */
+            site_key: string;
+            /**
+             * Secret Key Set
+             * @description The secret key itself is never sent back
+             */
+            secret_key_set: boolean;
+        };
+        /** CaptchaUpdate */
+        CaptchaUpdate: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "none" | "recaptcha" | "turnstile" | "hcaptcha" | "altcha";
+            /**
+             * Placement
+             * @enum {string}
+             */
+            placement: "login" | "registration" | "both";
+            /**
+             * Site Key
+             * @default
+             */
+            site_key: string;
+            /**
+             * Secret Key
+             * @description Empty keeps the stored key
+             * @default
+             */
+            secret_key: string;
+            /**
+             * Token
+             * @description Solved with the new keys; required when the provider or keys change
+             */
+            token?: string | null;
         };
         /** Changes */
         Changes: {
@@ -1153,6 +1252,8 @@ export interface components {
             display_name: string;
             /** Password */
             password: string;
+            /** Captcha Token */
+            captcha_token?: string | null;
         };
         /** InviteCreate */
         InviteCreate: {
@@ -1181,6 +1282,8 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+            /** Captcha Token */
+            captcha_token?: string | null;
         };
         /** Mark */
         Mark: {
@@ -1353,6 +1456,23 @@ export interface components {
             /** Default View */
             default_view?: ("grid" | "list") | null;
         };
+        /** PublicCaptcha */
+        PublicCaptcha: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "recaptcha" | "turnstile" | "hcaptcha" | "altcha";
+            /** Site Key */
+            site_key: string;
+            /** Login */
+            login: boolean;
+            /**
+             * Registration
+             * @description Open registration and invite links
+             */
+            registration: boolean;
+        };
         /** PublicConfig */
         PublicConfig: {
             /** App Name */
@@ -1373,6 +1493,8 @@ export interface components {
             trash_retention_days: number;
             /** Max Image Mb */
             max_image_mb: number;
+            /** @description None when no captcha is configured */
+            captcha: components["schemas"]["PublicCaptcha"] | null;
         };
         /** PullResponse */
         PullResponse: {
@@ -1409,6 +1531,8 @@ export interface components {
             display_name: string;
             /** Password */
             password: string;
+            /** Captcha Token */
+            captcha_token?: string | null;
         };
         /** RichDoc */
         RichDoc: {
@@ -1875,6 +1999,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    altcha_challenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AltchaChallenge"];
                 };
             };
             /** @description Default Response */
@@ -2661,6 +2814,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InstanceSettings"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_captcha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptchaSettings"];
+                };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_captcha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptchaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptchaSettings"];
                 };
             };
             /** @description Default Response */
