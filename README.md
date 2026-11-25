@@ -39,8 +39,6 @@ Self-hosted notes with the layout and habits of Google Keep: quick notes, checkl
 
 Not included on purpose: sharing notes between users, reminders, drawings, e-mail of any kind, import and export.
 
-Known limitation: notes and checklist items are reordered by dragging with a mouse or a finger only; there is no way to do it from the keyboard.
-
 ## Quick start
 
 You need Docker with Compose, a domain name pointing at the machine, and a reverse proxy that provides HTTPS (see [HTTPS and the reverse proxy](#https-and-the-reverse-proxy)). Browsers only allow the offline app and installing it over HTTPS.
