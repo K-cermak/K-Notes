@@ -32,7 +32,12 @@ test('with ALTCHA on, signing in needs the solved check', async ({ browser }) =>
     await expect(login.getByTestId('sync-status')).toBeVisible()
     await visitor.close()
   } finally {
-    await saveCaptcha(page, 'none')
+    // Through the API: it works even when the test failed halfway, and no second snackbar can
+    // overlap the first one while it fades out.
+    const off = await context.request.put('/api/v1/admin/captcha', {
+      data: { provider: 'none', placement: 'both' },
+    })
+    expect(off.ok()).toBe(true)
     await context.close()
   }
 })
