@@ -67,9 +67,6 @@ All settings are environment variables. Only `APP_BASE_URL` is required. The ser
 | `APP_BASE_URL` | (required) | Public address, such as `https://notes.example.com`, with no path |
 | `APP_DATA_DIR` | `/data` | Where the database, images and generated secret key live |
 | `APP_SECRET_KEY` | generated | At least 32 characters. If unset, one is generated on first start and kept in `APP_DATA_DIR/secret.key`. Changing it signs out OIDC logins in progress and makes two-step verification secrets unreadable |
-| `APP_TRASH_RETENTION_DAYS` | `7` | Days before notes in the trash are deleted for good; `0` keeps them until emptied by hand |
-| `APP_MAX_IMAGE_MB` | `10` | Largest image accepted, after the device has resized it |
-| `APP_SESSION_DAYS` | `180` | How long a sign-in lasts without use. Long on purpose: an offline app should not sign people out |
 | `APP_PASSWORD_LOGIN_ENABLED` | `true` | `false` allows sign-in only through OIDC, which must then be configured |
 | `APP_OIDC_DISCOVERY_URL` | | The provider's `.well-known/openid-configuration` URL |
 | `APP_OIDC_CLIENT_ID` | | |
@@ -79,7 +76,7 @@ All settings are environment variables. Only `APP_BASE_URL` is required. The ser
 | `APP_TRUSTED_PROXIES` | | Comma-separated addresses or networks of reverse proxies whose `X-Forwarded-For` is believed, for the client address in logs and sign-in throttling |
 | `APP_LOG_LEVEL` | `info` | `debug`, `info`, `warning`, `error` or `critical` |
 
-Storage limits per user and open registration are set by an administrator in the app, not here.
+Open registration, storage limits per user, how long notes stay in the trash (7 days at first), the largest image (10 MB) and how long a sign-in lasts without use (180 days) are set by an administrator in the app, not here.
 
 ### Single sign-on (OIDC)
 
@@ -117,7 +114,7 @@ server {
     ssl_certificate     /etc/letsencrypt/live/notes.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/notes.example.com/privkey.pem;
 
-    # Above APP_MAX_IMAGE_MB.
+    # Above the largest image set in the administration; raise it if you allow larger images.
     client_max_body_size 20m;
 
     location / {

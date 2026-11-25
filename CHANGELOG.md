@@ -15,7 +15,7 @@ The first release.
 - Offline-first sync: every change is saved on the device first and synced field by field, live through Server-Sent Events; concurrent edits of the same text keep the losing version as a conflict copy.
 - Installable web app with offline start, an update prompt and safe-area handling on phones.
 - Accounts: first-run setup, invite links, optional open registration, password reset links, two-step verification with recovery codes, single sign-on through OIDC, sessions that can be revoked.
-- Administration: users, admin rights with guards against locking out the last admin, deactivation, deletion, storage quotas per user and an instance default.
+- Administration: users, admin rights with guards against locking out the last admin, deactivation, deletion, storage quotas per user and an instance default, and the instance limits: days in the trash, the largest image and how long a sign-in lasts.
 - Personal API tokens with read or write scope, and a REST API for notes and labels.
 - Light and dark theme, saved in the profile.
 - A multi-architecture Docker image (`linux/amd64`, `linux/arm64`) that serves the app and the API, with checks of the configuration at startup.

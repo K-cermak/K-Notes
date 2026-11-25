@@ -16,9 +16,6 @@ services:
       APP_BASE_URL: https://notes.example.com
       # The proxy reaches the container from the Docker network, so its address is in this range.
       APP_TRUSTED_PROXIES: "172.16.0.0/12"
-      # APP_TRASH_RETENTION_DAYS: "7"
-      # APP_MAX_IMAGE_MB: "10"
-      # APP_SESSION_DAYS: "180"
       # APP_LOG_LEVEL: info
 
       # Single sign-on through any OIDC provider (Authentik, Keycloak, ...).

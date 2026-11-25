@@ -92,9 +92,6 @@ All settings are environment variables with the neutral prefix `APP_`, so a rena
 | `APP_DATA_DIR` | `/data` | SQLite file, blobs, generated secret key |
 | `APP_BASE_URL` | none | Public URL, for example `https://notes.example.com`. Required. Used for invite and reset links, the OIDC redirect, cookie security and the origin check |
 | `APP_SECRET_KEY` | generated | If unset, generated on first start and saved in `APP_DATA_DIR` |
-| `APP_TRASH_RETENTION_DAYS` | `7` | Days before trashed notes are purged. `0` disables automatic purging |
-| `APP_MAX_IMAGE_MB` | `10` | Largest accepted image upload |
-| `APP_SESSION_DAYS` | `180` | Sliding session lifetime. Long because an offline app should not log people out |
 | `APP_PASSWORD_LOGIN_ENABLED` | `true` | Set `false` to allow only OIDC. Refused at startup unless OIDC is configured |
 | `APP_OIDC_DISCOVERY_URL`, `APP_OIDC_CLIENT_ID`, `APP_OIDC_CLIENT_SECRET` | none | OIDC is enabled when all three are set |
 | `APP_OIDC_PROVIDER_NAME` | `SSO` | Label on the login button |
@@ -103,6 +100,14 @@ All settings are environment variables with the neutral prefix `APP_`, so a rena
 | `APP_LOG_LEVEL` | `info` | |
 
 If `APP_SECRET_KEY` is unset, a random key is generated on first start and stored in `APP_DATA_DIR/secret.key`, so self-hosters do not have to invent one. TOTP secrets are encrypted with a key derived from it, and it signs OIDC state.
+
+Three limits are not environment variables but instance settings an admin changes in the administration, stored in the `settings` table, with these defaults until changed (moved there from environment variables by the owner after phase 12):
+
+| Setting | Default | Range | Meaning |
+|---|---|---|---|
+| Delete notes from the trash after | `7` days | 0 to 3650 | Days before trashed notes are purged. `0` disables automatic purging. Shortening it asks for confirmation, as older notes are purged within the hour |
+| Maximum image size | `10` MB | 1 to 100 | Largest accepted image upload. The reverse proxy's body size limit must allow it |
+| Sign people out after inactivity | `180` days | 1 to 3650 | Sliding session lifetime. Long because an offline app should not log people out. A change applies to new sessions and to existing ones the next time they slide forward |
 
 The app must start and be usable with nothing set except `APP_BASE_URL`. Validate configuration at startup and fail with a message that names the variable and the problem.
 
@@ -154,7 +159,7 @@ Every synced row has these bookkeeping columns in addition to its own fields:
 - **recovery_codes**: `user_id`, `code_hash`, `used_at`.
 - **blobs**: (`user_id`, `hash`) primary key, `size`, `mime`, `created_at`.
 - **applied_ops**: (`user_id`, `op_id`) primary key, `result`, `created_at`. Makes pushes idempotent. Rows older than 30 days are pruned.
-- **settings**: key and value. Holds `registration_enabled`.
+- **settings**: key and value. Holds `registration_enabled`, `default_storage_limit_bytes` and the instance limits `trash_retention_days`, `max_image_mb` and `session_days`; a missing key means the default.
 
 ### 4.1 Rich text
 
@@ -296,7 +301,7 @@ Local Dexie tables: `notes`, `checklistItems`, `labels`, `noteLabels`, `attachme
 
 ### 5.7 Trash purging
 
-A background task runs hourly and purges notes whose `trashed_at` is older than `APP_TRASH_RETENTION_DAYS` (never when the value is `0`). Purging goes through the merge service like a client `purge` op, so other devices learn about it through a normal pull. "Delete forever" and "Empty trash" in the UI are `purge` ops.
+A background task runs hourly and purges notes whose `trashed_at` is older than the trash period set by an admin (section 3; never when it is `0`). Purging goes through the merge service like a client `purge` op, so other devices learn about it through a normal pull. "Delete forever" and "Empty trash" in the UI are `purge` ops.
 
 After purging, delete blob files that no live attachment of that user references any more.
 
@@ -315,7 +320,7 @@ After purging, delete blob files that no live attachment of that user references
 
 - **First run and accounts.** When the database has no users, the app shows a setup screen that creates the admin. When `APP_PASSWORD_LOGIN_ENABLED` is false, the setup screen offers the OIDC button in place of the password form, and the first user to sign in through it becomes the admin, regardless of `APP_OIDC_AUTO_PROVISION`. After that, accounts come from three places: an invite link created by an admin (shown for copying, since the app sends no e-mail), self-registration if an admin has switched it on, or OIDC auto-provisioning if configured. Admins do not create accounts by hand or set other users' passwords. A user is identified by their e-mail address and has a display name.
 - **Passwords.** Hash with Argon2id (`argon2-cffi`). Minimum length 10, no composition rules. Changing the password revokes all other sessions. Throttle failed logins per account and per IP with an in-memory counter and growing delays. Login responses must not reveal whether an e-mail address has an account.
-- **Sessions.** A random 256-bit token in an `HttpOnly`, `SameSite=Lax` cookie, marked `Secure` whenever `APP_BASE_URL` is https; the database stores only its hash. Lifetime slides forward on use, up to `APP_SESSION_DAYS`. Users can see and revoke their sessions. A nightly cleanup deletes expired sessions and used or expired invites.
+- **Sessions.** A random 256-bit token in an `HttpOnly`, `SameSite=Lax` cookie, marked `Secure` whenever `APP_BASE_URL` is https; the database stores only its hash. Lifetime slides forward on use, up to the sign-in length set by an admin (section 3). Users can see and revoke their sessions. A nightly cleanup deletes expired sessions and used or expired invites.
 - **CSRF.** For requests authenticated by cookie, reject any state-changing method whose `Origin` (or `Sec-Fetch-Site`) shows it came from another site. Requests authenticated by a Bearer token skip this check.
 - **TOTP.** Optional, and each user decides for themselves (`pyotp`). Enrolment shows a QR code and the secret, and completes only after the user enters a valid code. It then shows 10 recovery codes once; store only their hashes. Each recovery code works once. Login becomes two steps: the password yields a short-lived pending token (5 minutes) that can only be exchanged, together with a TOTP or recovery code, for a session. Accept the previous and next time step to tolerate clock drift, and store the last accepted step so a code cannot be replayed. Turning TOTP off requires the password and a current code. Encrypt the secret at rest with a key derived from the secret key. A login through OIDC does not ask for TOTP, because second factors are then the identity provider's job.
 - **OIDC.** One generic provider configured by discovery URL, using the authorization code flow with PKCE (Authlib) and the scopes `openid email profile`. The login page shows a button labelled with `APP_OIDC_PROVIDER_NAME` when OIDC is enabled. Resolving who is logging in, in this order:
@@ -473,7 +478,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - **Make a copy** duplicates a note with its items, labels and image references.
 - **Keyboard**: `c` new note, `l` new checklist, `/` focus search, `Esc` close editor or clear selection, `Ctrl/Cmd+Enter` close editor.
 - **Trash view**: a notice saying notes are deleted after N days (from `/config`; hidden when purging is off) and an "Empty trash" button. Cards offer restore and delete forever.
-- **Settings**: theme, language, default view, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota and instance status.
+- **Settings**: theme, language, default view, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the default storage quota, the instance limits from section 3 and instance status.
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
 - **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal. Known limitation, accepted by the owner: reordering notes and checklist items works only by dragging with a pointer or touch, as in Keep; there is no keyboard equivalent.
