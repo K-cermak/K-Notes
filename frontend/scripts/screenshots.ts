@@ -115,8 +115,8 @@ async function shoot(file: string): Promise<void> {
   }
   // Let fades and the masonry settle, so nothing is caught mid-way.
   await page.waitForTimeout(600)
-  await page.screenshot({ path: `${outDir}${file}` })
-  console.log(`Wrote Images/${file}`)
+  await page.screenshot({ path: `${outDir}github-${file}` })
+  console.log(`Wrote Images/github-${file}`)
 }
 
 await shoot('notes-light.png')
