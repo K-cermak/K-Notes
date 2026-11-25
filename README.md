@@ -221,4 +221,4 @@ How it is built and why is described in [docs/SPEC.md](docs/SPEC.md). See [CONTR
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE.md](LICENSE.md).
