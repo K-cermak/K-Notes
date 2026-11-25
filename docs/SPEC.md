@@ -33,7 +33,7 @@ Do not build these, and do not add hooks for them:
 
 ### Look and feel
 
-The layout and interactions should feel like Google Keep's web app, described in section 9. The visual style is the owner's own, shared with their other products and specified in section 9 "Visual design"; the app is not meant to look like Keep at a glance. Do not use Google's name, logo, the Keep icon or Google's typefaces. The app has its own name and icon. The name lives only in `branding.json` at the repository root (app name, short name, description, theme colour); the backend, the frontend and the web manifest all read it from there.
+The layout and interactions should feel like Google Keep's web app, described in section 9. The visual style is the owner's own, shared with their other products and specified in section 9 "Visual design"; the app is not meant to look like Keep at a glance. Do not use Google's name, logo, the Keep icon or Google's typefaces. The app has its own name and icon. The icon is the mark from the owner's logo, kept in `frontend/public/icon.svg` as the favicon, the source of the PWA icons and the logo in the top bar and drawer; the app shows it next to the name rather than using the wordmark, so a rename needs no new artwork in the app, and as a picture it is exempt from the colour rules of section 9. The source artwork and the wordmark versions are kept outside the repository and published on a CDN for the README and the website. The name lives only in `branding.json` at the repository root (app name, short name, description, theme colour); the backend, the frontend and the web manifest all read it from there.
 
 ## 2. Architecture
 
