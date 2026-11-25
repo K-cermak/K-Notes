@@ -184,13 +184,28 @@ Stop the container first, so the database is not copied halfway through a write.
 
 ## Administration from the command line
 
-For a locked-out administrator, or when no one else can help:
+For a locked-out administrator, or when no one else can help. The commands run inside the container, where the `APP_*` variables are already set, and change the database directly; the running app picks the change up at once.
 
 ```sh
-docker compose exec notes python -m app.cli reset-password someone@example.com   # prints a one-time reset link
-docker compose exec notes python -m app.cli disable-totp someone@example.com     # turns off two-step verification
-docker compose exec notes python -m app.cli make-admin someone@example.com       # grants admin rights
-docker compose exec notes python -m app.cli disable-captcha                       # turns off the captcha
+docker compose exec notes python -m app.cli <command> [e-mail]
+```
+
+With plain Docker, use `docker exec <container> python -m app.cli …` instead.
+
+| Command | What it does |
+| --- | --- |
+| `reset-password <e-mail>` | Prints a password reset link, valid for 24 hours and usable once, for you to pass on. An older reset link for the same account stops working. A deactivated account cannot use it until it is reactivated. |
+| `disable-totp <e-mail>` | Turns off two-step verification and deletes the recovery codes, for someone who lost both their phone and their codes. They can set it up again in their security settings. |
+| `make-admin <e-mail>` | Grants admin rights. A deactivated account stays deactivated; reactivate it in the administration. |
+| `disable-captcha` | Turns off the captcha on sign-in and registration, for example when its keys were deleted at the provider and nobody can sign in. |
+
+The e-mail address is matched without regard to case. `python -m app.cli --help` lists the commands. The exit code is 0 on success, 1 when the command fails (no account with that address, for example) and 2 for a configuration problem or a mistyped command.
+
+In a development setup, run the same commands from `backend` with `uv run`, pointing them at the development data:
+
+```sh
+cd backend
+APP_BASE_URL=http://localhost:5173 APP_DATA_DIR=.data uv run python -m app.cli make-admin someone@example.com
 ```
 
 ## REST API
