@@ -56,4 +56,21 @@ Then run the app with `just dev` and try the change yourself, in both themes and
 1. Set the new version in `backend/pyproject.toml` and `frontend/package.json`, and run `cd backend && uv lock` so the lockfile follows.
 2. Commit, then tag and push: `git tag v1.2.3 && git push origin main v1.2.3`.
 
-The release workflow runs all checks again, refuses a tag that does not match the version in `backend/pyproject.toml`, and publishes `ghcr.io/k-cermak/k-notes` for `linux/amd64` and `linux/arm64`, tagged with the version and `latest`. The GitHub release and its notes are written by hand.
+The release workflow runs all checks again, refuses a tag that does not match the version in `backend/pyproject.toml`, and publishes `ghcr.io/k-cermak/k-notes` for `linux/amd64` and `linux/arm64`, tagged with the version and `latest`. The GitHub release and its notes are written by hand. Every release uses this form:
+
+Title: `K-Notes {version}`
+
+Description:
+
+````markdown
+Contains K-Notes {version}.
+
+https://k-notes.karlosoft.com/
+
+## Changelog (differences compared to {previous_version}):
+- Updated
+
+**Full Changelog**: https://github.com/K-cermak/K-Notes/compare/v{previous_version}...v{version}
+````
+
+`{version}` and `{previous_version}` are bare version numbers such as `1.1.0` and `1.0.0`; the compare link adds the `v` of the tag. The changelog lists the changes as bullets.

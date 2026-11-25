@@ -88,6 +88,27 @@ just screenshots      # render the README screenshots into Images/ from the buil
 
 Toolchain: Python 3.14 (`backend/.python-version`), Node 26 (`.node-version`), pnpm 12. The Node version matters: jsdom, used by Vitest, needs Node 22.22+ or newer. Playwright needs `pnpm exec playwright install chromium` once.
 
+## Releases
+
+The release steps are in `CONTRIBUTING.md` under "Releasing". GitHub releases are written by hand and always take this form:
+
+Title: `K-Notes {version}`
+
+Description:
+
+````markdown
+Contains K-Notes {version}.
+
+https://k-notes.karlosoft.com/
+
+## Changelog (differences compared to {previous_version}):
+- Updated
+
+**Full Changelog**: https://github.com/K-cermak/K-Notes/compare/v{previous_version}...v{version}
+````
+
+`{version}` and `{previous_version}` are bare version numbers such as `1.1.0` and `1.0.0`; the compare link adds the `v` of the tag. The changelog lists the changes as bullets.
+
 ## Testing
 
 The sync and merge logic is the riskiest part of the project and must be covered before UI is built on it: pytest for the merge rules and API, Vitest for the client outbox and sync engine, Playwright for two-client and offline scenarios. A change is not done until its tests pass and you have run the app and exercised the feature yourself.
