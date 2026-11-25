@@ -503,7 +503,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
   - On a `v*` tag: build a multi-architecture image for `linux/amd64` and `linux/arm64` (Docker Buildx; Raspberry Pi and ARM NAS devices are common among self-hosters) and push to GHCR with the version and `latest` tags. Avoid dependencies that lack prebuilt arm64 wheels, so the arm64 build does not compile native code under emulation.
 - License: MIT.
 - `README.md`: what it is, screenshots, quick start with Docker Compose, configuration table, reverse proxy and HTTPS notes, backup and restore (stop the container, copy `/data`), admin CLI, how to add a translation, development setup.
-- `CONTRIBUTING.md` and `CHANGELOG.md`.
+- `CONTRIBUTING.md`. Release notes are written by hand on each GitHub release; there is no changelog file.
 
 ## 12. Testing
 
