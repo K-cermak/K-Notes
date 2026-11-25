@@ -101,7 +101,7 @@ All settings are environment variables with the neutral prefix `APP_`, so a rena
 
 If `APP_SECRET_KEY` is unset, a random key is generated on first start and stored in `APP_DATA_DIR/secret.key`, so self-hosters do not have to invent one. TOTP secrets are encrypted with a key derived from it, and it signs OIDC state.
 
-Three limits are not environment variables but instance settings an admin changes in the administration, stored in the `settings` table, with these defaults until changed (moved there from environment variables by the owner after phase 12):
+Three limits are not environment variables but instance settings an admin changes in the administration, stored in the `settings` table, with these defaults until changed (moved there from environment variables by the owner before 0.1.0):
 
 | Setting | Default | Range | Meaning |
 |---|---|---|---|
@@ -341,13 +341,13 @@ After purging, delete blob files that no live attachment of that user references
 
 ### Storage quotas
 
-Added after phase 9 at the owner's request.
+Added during development at the owner's request.
 
 - **What counts.** The text of the user's notes (titles, rich text and checklist items) and the user's images, each stored image once even when several notes use it. Notes in the trash count until they are purged.
 - **Limits.** An instance default set by an admin, which may be unlimited (the default), and a per-user setting: the instance default, unlimited, or a custom size. Admins are always unlimited.
 - **Over the limit** the user cannot create new notes (including copies) or add images. Editing existing notes, even making them longer, restoring from the trash, and everything else stays allowed, and so do reading and deleting, which brings the user back under the limit.
 - **Enforcement.** The app knows the usage and the limit from `GET /me/storage`, refreshed after every sync cycle, and disables the actions above while the user is over. The server does not refuse sync pushes or image uploads because of the quota: a device that was offline could not have known, and its changes must not be lost, so they may take the user over the limit. The REST API for tokens, which is always online, refuses to create notes over the limit (`storage_full`). A modified client could therefore exceed the quota; it protects against accidents on a trusted instance, not against a hostile user.
-- **Shown** at the bottom of the navigation drawer and in the Storage section of settings, as "X of Y used" with a usage bar, or as "X used" without a bar when the user has no limit; and in the admin user list with each user's usage and limit. (The drawer and the settings section were added by the owner after phase 12.)
+- **Shown** at the bottom of the navigation drawer and in the Storage section of settings, as "X of Y used" with a usage bar, or as "X used" without a bar when the user has no limit; and in the admin user list with each user's usage and limit. (The drawer and the settings section were added by the owner before 0.1.0.)
 
 ### Security headers
 
@@ -375,7 +375,7 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 - **Top bar**: menu button, app icon and name, a wide search field, sync status, grid/list toggle, a display options menu (theme, images on demand; its icon is not the settings gear, which belongs to the settings page in the account menu), account menu. On phones the search field takes the available width and the secondary buttons move into the account menu.
 - **Navigation drawer**: Notes, one entry per label, Edit labels, Archive, Trash, and at the bottom the account's storage use, linking to the Storage section of settings (section 7, Storage quotas); it is hidden while the drawer is collapsed to the rail. On desktop it collapses to an icon rail and expands on hover or with the menu button; whether it was left expanded is remembered on the device. On phones it is an overlay opened with the menu button, closed at start.
 - **Composer**: on desktop, a "Take a note…" bar centred above the grid, with buttons for a new checklist and a new note with image. Clicking it expands in place to title, body and toolbar. On phones, a floating action button at the bottom right opens a full-screen editor.
-- **Grid**: masonry columns of fixed card width (about 240 px), as many as fit; where fewer than two fit, as on a phone, two narrower columns share the width, as long as each stays at least 140 px wide, and only below that one column takes the full width, up to 600 px. (Two columns on phones were asked for by the owner after phase 12; it was one before.) A "Pinned" section and an "Others" section, each with a small uppercase heading, shown only when pinned notes exist. List view is a single centred column about 600 px wide.
+- **Grid**: masonry columns of fixed card width (about 240 px), as many as fit; where fewer than two fit, as on a phone, two narrower columns share the width, as long as each stays at least 140 px wide, and only below that one column takes the full width, up to 600 px. (Two columns on phones were asked for by the owner before 0.1.0; it was one before.) A "Pinned" section and an "Others" section, each with a small uppercase heading, shown only when pinned notes exist. List view is a single centred column about 600 px wide.
 - **Empty states**: a large faint icon and one line of text, per view (notes, archive, trash, label, search).
 
 ### Note card
@@ -426,14 +426,14 @@ Page background, borders and text come from the tokens in "Visual design".
 
 ### Visual design
 
-The layout and behaviour follow Keep; the look does not. The owner wants the look of Vercel's design language, in the specific variant used across their other products. `docs/design/reference.css` is the stylesheet of one of those products (a contact form). Read it before building any UI. It is a reference for tokens, proportions and the feel of the interactions; do not import it or copy its class names. The app should look like it belongs to the same family as that form.
+The layout and behaviour follow Keep; the look does not. The owner wants the look of Vercel's design language, in the specific variant used across their other products. It was taken from the stylesheet of one of those products (a contact form) and is now built into the design tokens in `frontend/src/styles/tokens.css` and the shared elements in `ui.css`. New UI builds on those and should look like it belongs to the same family.
 
 What defines the style:
 
 - **Monochrome first.** Near-black ink on white, near-white on near-black. Greys do the structural work. The accent blue is rare: the primary action, links, the selected state. Colour otherwise belongs to the user's notes, which is what makes them easy to tell apart.
 - **Square corners.** Border radius is zero on everything: buttons, inputs, note cards, dialogs, chips, checkboxes, colour swatches, the floating button. The only round thing is a loading spinner. This is the trait that separates the owner's variant from stock Vercel, so do not soften it.
 - **Hairlines, not shadows.** Surfaces are separated by 1 px borders in the line colour. Cards and panels have no shadow. Popovers, menus, snackbars and a card being dragged float above a busy grid, so they get the border plus one soft shadow token; the editor dialog also dims the page behind it.
-- **Geist, and Geist Mono for codes.** Geist for everything, with tabular figures for numbers that should align or read as data: the "Edited" timestamp, counts (selected notes, checked items, unsent changes), storage use. Geist Mono only for codes read character by character: API tokens, the TOTP secret, recovery codes. (Changed by the owner after phase 12; numbers were mono before.) Self-host both through their npm font packages. Do not load them from Google Fonts: the app must work offline, under a strict CSP, and without telling a third party who uses it.
+- **Geist, and Geist Mono for codes.** Geist for everything, with tabular figures for numbers that should align or read as data: the "Edited" timestamp, counts (selected notes, checked items, unsent changes), storage use. Geist Mono only for codes read character by character: API tokens, the TOTP secret, recovery codes. (Changed by the owner before 0.1.0; numbers were mono before.) Self-host both through their npm font packages. Do not load them from Google Fonts: the app must work offline, under a strict CSP, and without telling a third party who uses it.
 - **Small, dense type.** 14 px base, 13 px medium-weight labels in the muted colour, 12 px meta in the muted colour with tabular figures. Headings and note titles are weight 600 with slightly negative letter spacing. Nothing heavier than 600.
 - **Thin square icons.** Lucide, drawn at stroke width 1.6 with square line caps and mitred joins set globally, so they match the reference's icons.
 - **Quiet state changes.** Hover darkens a border or tints the background with a few percent of ink (`color-mix`), and only applies under `(hover: hover) and (pointer: fine)` so that touch devices do not get stuck hover states. Focus shows an ink border with a 3 px translucent ring on inputs, and a 2 px ink outline on buttons and links. Colour transitions take 150 ms. Movement is small (a few pixels) and uses the reference's ease-out curve. Under `prefers-reduced-motion`, movement becomes a fade or nothing.

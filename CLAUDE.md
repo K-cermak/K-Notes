@@ -2,11 +2,7 @@
 
 A self-hosted, open-source notes app with the layout and behaviour of Google Keep and the owner's own visual style: quick notes, checklists, labels, colors and images, usable on phones as an installable PWA with full offline editing. "K-Notes" is a working name and will change. It lives only in `branding.json`; never hard-code it anywhere else.
 
-Read these before writing code:
-
-- `docs/SPEC.md` is the product and architecture specification. It is the source of truth for behaviour, the data model and the sync protocol.
-- `docs/PLAN.md` is the build order, as phases with checkboxes. Work one phase at a time, tick the boxes as items are done, and stop at the end of each phase for review.
-- `docs/design/reference.css` is a stylesheet from another of the owner's products. It shows the visual style to match. Read it before any UI work; do not import it.
+Read `docs/SPEC.md` before writing code. It is the product and architecture specification and the source of truth for behaviour, the data model and the sync protocol.
 
 If the spec is silent or looks wrong, say so and propose a change to the spec before coding around it. Decisions already recorded in the spec were made deliberately with the project owner; do not replace them (for example SQLite with Postgres, or SSE with WebSocket) without asking.
 
@@ -49,7 +45,9 @@ frontend/
     locales/         en.json
     styles/          tokens.css, base.css, ui.css (plain, reusable CSS); main.css (Tailwind, app-only)
   e2e/               Playwright tests
-docs/                SPEC.md, PLAN.md, design/reference.css
+docs/                SPEC.md
+Images/              logo artwork and README screenshots, published on the CDN; ignored by git
+private/             the owner's local notes; ignored by git, never commit or publish it
 ```
 
 ## Conventions
@@ -66,13 +64,13 @@ docs/                SPEC.md, PLAN.md, design/reference.css
 - The frontend never hand-writes API types. They come from `just api-types`.
 - API errors have one shape: a machine-readable code and a message.
 - Shared interface elements are the `.ui-*` classes in `frontend/src/styles/ui.css`, on the tokens in `tokens.css`; these files stay plain CSS so other projects can reuse them. Use them before styling an element by hand, and add an element there when more than one place needs it.
-- The look is specified in SPEC section 9 "Visual design" and shown in `docs/design/reference.css`. Colours come from the design tokens and the note palette only, corners are square, and surfaces are separated by hairlines rather than shadows.
+- The look is specified in SPEC section 9 "Visual design" and built into `tokens.css` and `ui.css`. Colours come from the design tokens and the note palette only, corners are square, and surfaces are separated by hairlines rather than shadows.
 - Backend: `ruff` for lint and format, `pyright` for types. Frontend: `eslint`, `prettier`, `vue-tsc`.
 - Commits: small, one logical change each, Conventional Commits format (`feat:`, `fix:`, `test:`, `docs:`, `chore:`). Commit to the active branch, including `main`, unless told otherwise.
 
 ## Commands
 
-Phase 0 creates these. Keep this section accurate when they change.
+Keep this section accurate when the commands change.
 
 ```
 just setup            # install backend (uv) and frontend (pnpm) dependencies
@@ -85,10 +83,11 @@ just api-types        # regenerate frontend/src/api/schema.d.ts from the OpenAPI
 just api-types-check  # fail if the generated API types are out of date (runs in CI)
 just docker           # build the production image locally
 just icons            # render the PWA icons in frontend/public from icon.svg
+just screenshots      # render the README screenshots into Images/ from the built image
 ```
 
 Toolchain: Python 3.14 (`backend/.python-version`), Node 26 (`.node-version`), pnpm 12. The Node version matters: jsdom, used by Vitest, needs Node 22.22+ or newer. Playwright needs `pnpm exec playwright install chromium` once.
 
 ## Testing
 
-The sync and merge logic is the riskiest part of the project and must be covered before UI is built on it: pytest for the merge rules and API, Vitest for the client outbox and sync engine, Playwright for two-client and offline scenarios. A phase is not done until its tests pass and you have run the app and exercised the feature yourself.
+The sync and merge logic is the riskiest part of the project and must be covered before UI is built on it: pytest for the merge rules and API, Vitest for the client outbox and sync engine, Playwright for two-client and offline scenarios. A change is not done until its tests pass and you have run the app and exercised the feature yourself.
