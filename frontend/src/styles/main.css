@@ -199,15 +199,17 @@
 .note-editor {
   animation: editor-in var(--motion) var(--motion-ease) both;
 
+  /* A full-screen sheet that faded out would show the grid through the note, so it slides away
+     whole instead. */
   &[data-state='closed'] {
-    animation: editor-out var(--motion-fast) var(--motion-ease) both;
+    animation: editor-out var(--motion) var(--motion-ease) both;
   }
 
   @media (min-width: 640px) {
     animation-name: ui-rise;
 
     &[data-state='closed'] {
-      animation-name: ui-sink;
+      animation: ui-sink var(--motion-fast) var(--motion-ease) both;
     }
   }
 }
@@ -221,8 +223,7 @@
 
 @keyframes editor-out {
   to {
-    opacity: 0;
-    transform: translateY(32px);
+    transform: translateY(100%);
   }
 }
 
