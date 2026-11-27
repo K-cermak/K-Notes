@@ -135,6 +135,33 @@ test('a new note starts in its text, and Tab leads from the title to the text', 
   await expect(form.getByTestId('add-item')).toBeFocused()
 })
 
+test('a note grows out of its card and shrinks back into it', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  await addNote(page, 'Morph', 'Grows into the editor')
+  // The masonry cell is what hides, so the card keeps its place in the grid.
+  const cell = card(page, 'Morph').locator('..')
+  const editor = page.getByTestId('editor')
+
+  await openNote(page, 'Morph')
+  await expect(editor).toHaveAttribute('data-morph', /waiting|growing/)
+  await expect(cell).toHaveCSS('opacity', '0')
+  await page.keyboard.press('Escape')
+  await expect(editor).toHaveCount(0)
+  await expect(cell).toHaveCSS('opacity', '1')
+
+  // The browser's Back closes the note the same way.
+  await openNote(page, 'Morph')
+  await expect(cell).toHaveCSS('opacity', '0')
+  await page.goBack()
+  await expect(editor).toHaveCount(0)
+  await expect(cell).toHaveCSS('opacity', '1')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openNote(page, 'Morph')
+  await expect(editor).toHaveAttribute('data-morph', 'none')
+  await expect(cell).toHaveCSS('opacity', '1')
+})
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
 

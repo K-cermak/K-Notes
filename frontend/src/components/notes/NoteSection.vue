@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { LocalAttachment, LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import { updateNote } from '@/db/notes'
 import { insertKeys } from '@/db/positions'
+import { hiddenCard } from '@/composables/useCardMorph'
 import { GRID, LIST, PHONE_GAP, useMasonry } from '@/composables/useMasonry'
 import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useNoteDrag } from '@/composables/useNoteDrag'
@@ -117,6 +118,7 @@ function swallow(event: MouseEvent): void {
           class="absolute top-0 left-0 select-none [-webkit-touch-callout:none]"
           :class="[
             !masonry.measured && 'invisible',
+            hiddenCard === note.id && 'opacity-0',
             drag.drag.value?.id === note.id
               ? 'z-10 cursor-grabbing shadow-float'
               : 'transition-transform duration-200 ease-out motion-reduce:transition-none',

@@ -235,6 +235,24 @@
   }
 }
 
+/* Growing out of a card and shrinking back into it run as script animations (useCardMorph); the
+   closing one is matched by a CSS animation of the same length that does nothing, because Reka
+   keeps the closed dialog in the page only while a CSS animation runs on it. */
+.note-editor--morph {
+  animation: none;
+}
+
+.note-editor--hold,
+.note-editor--hold[data-state='closed'] {
+  animation: editor-hold var(--motion) linear both;
+}
+
+@keyframes editor-hold {
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .note-editor {
     animation-name: ui-fade;
