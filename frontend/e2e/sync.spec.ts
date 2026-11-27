@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { accountMenu, addNote, card, newUser, openNote, retitle, signedIn } from './helpers'
 
 test('a note created in one browser appears in another without reloading', async ({ browser }) => {
@@ -139,4 +139,51 @@ test('the sync status opens details with the unsent changes and a sync button', 
   await details.getByTestId('sync-now').click()
   await expect(details.getByTestId('sync-details-unsent')).toHaveText('0')
   await expect(details).toContainText('Synced')
+})
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  /** Drags a finger down the list; Playwright has no touch drag, so it goes through CDP. */
+  async function pull(page: Page, by: number): Promise<void> {
+    const cdp = await page.context().newCDPSession(page)
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', y?: number) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: y === undefined ? [] : [{ x: 100, y }],
+      })
+    // Starts on the first card, where people usually pull.
+    await touch('touchStart', 120)
+    for (let y = 120; y <= 120 + by; y += 15) await touch('touchMove', y)
+    await touch('touchEnd')
+  }
+
+  test('pulling the list down syncs at once', async ({ browser }) => {
+    const user = await newUser(browser)
+    const a = await signedIn(browser, user)
+    await a.page.getByTestId('fab').tap()
+    await expect(a.page.getByTestId('editor-body')).toBeFocused()
+    await a.page.keyboard.type('Pulled')
+    await a.page.getByTestId('editor-back').tap()
+    await expect(a.page.getByTestId('note-card')).toHaveCount(1)
+    // The gesture waits until the editor has finished closing.
+    await expect(a.page.getByTestId('editor')).toHaveCount(0)
+    const spinner = a.page.getByTestId('pull-to-sync')
+
+    // A short pull springs back without syncing.
+    await pull(a.page, 45)
+    await expect(spinner).toHaveAttribute('data-phase', 'leaving')
+    await expect(spinner).toHaveCount(0)
+
+    const synced = a.page.waitForRequest(/\/sync\/pull/)
+    await pull(a.page, 180)
+    await expect(spinner).toHaveAttribute('data-phase', 'syncing')
+    await synced
+    await expect(spinner).toHaveCount(0)
+    await expect(a.page.getByTestId('snackbar')).toHaveCount(0)
+
+    await a.context.setOffline(true)
+    await pull(a.page, 180)
+    await expect(a.page.getByTestId('snackbar')).toContainText('You are offline')
+  })
 })

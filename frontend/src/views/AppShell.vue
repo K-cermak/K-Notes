@@ -13,6 +13,7 @@ import EditLabelsDialog from '@/components/labels/EditLabelsDialog.vue'
 import NavDrawer from '@/components/shell/NavDrawer.vue'
 import NoteComposer from '@/components/shell/NoteComposer.vue'
 import NoteEditorDialog from '@/components/shell/NoteEditorDialog.vue'
+import PullToSync from '@/components/shell/PullToSync.vue'
 import SelectionBar from '@/components/shell/SelectionBar.vue'
 import TopBar from '@/components/shell/TopBar.vue'
 import UiNotice from '@/components/ui/UiNotice.vue'
@@ -235,6 +236,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <Plus :size="24" />
     </button>
   </div>
+  <PullToSync :disabled="editing || selection.active || (compact && drawerOpen)" />
   <NoteEditorDialog :open="editing" :fallback="listPath" />
   <EditLabelsDialog v-model:open="editLabels" />
 </template>

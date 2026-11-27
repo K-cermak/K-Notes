@@ -265,6 +265,11 @@
     "lastSynced": "Last synced",
     "never": "Never",
     "now": "Sync now",
+    "pullFailed": {
+      "offline": "You are offline. Your notes sync when you are back online.",
+      "error": "Sync failed. It is retried automatically.",
+      "unauthorized": "Your session has ended. Sign in again to sync your notes."
+    },
     "about": {
       "idle": "Connecting to the server.",
       "syncing": "Sending and receiving changes.",

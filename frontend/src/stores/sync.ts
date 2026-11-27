@@ -98,6 +98,12 @@ export const useSyncStore = defineStore('sync', () => {
     engine?.request()
   }
 
+  /** Runs a cycle now and resolves with the state it ended in. */
+  async function syncAndWait(): Promise<SyncState> {
+    await engine?.sync()
+    return state.value
+  }
+
   /** Fetches one note's images now, for a device that downloads images on demand. */
   async function downloadImages(noteId: string): Promise<void> {
     await blobs.downloadNote(noteId)
@@ -115,6 +121,7 @@ export const useSyncStore = defineStore('sync', () => {
     stop,
     resume,
     syncNow,
+    syncAndWait,
     downloadImages,
   }
 })

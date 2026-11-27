@@ -81,6 +81,14 @@
   html {
     touch-action: manipulation;
   }
+
+  /* Pulling the list down syncs (PullToSync.vue) instead of reloading the page, and the page does
+     not bounce under the spinner. */
+  @media (pointer: coarse) {
+    html {
+      overscroll-behavior-y: none;
+    }
+  }
 }
 
 /* Note text in cards and the editor: headings stay modest, as in a small card. */
