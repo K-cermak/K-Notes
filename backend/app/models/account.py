@@ -22,6 +22,7 @@ class User(Base):
     locale: Mapped[str] = mapped_column(String(16), default="en")
     theme: Mapped[str] = mapped_column(String(8), default="system")
     default_view: Mapped[str] = mapped_column(String(8), default="grid")
+    time_format: Mapped[str] = mapped_column(String(4), default="24h")
     seq: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[int]
     # None follows the instance default, -1 is unlimited, anything else a limit in bytes.

@@ -101,6 +101,7 @@ def to_me(user: User) -> Me:
         locale=user.locale,
         theme=user.theme,  # pyright: ignore[reportArgumentType]
         default_view=user.default_view,  # pyright: ignore[reportArgumentType]
+        time_format=user.time_format,  # pyright: ignore[reportArgumentType]
         totp_enabled=user.totp_enabled,
         has_password=user.password_hash is not None,
         oidc_linked=user.oidc_subject is not None,
@@ -116,6 +117,8 @@ def update_profile(db: Session, user: User, update: ProfileUpdate) -> User:
         user.theme = update.theme
     if update.default_view is not None:
         user.default_view = update.default_view
+    if update.time_format is not None:
+        user.time_format = update.time_format
     db.commit()
     return user
 

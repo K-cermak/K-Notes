@@ -15,28 +15,41 @@ const messages = Object.fromEntries(
   ).map(([path, value]) => [path.replace(/^.*\/(.+)\.json$/, '$1'), value]),
 )
 
+export type TimeFormat = '24h' | '12h'
+
+// The user's choice rather than the language's convention, so 24-hour time also in English.
+function dateTimeFormats(format: TimeFormat) {
+  const hourCycle = format === '12h' ? 'h12' : 'h23'
+  return {
+    time: { hour: 'numeric', minute: '2-digit', hourCycle },
+    date: { day: 'numeric', month: 'short', year: 'numeric' },
+    dateTime: {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hourCycle,
+    },
+  } as const
+}
+
 export const i18n = createI18n<[MessageSchema], string, false>({
   legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
   messages,
   datetimeFormats: Object.fromEntries(
-    Object.keys(LOCALES).map((code) => [
-      code,
-      {
-        time: { hour: 'numeric', minute: '2-digit' },
-        date: { day: 'numeric', month: 'short', year: 'numeric' },
-        dateTime: {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-        },
-      },
-    ]),
+    Object.keys(LOCALES).map((code) => [code, dateTimeFormats('24h')]),
   ),
 })
+
+/** Shows times on a 24-hour or 12-hour clock, whatever the language. */
+export function applyTimeFormat(format: TimeFormat | undefined): void {
+  for (const code of Object.keys(LOCALES)) {
+    i18n.global.setDateTimeFormat(code, dateTimeFormats(format === '12h' ? '12h' : '24h'))
+  }
+}
 
 /** Switches the interface language, keeping English for a language that is not available. */
 export function applyLocale(code: string | undefined): void {

@@ -8,20 +8,32 @@ from tests.conftest import ADMIN, PASSWORD
 def test_profile_update(admin: TestClient) -> None:
     response = admin.patch(
         "/api/v1/me",
-        json={"display_name": " Ada ", "locale": "cs", "theme": "dark", "default_view": "list"},
+        json={
+            "display_name": " Ada ",
+            "locale": "cs",
+            "theme": "dark",
+            "default_view": "list",
+            "time_format": "12h",
+        },
     )
     assert response.status_code == 200
     me = admin.get("/api/v1/me").json()
-    assert (me["display_name"], me["locale"], me["theme"], me["default_view"]) == (
+    assert (me["display_name"], me["locale"], me["theme"], me["default_view"], me["time_format"]) == (
         "Ada",
         "cs",
         "dark",
         "list",
+        "12h",
     )
+
+
+def test_time_format_defaults_to_24_hours(admin: TestClient) -> None:
+    assert admin.get("/api/v1/me").json()["time_format"] == "24h"
 
 
 def test_profile_rejects_unknown_values(admin: TestClient) -> None:
     assert admin.patch("/api/v1/me", json={"theme": "sepia"}).status_code == 422
+    assert admin.patch("/api/v1/me", json={"time_format": "36h"}).status_code == 422
     assert admin.patch("/api/v1/me", json={"locale": "<script>"}).status_code == 422
 
 

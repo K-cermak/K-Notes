@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { setLucideProps } from '@lucide/vue'
 import AppSnackbar from '@/components/AppSnackbar.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { applyLocale } from '@/i18n'
+import { applyLocale, applyTimeFormat } from '@/i18n'
 import { registerServiceWorker, trackVisualViewport } from '@/pwa'
 import { applyTheme, rememberTheme } from '@/theme'
 import { useSessionStore } from '@/stores/session'
@@ -51,6 +51,7 @@ watch(
 )
 
 watch(() => session.user?.locale, applyLocale, { immediate: true })
+watch(() => session.user?.time_format, applyTimeFormat, { immediate: true })
 
 // A profile change made offline goes out once sync works again.
 watch(

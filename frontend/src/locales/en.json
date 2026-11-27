@@ -413,7 +413,10 @@
       "language": "Language",
       "view": "Notes layout",
       "grid": "Grid",
-      "list": "List"
+      "list": "List",
+      "timeFormat": "Time format",
+      "hours24": "24-hour",
+      "hours12": "12-hour"
     },
     "storage": {
       "title": "Storage",

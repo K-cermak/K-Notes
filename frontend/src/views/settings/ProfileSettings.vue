@@ -23,6 +23,11 @@ const views = computed(() => [
   { value: 'list' as const, label: t('settings.profile.list') },
 ])
 
+const timeFormats = computed(() => [
+  { value: '24h' as const, label: t('settings.profile.hours24') },
+  { value: '12h' as const, label: t('settings.profile.hours12') },
+])
+
 // Applied at once and kept on this device until the server has it, so it counts as saved offline too.
 async function update(patch: ProfileUpdate): Promise<void> {
   await session.updateProfile(patch)
@@ -78,6 +83,15 @@ async function saveName(): Promise<void> {
         :options="views"
         :label="$t('settings.profile.view')"
         @update:model-value="(view) => update({ default_view: view })"
+      />
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="ui-label">{{ $t('settings.profile.timeFormat') }}</span>
+      <UiSegmented
+        :model-value="session.user?.time_format ?? '24h'"
+        :options="timeFormats"
+        :label="$t('settings.profile.timeFormat')"
+        @update:model-value="(format) => update({ time_format: format })"
       />
     </div>
   </section>

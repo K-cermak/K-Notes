@@ -355,7 +355,7 @@ async function copyResetLink(): Promise<void> {
 }
 
 function formatDate(ms: number): string {
-  return new Date(ms).toLocaleString()
+  return i18n.d(new Date(ms), 'dateTime')
 }
 
 onMounted(refresh)

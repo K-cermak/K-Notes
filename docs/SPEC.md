@@ -153,7 +153,7 @@ Every synced row has these bookkeeping columns in addition to its own fields:
 
 ### Non-synced server tables
 
-- **users**: `id`, `email` (unique, stored lowercase), `display_name`, `password_hash` (nullable for OIDC-only users), `is_admin`, `is_active`, `totp_secret` (encrypted), `totp_enabled`, `totp_last_step`, `oidc_issuer` and `oidc_subject` (nullable, unique together), `locale`, `theme` (system, light, dark), `default_view` (grid or list), `seq` (the change counter), `created_at`.
+- **users**: `id`, `email` (unique, stored lowercase), `display_name`, `password_hash` (nullable for OIDC-only users), `is_admin`, `is_active`, `totp_secret` (encrypted), `totp_enabled`, `totp_last_step`, `oidc_issuer` and `oidc_subject` (nullable, unique together), `locale`, `theme` (system, light, dark), `default_view` (grid or list), `time_format` (24h or 12h, default 24h), `seq` (the change counter), `created_at`.
 - **sessions**: `id` (SHA-256 of the cookie token), `user_id`, `auth_method` (password or oidc), `created_at`, `last_used_at`, `expires_at`, `user_agent`, `ip`.
 - **api_tokens**: `id`, `user_id`, `name`, `token_hash`, `token_prefix` (shown in the UI so the user can tell tokens apart), `scope` (`read` or `write`), `created_at`, `last_used_at`, `expires_at` (nullable), `revoked_at` (nullable).
 - **invites**: `token_hash`, `email` (optional), `created_by`, `expires_at`, `used_at`. The same mechanism with a `purpose` column serves password reset links. An invite link is valid for 7 days and a reset link for 24 hours; each works once.
@@ -475,7 +475,9 @@ Applying it to notes, which the reference does not cover:
 - **Banners and snackbars** follow the reference's notice: a border and a faint tint of one tone colour, with a thin icon.
 - **Phone.** The editor is full screen; menus and sheets rise from the bottom with square corners and a hairline top border. Tap targets are at least 44 px even where the visual is smaller.
 
-Themes follow the system by default, with light and dark as explicit choices in settings. Theme, language and default view are saved in the user's profile, so they follow the user across devices, and cached locally so the app opens in the right theme offline. A change made offline applies at once and is sent when the connection returns.
+Themes follow the system by default, with light and dark as explicit choices in settings. Theme, language, default view and time format are saved in the user's profile, so they follow the user across devices, and cached locally so the app opens in the right theme offline. A change made offline applies at once and is sent when the connection returns.
+
+Times (the "Edited" timestamp, sync status, sessions, tokens) use a 24-hour clock unless the user picks 12-hour in settings, whatever the language. (Added by the owner in 0.2.)
 
 ### Ordering and selection
 
@@ -490,7 +492,7 @@ Themes follow the system by default, with light and dark as explicit choices in 
 - **Make a copy** duplicates a note with its items, labels and image references.
 - **Keyboard**: `c` new note, `l` new checklist, `/` focus search, `Esc` close editor or clear selection, `Ctrl/Cmd+Enter` close editor.
 - **Trash view**: a notice saying notes are deleted after N days (from `/config`; hidden when purging is off) and an "Empty trash" button. Cards offer restore and delete forever.
-- **Settings**: theme, language, default view, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the captcha, the default storage quota, the instance limits from section 3 and instance status.
+- **Settings**: theme, language, default view, time format, download images on demand and the space the app takes on this device, account storage use, display name, password change, TOTP, OIDC link and unlink, sessions, API tokens. Admins also see user management with storage quotas, the registration toggle, the captcha, the default storage quota, the instance limits from section 3 and instance status.
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
 - **Zoom**: the app does not zoom like a web page: no pinch or double-tap zoom, and no zoom when a field gets focus on iOS (the viewport's `maximum-scale=1`, plus cancelled pinch gestures on iOS, which ignores it). The image viewer is the exception, so a photo can be looked at closely. (Asked for by the owner in 0.2.)

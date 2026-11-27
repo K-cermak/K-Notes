@@ -6,6 +6,7 @@ from app.schemas.admin import CAPTCHA_TOKEN_MAX
 
 Theme = Literal["system", "light", "dark"]
 View = Literal["grid", "list"]
+TimeFormat = Literal["24h", "12h"]
 
 
 class SetupRequest(BaseModel):
@@ -35,6 +36,7 @@ class Me(BaseModel):
     locale: str
     theme: Theme
     default_view: View
+    time_format: TimeFormat
     totp_enabled: bool
     has_password: bool
     oidc_linked: bool
@@ -45,6 +47,7 @@ class ProfileUpdate(BaseModel):
     locale: str | None = Field(default=None, pattern=r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$")
     theme: Theme | None = None
     default_view: View | None = None
+    time_format: TimeFormat | None = None
 
 
 class PasswordChange(BaseModel):

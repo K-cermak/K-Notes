@@ -1315,6 +1315,11 @@ export interface components {
              * @enum {string}
              */
             default_view: "grid" | "list";
+            /**
+             * Time Format
+             * @enum {string}
+             */
+            time_format: "24h" | "12h";
             /** Totp Enabled */
             totp_enabled: boolean;
             /** Has Password */
@@ -1455,6 +1460,8 @@ export interface components {
             theme?: ("system" | "light" | "dark") | null;
             /** Default View */
             default_view?: ("grid" | "list") | null;
+            /** Time Format */
+            time_format?: ("24h" | "12h") | null;
         };
         /** PublicCaptcha */
         PublicCaptcha: {
