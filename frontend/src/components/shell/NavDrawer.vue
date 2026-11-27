@@ -54,14 +54,20 @@ function navigated(): void {
 </script>
 
 <template>
-  <div
-    v-if="compact && open"
-    class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)]"
-    @click="open = false"
-  />
+  <Transition
+    leave-active-class="transition-opacity duration-200 ease-out"
+    leave-to-class="opacity-0"
+  >
+    <div
+      v-if="compact && open"
+      class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)]"
+      @click="open = false"
+    />
+  </Transition>
+  <!-- Tailwind 4 moves elements with the translate property, not transform. -->
   <nav
     :aria-label="$t('nav.label')"
-    class="fixed bottom-0 left-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto bg-bg py-2 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none"
+    class="fixed bottom-0 left-0 z-30 flex flex-col overflow-x-hidden overflow-y-auto bg-bg py-2 transition-[width,translate] duration-200 ease-out motion-reduce:transition-none"
     :class="
       compact
         ? [
