@@ -44,7 +44,7 @@ fmt:
 icons:
     cd frontend && node scripts/icons.ts
 
-# Render the README screenshots in Images from a fresh container of the built image
+# Render the README and website screenshots in Images from a fresh container of the built image
 screenshots:
     #!/usr/bin/env bash
     set -euo pipefail

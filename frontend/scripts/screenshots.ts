@@ -1,4 +1,4 @@
-// Renders the README screenshots in Images from a fresh instance filled with sample notes.
+// Renders the README and website screenshots in Images from a fresh instance filled with sample notes.
 // Run with `just screenshots`, which starts that instance; the base URL is the first argument.
 import { mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -105,32 +105,70 @@ await card(page, 'Garden')
   .waitFor()
 await page.getByTestId('sync-status').and(page.locator('[data-state=synced]')).waitFor()
 
-async function shoot(file: string): Promise<void> {
+async function shoot(shotPage: Page, file: string): Promise<void> {
   // Clicking the cards above scrolled them into view, and a pointer over the rail expands it.
-  await page.evaluate(() => document.querySelectorAll('*').forEach((el) => el.scrollTo(0, 0)))
-  await page.mouse.move(page.viewportSize()!.width / 2, 32)
+  await shotPage.evaluate(() => document.querySelectorAll('*').forEach((el) => el.scrollTo(0, 0)))
+  await shotPage.mouse.move(shotPage.viewportSize()!.width / 2, 32)
   // A card shows its toolbar while it holds the focus, as the Add image button left it.
-  if (!(await page.getByTestId('editor').count())) {
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+  if (!(await shotPage.getByTestId('editor').count())) {
+    await shotPage.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
   }
   // Let fades and the masonry settle, so nothing is caught mid-way.
-  await page.waitForTimeout(600)
-  await page.screenshot({ path: `${outDir}github-${file}` })
-  console.log(`Wrote Images/github-${file}`)
+  await shotPage.waitForTimeout(600)
+  await shotPage.screenshot({ path: `${outDir}${file}` })
+  console.log(`Wrote Images/${file}`)
 }
 
-await shoot('notes-light.png')
-await page.emulateMedia({ colorScheme: 'dark' })
-await shoot('notes-dark.png')
-await page.emulateMedia({ colorScheme: 'light' })
-await card(page, 'Weekend in Prague').getByTestId('card-title').click()
-await page.getByTestId('editor').waitFor()
-await shoot('editor.png')
-await page.keyboard.press('Escape')
+type Theme = 'light' | 'dark'
 
-await page.setViewportSize({ width: 390, height: 844 })
-await page.goto('/')
-await card(page, 'Groceries').waitFor()
-await shoot('phone.png')
+/** The notes, an open note and the phone layout, each in the given themes, named by `name`. */
+async function series(
+  shotPage: Page,
+  themes: Theme[],
+  name: (view: 'notes' | 'editor' | 'phone', theme: Theme) => string | null,
+): Promise<void> {
+  const each = async (view: 'notes' | 'editor' | 'phone') => {
+    for (const theme of themes) {
+      const file = name(view, theme)
+      if (!file) continue
+      await shotPage.emulateMedia({ colorScheme: theme })
+      await shoot(shotPage, file)
+    }
+  }
+  await shotPage.setViewportSize({ width: 1280, height: 800 })
+  await each('notes')
+  await card(shotPage, 'Weekend in Prague').getByTestId('card-title').click()
+  await shotPage.getByTestId('editor').waitFor()
+  await each('editor')
+  await shotPage.keyboard.press('Escape')
+  await shotPage.getByTestId('editor').waitFor({ state: 'detached' })
+
+  await shotPage.setViewportSize({ width: 390, height: 844 })
+  await shotPage.goto('/')
+  await card(shotPage, 'Groceries').waitFor()
+  await each('phone')
+  await shotPage.emulateMedia({ colorScheme: 'light' })
+}
+
+// The README shows the notes in both themes and the rest in the light one.
+await series(page, ['light', 'dark'], (view, theme) =>
+  view === 'notes' ? `github-notes-${theme}.png` : theme === 'light' ? `github-${view}.png` : null,
+)
+
+// The website shows every view in both themes, sharp on high-density screens.
+const sharp = await browser.newContext({
+  baseURL: base,
+  viewport: { width: 1280, height: 800 },
+  deviceScaleFactor: 2,
+  storageState: await context.storageState(),
+})
+const sharpPage = await sharp.newPage()
+await sharpPage.goto('/')
+await card(sharpPage, 'Garden')
+  .getByTestId('note-image')
+  .and(sharpPage.locator('[data-loaded=true]'))
+  .waitFor()
+await sharpPage.getByTestId('sync-status').and(sharpPage.locator('[data-state=synced]')).waitFor()
+await series(sharpPage, ['light', 'dark'], (view, theme) => `web-${view}-${theme}.png`)
 
 await browser.close()

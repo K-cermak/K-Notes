@@ -48,7 +48,7 @@ frontend/
   captcha.html       the page the captcha widget runs in, framed by the sign-in forms
   e2e/               Playwright tests
 docs/                SPEC.md
-Images/              logo artwork and README screenshots, published on the CDN; ignored by git
+Images/              logo artwork, README and website screenshots, published on the CDN; ignored by git
 private/             the owner's local notes; ignored by git, never commit or publish it
 ```
 
@@ -85,7 +85,7 @@ just api-types        # regenerate frontend/src/api/schema.d.ts from the OpenAPI
 just api-types-check  # fail if the generated API types are out of date (runs in CI)
 just docker           # build the production image locally
 just icons            # render the PWA icons in frontend/public from icon.svg
-just screenshots      # render the README screenshots into Images/ from the built image
+just screenshots      # render the README and website screenshots into Images/ from the built image
 ```
 
 Toolchain: Python 3.14 (`backend/.python-version`), Node 26 (`.node-version`), pnpm 12. The Node version matters: jsdom, used by Vitest, needs Node 22.22+ or newer. Playwright needs `pnpm exec playwright install chromium` once.
