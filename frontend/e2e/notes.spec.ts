@@ -115,3 +115,20 @@ test('a message replacing another one shows in the same place', async ({ browser
     .evaluateAll((bars) => bars.map((bar) => Math.round(bar.getBoundingClientRect().left)))
   expect(new Set(lefts).size).toBe(1)
 })
+
+test('Tab from the title goes to the note text, then on to the pin', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  await page.getByTestId('composer').click()
+  const form = page.getByTestId('note-form')
+  await expect(form.getByTestId('editor-title')).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(form.getByTestId('editor-body')).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
+  await expect(form.getByTestId('editor-title')).toBeFocused()
+
+  await page.keyboard.press('Escape')
+  await page.getByTestId('composer-list').click()
+  await form.getByTestId('editor-title').click()
+  await page.keyboard.press('Tab')
+  await expect(form.getByTestId('add-item')).toBeFocused()
+})

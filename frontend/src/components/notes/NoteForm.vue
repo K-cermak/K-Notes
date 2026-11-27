@@ -273,10 +273,12 @@ defineExpose({ finish })
         @missing="id && sync.downloadImages(id)"
       />
       <ImageViewer v-model:index="viewing" :attachments="attachments" />
-      <div class="px-4 pt-3 pb-2">
+      <!-- The pin sits beside the title but comes after the note's text in the page, so Tab goes
+           from the title straight to the text. -->
+      <div class="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 px-4 pt-3 pb-2">
         <div
           v-if="note?.conflict_of"
-          class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] bg-[color-mix(in_srgb,var(--warning)_8%,transparent)] px-3 py-2 text-label"
+          class="col-span-2 mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] bg-[color-mix(in_srgb,var(--warning)_8%,transparent)] px-3 py-2 text-label"
           data-testid="conflict"
         >
           <span class="flex-1">{{ $t('note.conflictCopy') }}</span>
@@ -295,47 +297,57 @@ defineExpose({ finish })
             {{ $t('note.dismissConflict') }}
           </button>
         </div>
-        <div class="flex items-start gap-2">
-          <input
-            v-model="title"
-            class="min-w-0 flex-1 bg-transparent py-1.5 text-base font-semibold tracking-[-0.01em] outline-none placeholder:text-faint pointer-coarse:text-lg"
-            :placeholder="$t('note.title')"
-            :aria-label="$t('note.title')"
-            :readonly="trashed || !loaded"
-            :autofocus="autofocus === 'title'"
-            maxlength="1000"
-            data-testid="editor-title"
-            @input="schedule"
-            @focus="focused = true"
-            @blur="((focused = false), flush())"
-          />
-          <button
-            v-if="!trashed"
-            type="button"
-            :class="[iconButton, '-mr-2', pinned && 'text-ink']"
-            :aria-label="$t(pinned ? 'note.unpin' : 'note.pin')"
-            :aria-pressed="pinned"
-            :title="$t(pinned ? 'note.unpin' : 'note.pin')"
-            @click="togglePin"
-          >
-            <PinOff v-if="pinned" :size="18" />
-            <Pin v-else :size="18" />
-          </button>
-        </div>
+        <input
+          v-model="title"
+          class="min-w-0 bg-transparent py-1.5 text-base font-semibold tracking-[-0.01em] outline-none placeholder:text-faint pointer-coarse:text-lg"
+          :placeholder="$t('note.title')"
+          :aria-label="$t('note.title')"
+          :readonly="trashed || !loaded"
+          :autofocus="autofocus === 'title'"
+          maxlength="1000"
+          data-testid="editor-title"
+          @input="schedule"
+          @focus="focused = true"
+          @blur="((focused = false), flush())"
+        />
         <!-- v-show: the editor keeps its instance while the note is a checklist. -->
-        <EditorContent v-show="noteType === 'text'" :editor="editor" class="pb-2" />
+        <EditorContent v-show="noteType === 'text'" :editor="editor" class="col-span-2 pb-2" />
         <ChecklistEditor
           v-if="noteType === 'checklist' && loaded"
           ref="checklist"
+          class="col-span-2"
           :note-id="id"
           :readonly="trashed"
           :ensure-note="ensureNote"
           :autofocus="autofocus === 'body'"
         />
-        <LabelChips v-if="id" :note-id="id" :labels="labels" :color="color" class="pt-1 pb-2" />
-        <p v-if="edited" class="ui-meta pt-1 text-right sm:hidden">
+        <LabelChips
+          v-if="id"
+          :note-id="id"
+          :labels="labels"
+          :color="color"
+          class="col-span-2 pt-1 pb-2"
+        />
+        <p v-if="edited" class="ui-meta col-span-2 pt-1 text-right sm:hidden">
           {{ edited }}
         </p>
+        <button
+          v-if="!trashed"
+          type="button"
+          :class="[
+            iconButton,
+            'col-start-2 -mr-2',
+            note?.conflict_of ? 'row-start-2' : 'row-start-1',
+            pinned && 'text-ink',
+          ]"
+          :aria-label="$t(pinned ? 'note.unpin' : 'note.pin')"
+          :aria-pressed="pinned"
+          :title="$t(pinned ? 'note.unpin' : 'note.pin')"
+          @click="togglePin"
+        >
+          <PinOff v-if="pinned" :size="18" />
+          <Pin v-else :size="18" />
+        </button>
       </div>
     </div>
     <div
