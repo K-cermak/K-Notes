@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import { ChevronLeft, ChevronRight, X } from '@lucide/vue'
 import type { LocalAttachment } from '@/db/schema'
 import NoteImage from './NoteImage.vue'
+import { allowZoom } from '@/zoom'
 
 /** A note's images one at a time over everything else, with arrows between them. */
 const props = defineProps<{ attachments: LocalAttachment[] }>()
@@ -11,6 +12,21 @@ const index = defineModel<number | null>('index', { required: true })
 
 const current = computed(() => (index.value === null ? undefined : props.attachments[index.value]))
 const count = computed(() => props.attachments.length)
+
+// The rest of the app does not zoom, but a photo often needs a closer look.
+let releaseZoom: (() => void) | null = null
+watch(
+  () => !!current.value,
+  (open) => {
+    if (open) releaseZoom ??= allowZoom()
+    else {
+      releaseZoom?.()
+      releaseZoom = null
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => releaseZoom?.())
 
 function step(by: number): void {
   if (index.value === null || count.value < 2) return

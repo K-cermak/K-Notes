@@ -75,6 +75,14 @@
   }
 }
 
+/* No double-tap zoom: the app does not zoom like a page (src/zoom.ts). Pinching stays possible
+   where it is allowed. */
+@layer base {
+  html {
+    touch-action: manipulation;
+  }
+}
+
 /* Note text in cards and the editor: headings stay modest, as in a small card. */
 @layer components {
   .rich-text h3,

@@ -2,10 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- resizes-content: on Android the keyboard shrinks the layout, so the editor toolbar stays visible. -->
+    <!-- resizes-content: on Android the keyboard shrinks the layout, so the editor toolbar stays visible.
+         maximum-scale=1: the app does not zoom like a page; src/zoom.ts lifts it for the image viewer. -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content, maximum-scale=1"
     />
     <meta name="description" content="%BRANDING_DESCRIPTION%" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
