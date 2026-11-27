@@ -110,6 +110,22 @@
   }
 
   .ProseMirror [contenteditable='false'] {
+  /* iOS zooms into a focused field whose text is under 16 px, and the zoom pushes the editor's
+     toolbar off screen; on touch screens the note text is never smaller. */
+  @media (pointer: coarse) {
+    .ProseMirror {
+      font-size: 16px;
+    }
+
+    .ProseMirror h1 {
+      font-size: 20px;
+    }
+
+    .ProseMirror h2 {
+      font-size: 17px;
+    }
+  }
+
     white-space: normal;
   }
 

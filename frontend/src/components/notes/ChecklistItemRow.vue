@@ -118,7 +118,7 @@ defineExpose({
       ref="field"
       v-model="text"
       rows="1"
-      class="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-1.5 leading-5 outline-none placeholder:text-faint"
+      class="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-1.5 leading-5 outline-none placeholder:text-faint pointer-coarse:text-base"
       :class="item.checked && 'text-muted line-through'"
       :readonly="readonly"
       :maxlength="MAX_ITEM_LENGTH"

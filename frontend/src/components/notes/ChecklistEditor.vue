@@ -264,7 +264,7 @@ defineExpose({
       <input
         ref="addField"
         v-model="adding"
-        class="min-w-0 flex-1 bg-transparent py-1.5 outline-none placeholder:text-muted"
+        class="min-w-0 flex-1 bg-transparent py-1.5 outline-none placeholder:text-muted pointer-coarse:text-base pointer-coarse:leading-5"
         :placeholder="$t('checklist.add')"
         :aria-label="$t('checklist.add')"
         data-testid="add-item"

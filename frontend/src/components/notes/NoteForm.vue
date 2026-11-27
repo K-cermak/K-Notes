@@ -298,7 +298,7 @@ defineExpose({ finish })
         <div class="flex items-start gap-2">
           <input
             v-model="title"
-            class="min-w-0 flex-1 bg-transparent py-1.5 text-base font-semibold tracking-[-0.01em] outline-none placeholder:text-faint"
+            class="min-w-0 flex-1 bg-transparent py-1.5 text-base font-semibold tracking-[-0.01em] outline-none placeholder:text-faint pointer-coarse:text-lg"
             :placeholder="$t('note.title')"
             :aria-label="$t('note.title')"
             :readonly="trashed || !loaded"
