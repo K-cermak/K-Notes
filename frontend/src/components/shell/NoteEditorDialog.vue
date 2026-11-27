@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import NoteForm from '@/components/notes/NoteForm.vue'
+import { useMediaQuery } from '@/composables/useMediaQuery'
+import type { NoteColor } from '@/notes'
+import { setBarColor } from '@/theme'
 
 // The open note has its own route, so Back and the Android back gesture close it (SPEC 9, Editor).
 // On phones it fills the visual viewport, so the on-screen keyboard does not cover its toolbar.
@@ -10,7 +13,7 @@ const props = defineProps<{ open: boolean; fallback: string }>()
 
 const route = useRoute()
 const router = useRouter()
-const form = ref<{ finish: () => Promise<void> } | null>(null)
+const form = ref<{ finish: () => Promise<void>; color: NoteColor } | null>(null)
 let closing = false
 
 interface Shown {
@@ -35,6 +38,15 @@ watch(
   },
   { immediate: true },
 )
+
+// The phone editor fills the screen up to the status bar, which would otherwise keep the page's
+// colour above a coloured note.
+const phone = useMediaQuery('(max-width: 639px)')
+watch(
+  () => (props.open && phone.value ? form.value?.color : undefined),
+  (color) => setBarColor(color && color !== 'default' ? `var(--note-${color})` : null),
+)
+onBeforeUnmount(() => setBarColor(null))
 
 async function close(): Promise<void> {
   if (closing) return

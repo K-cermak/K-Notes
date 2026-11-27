@@ -273,7 +273,7 @@ onBeforeUnmount(() => editor.value?.destroy())
 
 if (props.files?.length) void images.attachFiles(ensureNote, props.files)
 
-defineExpose({ finish })
+defineExpose({ finish, color })
 </script>
 
 <template>

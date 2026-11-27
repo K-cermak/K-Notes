@@ -399,7 +399,7 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 
 ### Editor
 
-- Desktop: the card grows into a centred dialog about 600 px wide over a dimmed backdrop. Phones: full screen, with a back arrow at the top left that closes it, besides Close in the bottom toolbar.
+- Desktop: the card grows into a centred dialog about 600 px wide over a dimmed backdrop. Phones: full screen, with a back arrow at the top left that closes it, besides Close in the bottom toolbar. On phones the browser and system bars (`theme-color`) take the note's colour while it is open, so the status bar does not cut a band of page colour above a coloured note.
 - The open note has its own route (`/note/:id`), so the browser back button and the Android back gesture close it.
 - Title field, then the Tiptap body or the checklist. A new note starts with the cursor in the body or the checklist, as in Keep; the title is a click or Shift+Tab away. A formatting control offers H1, H2, normal text, bold, italic, underline and clear formatting. Standard shortcuts work (Ctrl/Cmd+B, I, U).
 - Bottom toolbar: formatting, color, image, archive, more menu, "Edited" timestamp, Close.
