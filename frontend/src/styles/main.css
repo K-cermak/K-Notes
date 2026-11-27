@@ -43,6 +43,7 @@
   --color-line: var(--line);
   --color-line-hover: var(--line-hover);
   --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-on-accent: var(--on-accent);

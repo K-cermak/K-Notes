@@ -463,6 +463,7 @@ Tokens. Define these as CSS custom properties using `light-dark()`, with `color-
 | `accent-hover` | `#1a5fc8` | `#1a5fc8` | |
 | `danger` | `#d1242f` | `#ff6369` | Errors, destructive actions |
 | `warning` | `#b45309` | `#f5a524` | |
+| `scrim` | black at 30 % | black at 60 % | The dimmed backdrop behind dialogs and the phone drawer; black in both themes, so it darkens a dark page instead of washing it out |
 | `success` | `#18803a` | `#3fb950` | Darker than the reference's `#1a8c3e`, which is 4.3:1 on white, so that it can be used for text |
 
 Applying it to notes, which the reference does not cover:

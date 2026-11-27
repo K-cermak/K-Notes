@@ -50,7 +50,7 @@ async function close(): Promise<void> {
   <DialogRoot :open="open" @update:open="(value) => !value && close()">
     <DialogPortal>
       <DialogOverlay
-        class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)] data-[state=closed]:animate-fade-out"
+        class="fixed inset-0 z-30 animate-fade bg-scrim data-[state=closed]:animate-fade-out"
       />
       <DialogContent
         v-if="shown"

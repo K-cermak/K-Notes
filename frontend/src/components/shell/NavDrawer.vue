@@ -60,7 +60,7 @@ function navigated(): void {
   >
     <div
       v-if="compact && open"
-      class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)]"
+      class="fixed inset-0 z-30 animate-fade bg-scrim"
       @click="open = false"
     />
   </Transition>
