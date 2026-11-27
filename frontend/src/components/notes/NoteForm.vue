@@ -34,7 +34,8 @@ import LabelPicker from '@/components/labels/LabelPicker.vue'
  */
 const props = defineProps<{
   noteId: string | null
-  autofocus?: 'title' | 'body'
+  /** Puts the cursor in the body or the checklist, as Keep does for a new note. */
+  autofocus?: boolean
   /** The kind of note a draft becomes. */
   type?: LocalNote['type']
   /** Labels a new note gets, as when it is written in a label's view. */
@@ -114,7 +115,23 @@ function createEditor(content: JSONContent, editable: boolean): void {
     },
     editorProps: { attributes: { 'aria-label': t('note.body'), 'data-testid': 'editor-body' } },
   })
-  if (props.autofocus === 'body' && noteType.value === 'text') editor.value.commands.focus('end')
+  if (props.autofocus && noteType.value === 'text') focusBodyEnd()
+}
+
+// Not Tiptap's focus command: it focuses a frame later regardless, and typing into the title in
+// the meantime went to the body.
+function focusBodyEnd(): void {
+  const current = editor.value
+  if (!current || current.isDestroyed) return
+  // EditorContent moves the editor into the page a few ticks after it renders.
+  if (!current.view.dom.isConnected) {
+    requestAnimationFrame(focusBodyEnd)
+    return
+  }
+  const active = document.activeElement
+  if (active?.matches('input, textarea, [contenteditable="true"]')) return
+  current.commands.setTextSelection(current.state.doc.content.size)
+  current.view.focus()
 }
 
 // What this form last wrote, so its own writes coming back through the live query are not
@@ -303,7 +320,6 @@ defineExpose({ finish })
           :placeholder="$t('note.title')"
           :aria-label="$t('note.title')"
           :readonly="trashed || !loaded"
-          :autofocus="autofocus === 'title'"
           maxlength="1000"
           data-testid="editor-title"
           @input="schedule"
@@ -319,7 +335,7 @@ defineExpose({ finish })
           :note-id="id"
           :readonly="trashed"
           :ensure-note="ensureNote"
-          :autofocus="autofocus === 'body'"
+          :autofocus="autofocus"
         />
         <LabelChips
           v-if="id"

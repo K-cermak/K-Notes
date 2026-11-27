@@ -64,9 +64,7 @@ async function close(): Promise<void> {
           ref="form"
           :note-id="shown.id === 'new' ? null : shown.id"
           :type="shown.type"
-          :autofocus="
-            shown.id !== 'new' ? undefined : shown.type === 'checklist' ? 'body' : 'title'
-          "
+          :autofocus="shown.id === 'new'"
           :label-ids="shown.label ? [shown.label] : undefined"
           @close="close"
         />

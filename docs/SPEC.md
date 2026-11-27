@@ -401,7 +401,7 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 
 - Desktop: the card grows into a centred dialog about 600 px wide over a dimmed backdrop. Phones: full screen.
 - The open note has its own route (`/note/:id`), so the browser back button and the Android back gesture close it.
-- Title field, then the Tiptap body or the checklist. A formatting control offers H1, H2, normal text, bold, italic, underline and clear formatting. Standard shortcuts work (Ctrl/Cmd+B, I, U).
+- Title field, then the Tiptap body or the checklist. A new note starts with the cursor in the body or the checklist, as in Keep; the title is a click or Shift+Tab away. A formatting control offers H1, H2, normal text, bold, italic, underline and clear formatting. Standard shortcuts work (Ctrl/Cmd+B, I, U).
 - Bottom toolbar: formatting, color, image, archive, more menu, "Edited" timestamp, Close.
 - There is no save button. Changes are written continuously. A note left empty (no title, content, items or images) is discarded when the editor closes.
 - Notes in the trash open read-only.

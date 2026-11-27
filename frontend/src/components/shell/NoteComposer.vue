@@ -95,7 +95,7 @@ defineExpose({ start })
         :type="type"
         :label-ids="labelIds"
         :files="files"
-        :autofocus="type === 'checklist' ? 'body' : 'title'"
+        autofocus
         @close="close"
       />
     </div>
