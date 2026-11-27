@@ -235,6 +235,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <Plus :size="24" />
     </button>
   </div>
-  <NoteEditorDialog v-if="editing" :fallback="listPath" />
+  <NoteEditorDialog :open="editing" :fallback="listPath" />
   <EditLabelsDialog v-model:open="editLabels" />
 </template>

@@ -34,6 +34,7 @@
   --ease-out: var(--motion-ease);
   --animate-rise: ui-rise var(--motion) var(--motion-ease) both;
   --animate-fade: ui-fade var(--motion) var(--motion-ease) both;
+  --animate-fade-out: ui-fade-out var(--motion-fast) var(--motion-ease) both;
 
   --color-bg: var(--bg);
   --color-ink: var(--ink);
@@ -109,7 +110,6 @@
     -webkit-touch-callout: none;
   }
 
-  .ProseMirror [contenteditable='false'] {
   /* iOS zooms into a focused field whose text is under 16 px, and the zoom pushes the editor's
      toolbar off screen; on touch screens the note text is never smaller. */
   @media (pointer: coarse) {
@@ -126,6 +126,7 @@
     }
   }
 
+  .ProseMirror [contenteditable='false'] {
     white-space: normal;
   }
 
@@ -188,6 +189,48 @@
   }
 
   .card-leave {
+    animation-name: ui-fade-out;
+  }
+}
+
+/* The note editor: a full-screen sheet on phones, a centred dialog from 640 px. Reka keeps it in the
+   page with data-state="closed" until the closing animation ends. */
+.note-editor {
+  animation: editor-in var(--motion) var(--motion-ease) both;
+
+  &[data-state='closed'] {
+    animation: editor-out var(--motion-fast) var(--motion-ease) both;
+  }
+
+  @media (min-width: 640px) {
+    animation-name: ui-rise;
+
+    &[data-state='closed'] {
+      animation-name: ui-sink;
+    }
+  }
+}
+
+@keyframes editor-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+
+@keyframes editor-out {
+  to {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-editor {
+    animation-name: ui-fade;
+  }
+
+  .note-editor[data-state='closed'] {
     animation-name: ui-fade-out;
   }
 }

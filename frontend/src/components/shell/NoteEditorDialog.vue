@@ -1,17 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import NoteForm from '@/components/notes/NoteForm.vue'
 
 // The open note has its own route, so Back and the Android back gesture close it (SPEC 9, Editor).
 // On phones it fills the visual viewport, so the on-screen keyboard does not cover its toolbar.
-const props = defineProps<{ fallback: string }>()
+const props = defineProps<{ open: boolean; fallback: string }>()
 
 const route = useRoute()
 const router = useRouter()
 const form = ref<{ finish: () => Promise<void> } | null>(null)
 let closing = false
+
+interface Shown {
+  id: string
+  type: 'text' | 'checklist'
+  label?: string
+}
+
+// The note being shown outlives its route while the editor animates closed, so the form keeps
+// showing it instead of switching to an empty one.
+const shown = ref<Shown | null>(null)
+watch(
+  () => (props.open ? route.fullPath : null),
+  (path) => {
+    if (path === null) return
+    closing = false
+    shown.value = {
+      id: String(route.params.id),
+      type: route.query.type === 'checklist' ? 'checklist' : 'text',
+      label: route.query.label ? String(route.query.label) : undefined,
+    }
+  },
+  { immediate: true },
+)
 
 async function close(): Promise<void> {
   if (closing) return
@@ -24,30 +47,27 @@ async function close(): Promise<void> {
 </script>
 
 <template>
-  <DialogRoot :open="true" @update:open="(open) => !open && close()">
+  <DialogRoot :open="open" @update:open="(value) => !value && close()">
     <DialogPortal>
       <DialogOverlay
-        class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)]"
+        class="fixed inset-0 z-30 animate-fade bg-[color-mix(in_srgb,var(--ink)_28%,transparent)] data-[state=closed]:animate-fade-out"
       />
       <DialogContent
-        class="fixed inset-x-0 top-[var(--viewport-top,0px)] z-30 flex h-[var(--viewport-height,100dvh)] flex-col overflow-hidden bg-bg outline-none motion-reduce:animate-fade sm:inset-auto sm:top-[10dvh] sm:left-1/2 sm:h-auto sm:max-h-[80dvh] sm:w-[600px] sm:-translate-x-1/2 sm:animate-rise sm:border sm:border-line sm:shadow-float"
+        v-if="shown"
+        class="note-editor fixed inset-x-0 top-[var(--viewport-top,0px)] z-30 flex h-[var(--viewport-height,100dvh)] flex-col overflow-hidden bg-bg outline-none sm:inset-auto sm:top-[10dvh] sm:left-1/2 sm:h-auto sm:max-h-[80dvh] sm:w-[600px] sm:-translate-x-1/2 sm:border sm:border-line sm:shadow-float"
         :aria-describedby="undefined"
         data-testid="editor"
       >
         <DialogTitle class="sr-only">{{ $t('note.editor') }}</DialogTitle>
         <NoteForm
-          :key="String(route.params.id)"
+          :key="shown.id"
           ref="form"
-          :note-id="route.params.id === 'new' ? null : String(route.params.id)"
-          :type="route.query.type === 'checklist' ? 'checklist' : 'text'"
+          :note-id="shown.id === 'new' ? null : shown.id"
+          :type="shown.type"
           :autofocus="
-            route.params.id !== 'new'
-              ? undefined
-              : route.query.type === 'checklist'
-                ? 'body'
-                : 'title'
+            shown.id !== 'new' ? undefined : shown.type === 'checklist' ? 'body' : 'title'
           "
-          :label-ids="route.query.label ? [String(route.query.label)] : undefined"
+          :label-ids="shown.label ? [shown.label] : undefined"
           @close="close"
         />
       </DialogContent>
