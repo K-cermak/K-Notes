@@ -37,6 +37,9 @@ export const LIST: MasonryOptions = {
   minColumnWidth: 600,
 }
 
+/** On phones the cards sit closer together, as the screen has little width to spare. */
+export const PHONE_GAP = 8
+
 export interface Placement {
   x: number
   y: number

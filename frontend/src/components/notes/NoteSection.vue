@@ -3,7 +3,8 @@ import { computed, ref } from 'vue'
 import type { LocalAttachment, LocalChecklistItem, LocalLabel, LocalNote } from '@/db/schema'
 import { updateNote } from '@/db/notes'
 import { insertKeys } from '@/db/positions'
-import { GRID, LIST, useMasonry } from '@/composables/useMasonry'
+import { GRID, LIST, PHONE_GAP, useMasonry } from '@/composables/useMasonry'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useNoteDrag } from '@/composables/useNoteDrag'
 import { useSelectionStore } from '@/stores/selection'
 import NoteCard from './NoteCard.vue'
@@ -59,11 +60,15 @@ const drag = useNoteDrag({
 })
 
 const order = computed(() => drag.preview.value ?? keys.value)
+const phone = useMediaQuery('(max-width: 639px)')
 const {
   layout: masonry,
   heights,
   track,
-} = useMasonry(container, order, () => (props.layout === 'list' ? LIST : GRID))
+} = useMasonry(container, order, () => {
+  const options = props.layout === 'list' ? LIST : GRID
+  return phone.value ? { ...options, gap: PHONE_GAP } : options
+})
 
 function transform(key: string): string {
   const dragged = drag.drag.value
