@@ -1,7 +1,7 @@
 # Example deployment. Put a reverse proxy with HTTPS in front of it: the app needs HTTPS
 # for the service worker and secure cookies (localhost is the only exception).
 services:
-  notes:
+  k-notes:
     image: ghcr.io/k-cermak/k-notes:latest
     # To run your own build instead: comment out image above and uncomment build.
     # build: .

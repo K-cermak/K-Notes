@@ -187,7 +187,7 @@ Stop the container first, so the database is not copied halfway through a write.
 For a locked-out administrator, or when no one else can help. The commands run inside the container, where the `APP_*` variables are already set, and change the database directly; the running app picks the change up at once.
 
 ```sh
-docker compose exec notes python -m app.cli <command> [e-mail]
+docker compose exec k-notes python -m app.cli <command> [e-mail]
 ```
 
 With plain Docker, use `docker exec <container> python -m app.cli …` instead.
