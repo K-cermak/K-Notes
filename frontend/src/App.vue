@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { setLucideProps } from '@lucide/vue'
 import AppSnackbar from '@/components/AppSnackbar.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -17,6 +18,8 @@ const session = useSessionStore()
 const sync = useSyncStore()
 const snackbar = useSnackbarStore()
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 onMounted(() => {
   trackVisualViewport()
@@ -38,6 +41,15 @@ watch(
     }
   },
   { immediate: true },
+)
+
+// The session is checked in the background after an offline-first start; if it ends up signed
+// out, the page the user was on can no longer be shown.
+watch(
+  () => session.user,
+  (user, previous) => {
+    if (!user && previous && !route.meta.public) void router.replace({ name: 'login' })
+  },
 )
 
 // Theme follows the profile and is cached for the next start (SPEC 9, Visual design).

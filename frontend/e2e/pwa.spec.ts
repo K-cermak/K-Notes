@@ -64,6 +64,23 @@ test('an edit made offline survives a reload offline and syncs once back online'
   await expect(card(other.page, 'Packing list, edited offline')).toBeVisible()
 })
 
+test('on a connection that never answers the app still opens with its notes', async ({
+  browser,
+}) => {
+  const { page, context } = await signedIn(browser, await newUser(browser))
+  await addNote(page, 'Weak signal')
+  await expect(page.getByTestId('unsent')).toHaveCount(0)
+  await controlled(page)
+
+  // Unlike offline, requests neither fail nor finish, as on a weak mobile signal.
+  await context.route(
+    (url) => url.pathname.startsWith('/api/'),
+    () => {},
+  )
+  await page.reload()
+  await expect(card(page, 'Weak signal')).toBeVisible({ timeout: 3000 })
+})
+
 test('the browser considers the app installable', async ({ browser }) => {
   const { page, context } = await signedIn(browser, await newUser(browser))
   await controlled(page)

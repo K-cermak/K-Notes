@@ -298,7 +298,7 @@ Local Dexie tables: `notes`, `checklistItems`, `labels`, `noteLabels`, `attachme
 - A `401` during sync keeps all local data and the outbox, stops syncing and asks the user to sign in again. After signing in as the same user, sync resumes.
 - Signing in as a different user than the one whose data is stored locally wipes the local database first. If the outbox is not empty, warn and ask for confirmation.
 - Signing out wipes the local database, with the same warning.
-- Offline, the app opens straight into the local data without contacting the server.
+- With local data on the device, the app opens straight into it without waiting for the server, using the cached configuration and profile. The session is checked in the background: a `401` is handled like one during sync, a fresh profile replaces the cached one. This also covers a weak signal, where requests neither fail nor finish for a long time. Only a device without local data waits for the server at start. (Before 0.2 the app waited for the server whenever the network did not fail outright.)
 
 ### 5.7 Trash purging
 

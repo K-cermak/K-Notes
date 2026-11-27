@@ -36,4 +36,18 @@ describe('instance store', () => {
     expect(offline.config).toEqual(config)
     expect(offline.failed).toBe(true)
   })
+
+  it('starts from the cached configuration without waiting for the server', async () => {
+    vi.spyOn(api, 'GET').mockResolvedValueOnce({
+      data: config,
+      response: new Response(null, { status: 200 }),
+    })
+    await useInstanceStore().load()
+
+    setActivePinia(createPinia())
+    vi.spyOn(api, 'GET').mockReturnValueOnce(new Promise(() => {}))
+    const instance = useInstanceStore()
+    await instance.start()
+    expect(instance.config).toEqual(config)
+  })
 })

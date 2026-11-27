@@ -23,5 +23,17 @@ export const useInstanceStore = defineStore('instance', () => {
     await rememberConfig(db, fresh)
   }
 
-  return { config, failed, load }
+  /**
+   * For the first navigation: a cached configuration is used at once and refreshed in the
+   * background, so a slow or hanging connection does not hold up the start (SPEC 5.6).
+   */
+  async function start(): Promise<void> {
+    const cached = await cachedConfig(db)
+    // Until setup is done, the server's answer decides where the app goes.
+    if (!cached || cached.setup_required) return load()
+    config.value = cached
+    void load()
+  }
+
+  return { config, failed, load, start }
 })

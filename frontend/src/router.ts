@@ -113,14 +113,14 @@ export const router = createRouter({
 router.beforeEach(async (to) => {
   const instance = useInstanceStore()
   const session = useSessionStore()
-  if (!instance.config) await instance.load()
+  if (!instance.config) await instance.start()
   // Offline on the very first visit there is no cached configuration to decide anything with.
   if (!instance.config) return true
 
   if (instance.config.setup_required) {
     return to.name === 'setup' || to.name === 'showcase' ? true : { name: 'setup' }
   }
-  if (!session.loaded) await session.load()
+  if (!session.loaded) await session.start()
   if (to.name === 'setup') return { name: session.user ? 'notes' : 'login' }
   if (to.meta.guestOnly && session.user && !session.expired) return { name: 'notes' }
   if (!to.meta.public && !session.user) {

@@ -58,6 +58,33 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   /**
+   * For the first navigation: with a profile on this device, the app opens straight into the local
+   * data and checks the session in the background, so a weak connection does not hold up the
+   * start (SPEC 5.6). Without one it waits for the server.
+   */
+  async function start(): Promise<void> {
+    const cached = await cachedProfile(db)
+    if (!cached) return load()
+    user.value = cached
+    offline.value = true
+    loaded.value = true
+    void verify()
+  }
+
+  async function verify(): Promise<void> {
+    try {
+      const me = await call(() => api.GET('/api/v1/me'))
+      const pending = (await getMeta<ProfileUpdate>(db, PENDING_PROFILE)) ?? {}
+      if (!(await signedIn({ ...me, ...pending } as Me))) user.value = null
+      offline.value = false
+    } catch (e) {
+      if (!isFailure(e)) throw e
+      // The local data stays usable, as after a 401 during sync; the user is asked to sign in.
+      if (e.status === 401) expired.value = true
+    }
+  }
+
+  /**
    * Adopts the account the server just signed in. Another user's local data is wiped first,
    * after a confirmation when it has unsent changes. Returns false if the user backed out.
    */
@@ -135,6 +162,7 @@ export const useSessionStore = defineStore('session', () => {
     expired,
     offline,
     load,
+    start,
     signedIn,
     logout,
     deleteAccount,
