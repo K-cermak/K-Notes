@@ -75,7 +75,17 @@ onMounted(load)
 <template>
   <section class="flex flex-col gap-4">
     <h2 class="ui-section-title">{{ $t('settings.tokens.title') }}</h2>
-    <p class="text-muted">{{ $t('settings.tokens.intro') }}</p>
+    <p class="text-muted">
+      {{ $t('settings.tokens.intro') }}
+      <a
+        href="/api/v1/docs"
+        target="_blank"
+        rel="noopener"
+        class="text-accent underline-offset-2 hover:underline"
+        data-testid="api-docs"
+        >{{ $t('settings.tokens.docs') }}</a
+      >
+    </p>
     <form class="flex flex-col gap-4" @submit.prevent="create">
       <UiField :label="$t('settings.tokens.name')" for="token-name">
         <UiInput id="token-name" v-model="name" maxlength="100" autocomplete="off" />

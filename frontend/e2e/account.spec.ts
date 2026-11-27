@@ -57,6 +57,8 @@ test('a read token lists notes and is refused when it writes or touches tokens',
 }) => {
   const { page } = await signedIn(browser, await newUser(browser))
   await page.goto('/settings/tokens')
+  const docs = page.getByTestId('api-docs')
+  expect((await page.request.get((await docs.getAttribute('href'))!)).status()).toBe(200)
   await page.getByLabel('Name').fill('Reader')
   await page.getByRole('button', { name: 'Create token' }).click()
   const token = await page.getByTestId('new-token').getByRole('textbox').inputValue()

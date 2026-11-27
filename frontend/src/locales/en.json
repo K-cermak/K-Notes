@@ -485,6 +485,7 @@
     "tokens": {
       "title": "API tokens",
       "intro": "Tokens let scripts read or change your notes through the REST API. They cannot reach your account, security settings or administration.",
+      "docs": "Read the API documentation.",
       "name": "Name",
       "scope": "Access",
       "read": "Read",
