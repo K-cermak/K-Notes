@@ -1,8 +1,9 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
-from app.api.deps import AppSettings, CurrentAuth
+from app.api.deps import AppSettings, CurrentAuth, clear_session_cookie
 from app.db import DbSession
 from app.schemas.account import (
+    AccountDelete,
     ApiTokenCreate,
     ApiTokenInfo,
     CreatedApiToken,
@@ -30,6 +31,15 @@ def get_me(auth: CurrentAuth) -> Me:
 @router.patch("")
 def update_me(body: ProfileUpdate, auth: CurrentAuth, db: DbSession) -> Me:
     return accounts.to_me(accounts.update_profile(db, auth.user, body))
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me(
+    body: AccountDelete, auth: CurrentAuth, db: DbSession, settings: AppSettings, response: Response
+) -> None:
+    """Deletes the account with all its notes and images. The last active admin cannot."""
+    accounts.delete_account(db, auth.user, password=body.password, email=body.email)
+    clear_session_cookie(response, settings)
 
 
 @router.post("/password", status_code=status.HTTP_204_NO_CONTENT)

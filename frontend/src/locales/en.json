@@ -226,6 +226,7 @@
     "account_disabled": "This account has been deactivated.",
     "too_many_requests": "Too many attempts. Try again in {seconds} s.",
     "wrong_password": "The current password is not correct.",
+    "wrong_email": "The e-mail address does not match this account.",
     "cross_origin": "The request was refused: the app is open at a different address than the one it is set up for. Open it at its configured address.",
     "not_admin": "Only administrators can do this.",
     "self_change": "You cannot do this to your own account.",
@@ -458,6 +459,15 @@
       "unlink": "Unlink",
       "onlyWay": "This is your only way to sign in, so it cannot be unlinked.",
       "linked": "Linked. You can now sign in with single sign-on."
+    },
+    "deleteAccount": {
+      "title": "Delete account",
+      "intro": "Deletes your account with all your notes, labels and images, on the server and on this device. This cannot be undone.",
+      "email": "Your e-mail address",
+      "submit": "Delete account",
+      "confirmTitle": "Delete your account?",
+      "confirmMessage": "All your notes, labels and images will be deleted forever.",
+      "lastAdmin": "You are the only administrator. Make someone else an administrator first."
     },
     "sessions": {
       "title": "Sessions",

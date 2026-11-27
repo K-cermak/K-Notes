@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { expect, test } from '@playwright/test'
-import { admin, newUser, signedIn } from './helpers'
+import { addNote, admin, newUser, signedIn } from './helpers'
 
 /** RFC 6238 TOTP for a base32 secret, as an authenticator app computes it. */
 function totp(secret: string, at = Date.now()): string {
@@ -102,4 +102,23 @@ test('an admin deactivates a user, who is then signed out', async ({ browser }) 
   const me = await victim.context.request.get('/api/v1/me')
   expect(me.status()).toBe(401)
   await context.close()
+})
+
+test('a user deletes their own account', async ({ browser }) => {
+  const user = await newUser(browser)
+  const { page } = await signedIn(browser, user)
+  await addNote(page, 'Soon gone')
+  await expect(page.getByTestId('unsent')).toHaveCount(0)
+  await page.goto('/settings/security')
+  const section = page.getByTestId('delete-account')
+  await section.getByRole('button', { name: 'Delete account' }).click()
+  await section.getByLabel('Password').fill(user.password)
+  await section.getByRole('button', { name: 'Delete account' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete account' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+
+  const login = await page.request.post('/api/v1/auth/login', {
+    data: { email: user.email, password: user.password },
+  })
+  expect(login.status()).toBe(401)
 })

@@ -228,7 +228,11 @@ export interface paths {
         get: operations["get_me"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Me
+         * @description Deletes the account with all its notes and images. The last active admin cannot.
+         */
+        delete: operations["delete_me"];
         options?: never;
         head?: never;
         /** Update Me */
@@ -812,6 +816,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountDelete
+         * @description The password, or for an account without one, its e-mail address.
+         */
+        AccountDelete: {
+            /** Password */
+            password?: string | null;
+            /** Email */
+            email?: string | null;
+        };
         /** AdminUser */
         AdminUser: {
             /** Id */
@@ -2065,6 +2079,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Me"];
                 };
+            };
+            /** @description Default Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountDelete"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Default Response */
             default: {

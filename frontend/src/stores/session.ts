@@ -15,6 +15,7 @@ import { db } from '@/db/schema'
 import { useConfirmStore } from './confirm'
 
 type ProfileUpdate = components['schemas']['ProfileUpdate']
+type AccountDelete = components['schemas']['AccountDelete']
 const PENDING_PROFILE = 'profilePatch'
 
 export const useSessionStore = defineStore('session', () => {
@@ -91,6 +92,14 @@ export const useSessionStore = defineStore('session', () => {
     return true
   }
 
+  /** Deletes the account on the server, then everything of it on this device. */
+  async function deleteAccount(confirmation: AccountDelete): Promise<void> {
+    await call(() => api.DELETE('/api/v1/me', { body: confirmation }))
+    await wipeLocalData(db)
+    user.value = null
+    expired.value = false
+  }
+
   /**
    * Applies a profile change at once and sends it to the server; offline it waits in the local
    * database and goes out with the next successful sync (SPEC 9, Visual design).
@@ -120,5 +129,16 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  return { user, loaded, expired, offline, load, signedIn, logout, updateProfile, sendProfile }
+  return {
+    user,
+    loaded,
+    expired,
+    offline,
+    load,
+    signedIn,
+    logout,
+    deleteAccount,
+    updateProfile,
+    sendProfile,
+  }
 })

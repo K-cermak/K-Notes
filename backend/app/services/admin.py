@@ -57,6 +57,12 @@ def _active_admins(db: Session) -> int:
     return db.scalar(query) or 0
 
 
+def ensure_admin_remains(db: Session, target: User) -> None:
+    """Refuse to remove the target if it is the last active admin."""
+    if target.is_admin and target.is_active and _active_admins(db) <= 1:
+        raise ConflictError("last_admin", "The instance must keep at least one active admin")
+
+
 def _guard(db: Session, actor: User | None, target: User, *, removes_admin: bool) -> None:
     """Refuse changes that lock an admin out or leave the instance without an active admin.
 
@@ -64,8 +70,8 @@ def _guard(db: Session, actor: User | None, target: User, *, removes_admin: bool
     """
     if actor is not None and actor.id == target.id:
         raise ConflictError("self_change", "You cannot do this to your own account here")
-    if removes_admin and target.is_admin and target.is_active and _active_admins(db) <= 1:
-        raise ConflictError("last_admin", "The instance must keep at least one active admin")
+    if removes_admin:
+        ensure_admin_remains(db, target)
 
 
 def update_user(db: Session, actor: User | None, user_id: str, update: AdminUserUpdate) -> AdminUser:
