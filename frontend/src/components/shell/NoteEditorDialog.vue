@@ -65,6 +65,7 @@ async function close(): Promise<void> {
           :note-id="shown.id === 'new' ? null : shown.id"
           :type="shown.type"
           :autofocus="shown.id === 'new'"
+          back
           :label-ids="shown.label ? [shown.label] : undefined"
           @close="close"
         />

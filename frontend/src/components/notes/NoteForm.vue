@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import type { JSONContent } from '@tiptap/core'
 import { Editor, EditorContent } from '@tiptap/vue-3'
-import { Archive, ArchiveRestore, ImagePlus, Pin, PinOff, Undo2 } from '@lucide/vue'
+import { Archive, ArchiveRestore, ArrowLeft, ImagePlus, Pin, PinOff, Undo2 } from '@lucide/vue'
 import { noteAttachments, removeAttachment } from '@/db/attachments'
 import { convertNote } from '@/db/checklist'
 import { byName, setNoteLabel } from '@/db/labels'
@@ -42,6 +42,8 @@ const props = defineProps<{
   labelIds?: string[]
   /** Images a new note starts with, as from the composer's "New note with image". */
   files?: File[]
+  /** A back arrow at the top on phones, where the editor fills the screen. */
+  back?: boolean
 }>()
 const emit = defineEmits<{ close: [] }>()
 
@@ -281,6 +283,18 @@ defineExpose({ finish })
     data-testid="note-form"
     @keydown="onKeydown"
   >
+    <div v-if="back" class="flex h-12 shrink-0 items-center px-1 sm:hidden">
+      <button
+        type="button"
+        :class="iconButton"
+        :aria-label="$t('common.back')"
+        :title="$t('common.back')"
+        data-testid="editor-back"
+        @click="emit('close')"
+      >
+        <ArrowLeft :size="20" />
+      </button>
+    </div>
     <div class="min-h-0 flex-1 overflow-y-auto">
       <ImageCollage
         :attachments="attachments"

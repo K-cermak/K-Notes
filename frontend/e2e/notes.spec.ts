@@ -134,3 +134,21 @@ test('a new note starts in its text, and Tab leads from the title to the text', 
   await page.keyboard.press('Tab')
   await expect(form.getByTestId('add-item')).toBeFocused()
 })
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
+
+  test('a new note starts in its text and the back arrow saves and closes it', async ({
+    browser,
+  }) => {
+    const { page } = await signedIn(browser, await newUser(browser))
+    await page.getByTestId('fab').click()
+    await expect(page.getByTestId('editor-body')).toBeFocused()
+    await page.keyboard.type('Written on the phone')
+    await page.getByTestId('editor-back').click()
+    await expect(page.getByTestId('editor')).toHaveCount(0)
+    await expect(
+      page.getByTestId('note-card').filter({ hasText: 'Written on the phone' }),
+    ).toBeVisible()
+  })
+})
