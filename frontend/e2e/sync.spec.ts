@@ -114,3 +114,29 @@ test('signing out with unsent changes asks first', async ({ browser }) => {
     .click()
   await expect(a.page).toHaveURL(/\/login/)
 })
+
+test('the sync status opens details with the unsent changes and a sync button', async ({
+  browser,
+}) => {
+  const user = await newUser(browser)
+  const a = await signedIn(browser, user)
+  await addNote(a.page, 'Errands')
+
+  const details = a.page.getByTestId('sync-details')
+  await a.page.getByTestId('sync-status').getByRole('button').click()
+  await expect(details).toContainText('Synced')
+  await expect(details.getByTestId('sync-details-last')).not.toHaveText('Never')
+  await a.page.keyboard.press('Escape')
+
+  await a.context.setOffline(true)
+  await expect(a.page.getByTestId('sync-status')).toHaveAttribute('data-state', 'offline')
+  await retitle(a.page, 'Errands', 'Errands, offline')
+  await a.page.getByTestId('sync-status').getByRole('button').click()
+  await expect(details).toContainText('Offline')
+  await expect(details.getByTestId('sync-details-unsent')).toHaveText('1')
+
+  await a.context.setOffline(false)
+  await details.getByTestId('sync-now').click()
+  await expect(details.getByTestId('sync-details-unsent')).toHaveText('0')
+  await expect(details).toContainText('Synced')
+})

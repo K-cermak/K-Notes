@@ -18,6 +18,8 @@ export const useSyncStore = defineStore('sync', () => {
   const state = ref<SyncState>('idle')
   const unsent = ref(0)
   const rejected = ref(0)
+  // Kept on the device, so an offline start can still tell when the notes last reached the server.
+  const lastSynced = ref<number | null>(null)
   // The quota as of the last sync, kept for an offline start (SPEC 7, Storage quotas).
   const storage = ref<StorageStatus | null>(null)
   const storageFull = computed(() => storage.value?.full ?? false)
@@ -59,7 +61,11 @@ export const useSyncStore = defineStore('sync', () => {
       deviceId: await deviceId(db),
       onState: (value) => {
         state.value = value
-        if (value === 'synced') void refreshStorage()
+        if (value === 'synced') {
+          lastSynced.value = Date.now()
+          void setMeta(db, 'lastSynced', lastSynced.value)
+          void refreshStorage()
+        }
         if (value === 'unauthorized') session.expired = true
       },
       onRejected: (results) => {
@@ -67,6 +73,7 @@ export const useSyncStore = defineStore('sync', () => {
       },
     })
     storage.value = (await getMeta<StorageStatus>(db, 'storage')) ?? null
+    lastSynced.value = (await getMeta<number>(db, 'lastSynced')) ?? null
     outboxCount = liveQuery(() => db.outbox.count()).subscribe((count) => {
       unsent.value = count
     })
@@ -75,6 +82,7 @@ export const useSyncStore = defineStore('sync', () => {
 
   function stop(): void {
     storage.value = null
+    lastSynced.value = null
     engine?.stop()
     engine = null
     outboxCount?.unsubscribe()
@@ -99,6 +107,7 @@ export const useSyncStore = defineStore('sync', () => {
     state,
     unsent,
     rejected,
+    lastSynced,
     storage,
     storageFull,
     hasRoom,

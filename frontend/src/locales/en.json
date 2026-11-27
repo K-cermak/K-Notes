@@ -258,7 +258,20 @@
     "unauthorized": "Signed out",
     "unsent": "{count} unsent change | {count} unsent changes",
     "signInAgain": "Your session has ended. Your notes stay on this device; sign in again to sync them.",
-    "rejected": "The server refused {count} change. | The server refused {count} changes."
+    "rejected": "The server refused {count} change. | The server refused {count} changes.",
+    "unsentLabel": "Unsent changes",
+    "rejectedLabel": "Refused by the server",
+    "lastSynced": "Last synced",
+    "never": "Never",
+    "now": "Sync now",
+    "about": {
+      "idle": "Connecting to the server.",
+      "syncing": "Sending and receiving changes.",
+      "synced": "Everything on this device is on the server.",
+      "offline": "Changes are saved on this device and sync when you are back online.",
+      "error": "The last sync failed. It is retried automatically.",
+      "unauthorized": "Your notes stay on this device. Sign in again to sync them."
+    }
   },
   "session": {
     "unsentTitle": "Discard unsent changes?",

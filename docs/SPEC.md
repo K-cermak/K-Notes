@@ -291,7 +291,7 @@ Local Dexie tables: `notes`, `checklistItems`, `labels`, `noteLabels`, `attachme
 
 **Triggers.** Run a cycle on app start, on the browser `online` event, when the page becomes visible, on an SSE `change` event, and a short moment after any local write. On network failure retry with exponential backoff capped at 60 seconds. The Background Sync API is not available in Safari, so syncing happens only while the app is open; do not depend on it.
 
-**Status.** The top bar shows sync state: synced, syncing, offline, or error, and the number of unsent changes when it is not zero.
+**Status.** The top bar shows sync state: synced, syncing, offline, or error, and the number of unsent changes when it is not zero. Clicking it opens a panel with the state in words, the number of unsent changes and of changes the server refused, the time of the last successful sync (kept on the device), and a "Sync now" button, or a sign-in link when the session has ended.
 
 **Auth edge cases.**
 
