@@ -19,6 +19,8 @@ async function expectAccessible(page: Page, where: string): Promise<void> {
   )
   const { violations } = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    // The app does not zoom like a page, by the owner's decision (SPEC 9, Accessibility).
+    .disableRules(['meta-viewport'])
     .analyze()
   const found = violations.map(
     (v) =>

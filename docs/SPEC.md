@@ -497,7 +497,7 @@ Times (the "Edited" timestamp, sync status, sessions, tokens) use a 24-hour cloc
 - **Internationalisation**: all UI text lives in `frontend/src/locales/en.json` and is used through vue-i18n. Adding a language must need nothing more than a new JSON file and one entry in a list of available locales. English is the only language shipped. The chosen language is saved in the profile as `locale`.
 - **Routes**: the account pages are `/setup`, `/login`, `/invite/:token`, `/reset/:token`, `/settings/*` and `/admin/*`.
 - **Zoom**: the app does not zoom like a web page: no pinch or double-tap zoom, and no zoom when a field gets focus on iOS (the viewport's `maximum-scale=1`, plus cancelled pinch gestures on iOS, which ignores it). The image viewer is the exception, so a photo can be looked at closely. (Asked for by the owner in 0.2.)
-- **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal. Known limitation, accepted by the owner: reordering notes and checklist items works only by dragging with a pointer or touch, as in Keep; there is no keyboard equivalent.
+- **Accessibility**: every icon button has an accessible name, dialogs trap focus and restore it on close, everything is reachable by keyboard, and color is never the only signal. Known limitation, accepted by the owner: reordering notes and checklist items works only by dragging with a pointer or touch, as in Keep; there is no keyboard equivalent. Another, decided by the owner in 0.2: the page cannot be zoomed outside the image viewer (see Zoom above), so the axe rule `meta-viewport` is switched off in the accessibility test.
 
 ## 10. PWA
 
