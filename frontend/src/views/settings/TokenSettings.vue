@@ -81,7 +81,7 @@ onMounted(load)
         href="/api/v1/docs"
         target="_blank"
         rel="noopener"
-        class="text-accent underline-offset-2 hover:underline"
+        class="font-medium text-ink underline underline-offset-2"
         data-testid="api-docs"
         >{{ $t('settings.tokens.docs') }}</a
       >
