@@ -393,7 +393,7 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 
 - Square corners, a 1 px hairline border, the note's color as background. Hover darkens the border; there is no shadow.
 - Content order: images at the top edge to edge (a collage when there are several), title, body or checklist preview, label chips.
-- Long content is cut off with a fade. Checklists show unchecked items and then "N checked items", which opens the checked items right on the card, as in Keep; whether a card shows them is remembered on the device.
+- Long content is cut off with a fade. Checklists show unchecked items and then "N checked items", which opens the checked items right on the card, as in Keep; whether a note shows them is remembered on the device, and is the same on its card and in the editor.
 - On hover (desktop): a select checkbox at the top left, a pin button at the top right, and a bottom toolbar with color, add image, archive and a "more" menu (delete, add label, make a copy, show or hide checkboxes).
 - On touch devices there is no hover: tap opens the note, long-press starts selection, and the same actions live in the editor's toolbar.
 
@@ -410,7 +410,7 @@ Build with Vue components styled with Tailwind. Dialogs, popovers, menus, select
 
 - Each item: drag handle, checkbox, text, remove button. Enter adds an item below; Backspace on an empty item removes it and moves focus up; pasting several lines creates several items.
 - "+ List item" row at the bottom of the unchecked items.
-- Checked items move to a collapsible "N checked items" section, struck through.
+- Checked items move to a collapsible "N checked items" section, struck through. It starts collapsed and opens and closes together with the one on the note's card. (The owner asked for one shared state in 0.2; the editor always opened it before.)
 - Reorder by dragging the handle. Use `vue-draggable-plus` (SortableJS) here.
 - Converting text to checklist makes one item per non-empty line of the plain text. Converting back joins the items with line breaks. Formatting is lost in conversion; that is acceptable.
 

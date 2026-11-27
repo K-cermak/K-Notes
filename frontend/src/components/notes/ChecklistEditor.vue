@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { ChevronDown, Plus } from '@lucide/vue'
 import {
@@ -16,6 +16,7 @@ import { insertKeys } from '@/db/positions'
 import type { LocalChecklistItem } from '@/db/schema'
 import { useDebouncedSave } from '@/composables/useDebouncedSave'
 import { useLiveQuery } from '@/composables/useLiveQuery'
+import { useExpandedChecklistsStore } from '@/stores/expandedChecklists'
 import ChecklistItemRow from './ChecklistItemRow.vue'
 
 /** The items of a checklist note in the editor (SPEC 9, Checklists). */
@@ -62,7 +63,13 @@ function refresh(): void {
   checked.value = all.filter((item) => item.checked)
 }
 watch(items, refresh, { immediate: true })
-const showChecked = ref(true)
+// One choice per note, shared with its card, so the checked items are not open in one place
+// and closed in the other.
+const expanded = useExpandedChecklistsStore()
+const showChecked = computed(() => !!props.noteId && expanded.has(props.noteId))
+function toggleChecked(): void {
+  if (props.noteId) expanded.toggle(props.noteId)
+}
 
 // Every write goes through one queue, so an edit never reaches the database before the item it
 // edits. Typed text waits for the debounce like the note's title; other changes are queued at once.
@@ -279,7 +286,7 @@ defineExpose({
         class="ui-disclosure mt-2 ml-2 block h-8 border-t border-[color-mix(in_srgb,var(--ink)_10%,transparent)] pt-1 text-left leading-[27px]"
         :aria-expanded="showChecked"
         data-testid="checked-toggle"
-        @click="showChecked = !showChecked"
+        @click="toggleChecked"
       >
         <ChevronDown class="ui-disclosure__icon" />
         {{ $t('checklist.checked', { count: checked.length }, checked.length) }}

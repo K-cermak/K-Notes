@@ -93,6 +93,14 @@ test('a checklist is written, checked, edited and reordered', async ({ browser }
   await expect
     .poll(() => itemTexts(page.getByTestId('editor')))
     .toEqual(['Plums', 'Milk', 'Egg', 'Apples', 'Pears', 'Bread'])
+
+  // The card and the editor share whether the checked items are shown.
+  const checkedInEditor = item(page.getByTestId('editor'), 'Bread')
+  await expect(checkedInEditor).toBeVisible()
+  await page.getByTestId('checked-toggle').click()
+  await expect(checkedInEditor).toBeHidden()
+  await page.getByTestId('close-note').click()
+  await expect(checkedOnCard).toHaveCount(0)
 })
 
 test('a text note converts to a checklist and back', async ({ browser }) => {

@@ -15,8 +15,9 @@ function load(): string[] {
 }
 
 /**
- * Checklist cards whose checked items are shown in the overview, as in Keep. A view preference of
- * this device rather than note data, so it is kept in localStorage and not synced.
+ * Checklists whose checked items are shown, on the card and in the editor alike; the others keep
+ * them collapsed. A view preference of this device rather than note data, so it is kept in
+ * localStorage and not synced.
  */
 export const useExpandedChecklistsStore = defineStore('expandedChecklists', () => {
   const ids = ref<string[]>(load())
