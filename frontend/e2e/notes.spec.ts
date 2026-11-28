@@ -162,6 +162,18 @@ test('a note grows out of its card and shrinks back into it', async ({ browser }
   await expect(cell).toHaveCSS('opacity', '1')
 })
 
+test('an existing note opens with the cursor at the end of its text', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  await addNote(page, 'Groceries', 'Milk')
+  // Loaded from the device's database rather than straight after the composer wrote it.
+  await page.reload()
+  await openNote(page, 'Groceries')
+  await expect(page.getByTestId('editor-body')).toBeFocused()
+  await page.keyboard.type(' and eggs')
+  await page.keyboard.press('Escape')
+  await expect(card(page, 'Groceries').getByTestId('card-body')).toHaveText('Milk and eggs')
+})
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
 
@@ -177,5 +189,26 @@ test.describe('on a phone', () => {
     await expect(
       page.getByTestId('note-card').filter({ hasText: 'Written on the phone' }),
     ).toBeVisible()
+  })
+
+  test('an existing note opens with no field focused, so the keyboard stays down', async ({
+    browser,
+  }) => {
+    const { page } = await signedIn(browser, await newUser(browser))
+    await page.getByTestId('fab').click()
+    await expect(page.getByTestId('editor-body')).toBeFocused()
+    await page.keyboard.type('Read on the phone')
+    await page.getByTestId('editor-back').click()
+    const note = page.getByTestId('note-card').filter({ hasText: 'Read on the phone' })
+    await note.click()
+    // The form places the cursor once the note has loaded, a frame or two after the title unlocks.
+    await expect(page.getByTestId('editor-title')).not.toHaveAttribute('readonly')
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    )
+    const typing = await page.evaluate(() =>
+      document.activeElement?.matches('input, textarea, [contenteditable="true"]'),
+    )
+    expect(typing).toBe(false)
   })
 })

@@ -34,7 +34,7 @@ import LabelPicker from '@/components/labels/LabelPicker.vue'
  */
 const props = defineProps<{
   noteId: string | null
-  /** Puts the cursor in the body or the checklist, as Keep does for a new note. */
+  /** Puts the cursor at the end of the body, or in the checklist's new item field. */
   autofocus?: boolean
   /** The kind of note a draft becomes. */
   type?: LocalNote['type']

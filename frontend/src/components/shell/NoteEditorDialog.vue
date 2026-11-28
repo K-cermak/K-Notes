@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
 import NoteForm from '@/components/notes/NoteForm.vue'
@@ -73,6 +73,17 @@ watch(
 // The phone editor fills the screen up to the status bar, which would otherwise keep the page's
 // colour above a coloured note.
 const phone = useMediaQuery('(max-width: 639px)')
+
+// An existing note opens with the cursor in its text only where there is a mouse: on a touch
+// screen the keyboard would rise over the note every time it is opened just to be read.
+const finePointer = useMediaQuery('(pointer: fine)')
+const autofocus = computed(() => shown.value?.id === 'new' || finePointer.value)
+
+/** Reka would put focus on the first field, the title, before the form places the cursor. */
+function openAutoFocus(event: Event): void {
+  if (autofocus.value) event.preventDefault()
+}
+
 watch(
   () => (props.open && phone.value ? form.value?.color : undefined),
   (color) => setBarColor(color && color !== 'default' ? `var(--note-${color})` : null),
@@ -109,6 +120,7 @@ async function close(): Promise<void> {
         :aria-describedby="undefined"
         data-testid="editor"
         :data-morph="morph.phase.value"
+        @open-auto-focus="openAutoFocus"
       >
         <DialogTitle class="sr-only">{{ $t('note.editor') }}</DialogTitle>
         <NoteForm
@@ -116,7 +128,7 @@ async function close(): Promise<void> {
           ref="form"
           :note-id="shown.id === 'new' ? null : shown.id"
           :type="shown.type"
-          :autofocus="shown.id === 'new'"
+          :autofocus="autofocus"
           back
           :label-ids="shown.label ? [shown.label] : undefined"
           @close="close"

@@ -26,6 +26,14 @@ function item(scope: Locator, text: string) {
     .filter({ has: scope.page().getByRole('checkbox', { name: text, exact: true }) })
 }
 
+test('an existing checklist opens in its new item field', async ({ browser }) => {
+  const { page } = await signedIn(browser, await newUser(browser))
+  await addChecklist(page, 'Packing', ['Tent'])
+  await page.reload()
+  await openNote(page, 'Packing')
+  await expect(page.getByTestId('editor').getByTestId('add-item')).toBeFocused()
+})
+
 test('a checklist is written, checked, edited and reordered', async ({ browser }) => {
   const user = await newUser(browser)
   const { page } = await signedIn(browser, user)
