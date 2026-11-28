@@ -40,7 +40,7 @@ function timing(direction: 'in' | 'out'): { duration: number; easing: string } {
   return {
     duration:
       parseFloat(style.getPropertyValue(`--motion-travel-${direction}`)) ||
-      (direction === 'in' ? 360 : 300),
+      (direction === 'in' ? 300 : 250),
     easing: style.getPropertyValue('--motion-travel-ease').trim() || 'ease-in-out',
   }
 }
