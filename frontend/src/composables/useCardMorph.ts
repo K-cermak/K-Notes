@@ -33,12 +33,15 @@ function between(from: DOMRect, to: DOMRect): string {
   return `translate(${x}px, ${y}px) scale(${from.width / to.width}, ${from.height / to.height})`
 }
 
-// Read from the tokens, so the morph keeps the app's timing.
-function timing(): { duration: number; easing: string } {
+// Read from the tokens, so the CSS animations that run alongside (the scrim, the closing hold) last
+// exactly as long.
+function timing(direction: 'in' | 'out'): { duration: number; easing: string } {
   const style = getComputedStyle(document.documentElement)
   return {
-    duration: parseFloat(style.getPropertyValue('--motion')) || 240,
-    easing: style.getPropertyValue('--motion-ease').trim() || 'ease-out',
+    duration:
+      parseFloat(style.getPropertyValue(`--motion-travel-${direction}`)) ||
+      (direction === 'in' ? 360 : 300),
+    easing: style.getPropertyValue('--motion-travel-ease').trim() || 'ease-in-out',
   }
 }
 
@@ -56,8 +59,15 @@ export function useCardMorph() {
     running = []
   }
 
-  function animate(box: HTMLElement, from: string, to: string, fade: Keyframe[], fill: FillMode) {
-    const { duration, easing } = timing()
+  function animate(
+    box: HTMLElement,
+    from: string,
+    to: string,
+    fade: Keyframe[],
+    fill: FillMode,
+    direction: 'in' | 'out',
+  ) {
+    const { duration, easing } = timing(direction)
     const origin = { transformOrigin: '0 0' }
     running = [
       box.animate(
@@ -96,15 +106,15 @@ export function useCardMorph() {
     }
     phase.value = 'growing'
     hiddenCard.value = id
-    // The box covers most of the way in the first fifth of the time (the ease-out curve), so the
-    // content can start to show then without looking stretched.
+    // The box is past half of the way at a quarter of the time, so the content can start to show
+    // then without looking stretched.
     const fade = [
       { opacity: 0 },
-      { opacity: 0, offset: 0.15 },
-      { opacity: 1, offset: 0.7 },
+      { opacity: 0, offset: 0.25 },
+      { opacity: 1, offset: 0.6 },
       { opacity: 1 },
     ]
-    animate(box, between(from, box.getBoundingClientRect()), 'none', fade, 'none')
+    animate(box, between(from, box.getBoundingClientRect()), 'none', fade, 'none', 'in')
   }
 
   /**
@@ -121,13 +131,15 @@ export function useCardMorph() {
     }
     phase.value = 'shrinking'
     hiddenCard.value = id
-    const fade = [{ opacity: 1 }, { opacity: 0, offset: 0.3 }, { opacity: 0 }]
+    // Gone before the box is halfway, while the squeeze is not yet plain on the text.
+    const fade = [{ opacity: 1 }, { opacity: 0, offset: 0.18 }, { opacity: 0 }]
     const animation = animate(
       box,
       'none',
       between(to, box.getBoundingClientRect()),
       fade,
       'forwards',
+      'out',
     )
     animation.finished.then(
       () => {

@@ -94,6 +94,7 @@ async function close(): Promise<void> {
     <DialogPortal>
       <DialogOverlay
         class="fixed inset-0 z-30 animate-fade bg-scrim data-[state=closed]:animate-fade-out"
+        :class="{ 'note-scrim--travel': morph.phase.value !== 'none' }"
       />
       <DialogContent
         v-if="shown"

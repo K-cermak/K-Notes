@@ -37,6 +37,12 @@
   --motion-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-fast: 150ms;
   --motion: 240ms;
+  /* A box travelling across the screen, such as a card growing into a dialog. The ease-out curve
+     above covers most of such a distance in the first frame or two, which reads as a jump, so this
+     one starts gently. */
+  --motion-travel-ease: cubic-bezier(0.2, 0, 0, 1);
+  --motion-travel-in: 360ms;
+  --motion-travel-out: 300ms;
 
   --note-default: var(--bg);
   --note-coral: light-dark(#faafa8, #77172e);

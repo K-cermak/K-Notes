@@ -252,7 +252,16 @@
 
 .note-editor--hold,
 .note-editor--hold[data-state='closed'] {
-  animation: editor-hold var(--motion) linear both;
+  animation: editor-hold var(--motion-travel-out) linear both;
+}
+
+/* The scrim dims and clears in step with the travelling box. */
+.note-scrim--travel {
+  animation-duration: var(--motion-travel-in);
+
+  &[data-state='closed'] {
+    animation-duration: var(--motion-travel-out);
+  }
 }
 
 @keyframes editor-hold {
