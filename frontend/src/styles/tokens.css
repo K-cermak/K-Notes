@@ -41,8 +41,8 @@
      above covers most of such a distance in the first frame or two, which reads as a jump, so this
      one starts gently. */
   --motion-travel-ease: cubic-bezier(0.2, 0, 0, 1);
-  --motion-travel-in: 240ms;
-  --motion-travel-out: 200ms;
+  --motion-travel-in: 210ms;
+  --motion-travel-out: 180ms;
 
   --note-default: var(--bg);
   --note-coral: light-dark(#faafa8, #77172e);
